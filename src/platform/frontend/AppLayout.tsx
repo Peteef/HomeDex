@@ -2,7 +2,7 @@ import { Outlet } from 'react-router';
 import { Scene } from './components/scene/Scene.tsx';
 import { SCENE_LAYERS } from './sceneLayers.ts';
 
-export const ShellLayout = () => {
+export const AppLayout = () => {
   return (
     <>
       <Scene layers={SCENE_LAYERS} />

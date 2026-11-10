@@ -3,13 +3,13 @@ import { HomePage } from './pages/home/HomePage.tsx';
 import { LoginPage } from './pages/login/LoginPage.tsx';
 import { ModulePage } from './pages/module/ModulePage.tsx';
 import { NotFoundPage } from './pages/not-found/NotFoundPage.tsx';
-import { ShellLayout } from './ShellLayout.tsx';
+import { AppLayout } from './AppLayout.tsx';
 import { HOME_PATH, LOGIN_PATH, MODULE_ROUTE_PATTERN } from './routes.ts';
 
 export const App = () => {
   return (
     <Routes>
-      <Route element={<ShellLayout />}>
+      <Route element={<AppLayout />}>
         <Route path={HOME_PATH} element={<HomePage />} />
         <Route path={LOGIN_PATH} element={<LoginPage />} />
         <Route path={MODULE_ROUTE_PATTERN} element={<ModulePage />} />

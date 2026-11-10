@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';
 import { Tile } from '../../components/tile/Tile.tsx';
-import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
+import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
+import { sortTiles } from './sortTiles.ts';
 
 export const HomePage = () => {
   const [pinned, setPinned] = useState<ReadonlySet<number>>(new Set());
@@ -18,6 +19,8 @@ export const HomePage = () => {
     });
   };
 
+  const tiles = sortTiles(PLACEHOLDER_TILES, (tile) => pinned.has(tile.dexNo));
+
   return (
     <Panel className="flex flex-col gap-4">
       <Wordmark />
@@ -27,7 +30,7 @@ export const HomePage = () => {
         All entries
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {PLACEHOLDER_TILES.map((tile) => (
+        {tiles.map((tile) => (
           <Tile
             key={tile.dexNo}
             {...tile}

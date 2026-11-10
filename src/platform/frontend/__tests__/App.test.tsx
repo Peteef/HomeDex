@@ -86,6 +86,20 @@ describe('App', () => {
       );
     });
 
+    it('should move a pinned tile to the front and back when it is unpinned', () => {
+      // Given
+      renderAt('/');
+      const firstTile = () => screen.getAllByRole('article')[0];
+
+      // When
+      fireEvent.click(screen.getByRole('button', { name: 'Pin Weight log' }));
+
+      // Then
+      expect(firstTile()).toHaveTextContent('Weight log');
+      fireEvent.click(screen.getByRole('button', { name: 'Pin Weight log' }));
+      expect(firstTile()).toHaveTextContent('Finances');
+    });
+
     it('should unpin a tile when its pin control is clicked twice', () => {
       // Given
       renderAt('/');

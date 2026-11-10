@@ -104,6 +104,23 @@ test.describe('shell', () => {
       await expect(pin).toHaveAttribute('aria-pressed', 'true');
     });
 
+    test('should show a pinned tile first and put it back when it is unpinned', async ({
+      page,
+    }) => {
+      // Given
+      await page.goto('/');
+      const firstTile = page.getByRole('article').first();
+      await expect(firstTile).toContainText('Finances');
+
+      // When
+      await page.getByRole('button', { name: 'Pin Weight log' }).click();
+
+      // Then
+      await expect(firstTile).toContainText('Weight log');
+      await page.getByRole('button', { name: 'Pin Weight log' }).click();
+      await expect(firstTile).toContainText('Finances');
+    });
+
     test('should open a module tile on the module placeholder', async ({ page }) => {
       // Given
       await page.goto('/');

@@ -108,11 +108,11 @@ export const domainRules = [
 
 // Frontend layout: components/ are generic and pure, pages/ are the route screens that build the
 // platform out of them. Dependencies point one way, so components never import pages or the app
-// skeleton (App, ShellLayout, routes, scene layers).
+// skeleton (App, AppLayout, routes, scene layers).
 const FRONTEND_DIR = 'src/platform/frontend';
 const notAppCode = [
   {
-    group: ['**/pages/**', '**/App.tsx', '**/ShellLayout.tsx', '**/routes.ts', '**/sceneLayers.ts'],
+    group: ['**/pages/**', '**/App.tsx', '**/AppLayout.tsx', '**/routes.ts', '**/sceneLayers.ts'],
     message: 'Components are generic: they must not import pages or the app skeleton.',
   },
 ];
