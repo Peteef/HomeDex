@@ -14,6 +14,17 @@ It is a platform first. New tiles and modules are added over time, mostly by pro
 - **Mobile-first.** It has to feel right on a phone before a desktop.
 - **Popular, transferable technology.** This is also a learning project, so choose mainstream tools over exotic ones.
 
+## Commands
+
+If a script below does not exist yet, creating it is part of project setup.
+
+- `npm run dev`: local development.
+- `npm test`: unit tests (Vitest).
+- `npm run test:e2e`: Playwright end-to-end tests, including phone viewports.
+- `npm run fix`: formats and auto-fixes everything with Prettier and ESLint. One command, so formatting is never a discussion.
+- `npm run verify`: typecheck, lint (including the module boundary rules), format check, unit tests and build. CI runs the same command.
+- A command to create the two users.
+
 ## Tech
 
 - TypeScript in strict mode everywhere. Node.js LTS, pinned in `.nvmrc` and in the Docker image.
@@ -52,33 +63,40 @@ modules/
 
 ## Security and privacy
 
-- **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. `.gitignore` covers `data/`, `.env*` (except the example), `*.db` and `*.sqlite*`. Check `git status` before every commit.
+- **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
 - Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
+- Tests, fixtures and examples use fake data only.
 - Users are created by a command on first run, never from committed files.
 - No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
 - Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
 
 ## UI and theme
 
-- Check every UI change at 375 pt (iPhone 13 mini) and 402 pt (iPhone 17 Pro) wide. Touch targets are large.
+- Check every UI change with Playwright at 375 pt (iPhone 13 mini) and 402 pt (iPhone 17 Pro) wide. Touch targets are large.
 - Functional elements sit in a translucent panel over the background scene. Text contrast is at least 4.5:1 on any background.
 - Modern 2D style with Pokémon-inspired wording: "Party" for pinned tiles, Dex numbers on entries ("No. 001"), "Dex" for the full tile list.
 - Animation is optional polish and respects the "reduce motion" setting.
 
-## Commands
+## Git and pull requests
 
-These scripts must exist (creating them is part of project setup):
+- **Every change comes as a GitHub Pull Request.** Work on a branch and open a PR. Never commit or push to `master`.
+- **Never merge, and never merge branches yourself, unless the owner explicitly asks.** The owner reviews, approves and merges.
+- Every PR is reviewed and approved before it is merged. Address each review comment by fixing it or explaining why not, and wait for approval.
+- Keep each PR cohesive, with one purpose and a short description of what changed, why and how it was tested. Larger PRs are fine, especially early in the project. Avoid extreme ones touching tens or hundreds of files, and split those. Use a draft PR for unfinished work instead of "WIP" in the title.
 
-- `npm run dev`: local development.
-- `npm run fix`: formats and auto-fixes everything with Prettier and ESLint. One command, so formatting is never a discussion.
-- `npm run verify`: typecheck, lint (including the module boundary rules), format check, unit tests and build. CI runs the same command.
-- `npm run test:e2e`: Playwright, including phone viewports.
-- A command to create the two users.
+### Naming
+
+- **Branches:** `<type>/<short-kebab-description>`, with a prefix such as `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/` or `ci/`. Lowercase, hyphens, short.
+- **Commit messages and PR titles** start with your model name in square brackets, for example `[Claude Opus 5.5] Add pin button to tile`. Use your actual model name and the same prefix everywhere. After it, write an imperative summary ("Add", "Fix", not "Adding") of about 70 characters or less.
+- **Merges are squash merges**, so the PR title becomes the one commit on `master`. Write the PR title as the final commit message.
 
 ## Working practices
 
 - Ask when something is unclear instead of guessing, and do not build beyond what was asked.
-- Write tests for new behavior. Never disable or weaken a check to make it pass.
-- Run `npm run fix`, then `npm run verify`, before saying work is done.
-- Keep commits small and focused.
-- Keep this file current: when a decision changes how we build, update it.
+- **Done means, before you open a PR:**
+    1. `npm run fix` and then `npm run verify` pass.
+    2. New behavior has tests. Never disable or weaken a check to make it pass.
+    3. UI changes are checked at both phone widths.
+    4. Your diff contains no secrets, personal data or local paths.
+    5. The branch, commit and PR names follow the naming rules.
+- Keep this file short and current. When a decision changes how we build, update it in the same PR. Do not add rules that lint or tooling already enforce.
