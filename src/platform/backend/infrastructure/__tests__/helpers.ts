@@ -17,11 +17,11 @@ const SESSION_TTL_DAYS = 365;
 export const FAST_ARGON2: Argon2Params = { memory: 8, passes: 1, parallelism: 1 };
 export const TEST_PASSWORD = 'correct-horse-battery';
 
-export function createTestDatabase(): Database.Database {
+export const createTestDatabase = (): Database.Database => {
   const db = openDatabase(IN_MEMORY);
   migratePlatform(db);
   return db;
-}
+};
 
 export interface TestApp {
   app: Express;
@@ -29,10 +29,10 @@ export interface TestApp {
   clock: { now: number };
 }
 
-export function createTestApp(
+export const createTestApp = (
   env: Record<string, string> = {},
   overrides: { loginLimit?: LoginLimit } = {},
-): TestApp {
+): TestApp => {
   const db = createTestDatabase();
   const clock = { now: Date.now() };
   const app = createApp({
@@ -49,19 +49,19 @@ export function createTestApp(
     db,
     clock,
   };
-}
+};
 
-export function testServices(db: Database.Database): DomainServices {
+export const testServices = (db: Database.Database): DomainServices => {
   return domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, argon2Params: FAST_ARGON2 });
-}
+};
 
-export async function createTestUser(db: Database.Database, username: string): Promise<void> {
+export const createTestUser = async (db: Database.Database, username: string): Promise<void> => {
   await testServices(db).accounts.create(username, TEST_PASSWORD);
-}
+};
 
-export function postJson(app: Express, url: string, body?: unknown): request.Test {
+export const postJson = (app: Express, url: string, body?: unknown): request.Test => {
   return request(app)
     .post(url)
     .set('Content-Type', 'application/json')
     .send(JSON.stringify(body ?? {}));
-}
+};

@@ -6,7 +6,7 @@ import { boundaryRules, domainRules, styleRules } from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
-async function violationsOf(file: string): Promise<string[]> {
+const violationsOf = async (file: string): Promise<string[]> => {
   const eslint = new ESLint({
     cwd: fixtures,
     overrideConfigFile: true,
@@ -23,61 +23,76 @@ async function violationsOf(file: string): Promise<string[]> {
   });
   const [result] = await eslint.lintFiles([file]);
   return (result?.messages ?? []).map((message) => message.ruleId ?? message.message);
-}
+};
 
-describe('module boundary rules', () => {
-  it.each([
-    'src/platform/backend/ok-platform-internal.ts',
-    'src/modules/alpha/ok-own-file.ts',
-    'src/modules/alpha/ok-platform-api.ts',
-  ])('should allow %s', async (file) => {
-    expect(await violationsOf(file)).toEqual([]);
+describe('lint rules', () => {
+  describe('module boundaries', () => {
+    it.each([
+      'src/platform/backend/ok-platform-internal.ts',
+      'src/modules/alpha/ok-own-file.ts',
+      'src/modules/alpha/ok-platform-api.ts',
+    ])('should allow %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toEqual([]);
+    });
+
+    it.each([
+      'src/platform/backend/bad-imports-module.ts',
+      'src/modules/alpha/bad-other-module.ts',
+      'src/modules/alpha/bad-platform-internal.ts',
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('boundaries/dependencies');
+    });
   });
 
-  it.each([
-    'src/platform/backend/bad-imports-module.ts',
-    'src/modules/alpha/bad-other-module.ts',
-    'src/modules/alpha/bad-platform-internal.ts',
-  ])('should reject %s', async (file) => {
-    expect(await violationsOf(file)).toContain('boundaries/dependencies');
-  });
-});
+  describe('domains', () => {
+    const backend = 'src/platform/backend';
 
-describe('domain rules', () => {
-  const backend = 'src/platform/backend';
+    it.each([
+      `${backend}/infrastructure/ok-domain-entrypoint.ts`,
+      `${backend}/domain/accounts/ok-own-internal.ts`,
+      `${backend}/domain/auth/ok-other-domain-entrypoint.ts`,
+      `${backend}/domain/auth/ok-storage-entrypoint.ts`,
+      `${backend}/domain/auth/__tests__/ok-test-helper.ts`,
+      `${backend}/domain/ok-aggregate.ts`,
+    ])('should allow %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toEqual([]);
+    });
 
-  it.each([
-    `${backend}/infrastructure/ok-domain-entrypoint.ts`,
-    `${backend}/domain/accounts/ok-own-internal.ts`,
-    `${backend}/domain/auth/ok-other-domain-entrypoint.ts`,
-    `${backend}/domain/auth/ok-storage-entrypoint.ts`,
-    `${backend}/domain/auth/__tests__/ok-test-helper.ts`,
-    `${backend}/domain/ok-aggregate.ts`,
-  ])('should allow %s', async (file) => {
-    expect(await violationsOf(file)).toEqual([]);
-  });
-
-  it.each([
-    `${backend}/infrastructure/bad-domain-internal.ts`,
-    `${backend}/infrastructure/bad-domain-file.ts`,
-    `${backend}/domain/auth/bad-other-domain-internal.ts`,
-    `${backend}/domain/auth/bad-infrastructure.ts`,
-    `${backend}/domain/auth/bad-storage-internal.ts`,
-    `${backend}/domain/auth/bad-routes.ts`,
-    `${backend}/domain/bad-aggregate-internal.ts`,
-  ])('should reject %s', async (file) => {
-    expect(await violationsOf(file)).toContain('no-restricted-imports');
-  });
-});
-
-describe('style rules', () => {
-  it('should allow a returned object with one property per line', async () => {
-    expect(await violationsOf('src/style/ok-returned-object.ts')).toEqual([]);
+    it.each([
+      `${backend}/infrastructure/bad-domain-internal.ts`,
+      `${backend}/infrastructure/bad-domain-file.ts`,
+      `${backend}/domain/auth/bad-other-domain-internal.ts`,
+      `${backend}/domain/auth/bad-infrastructure.ts`,
+      `${backend}/domain/auth/bad-storage-internal.ts`,
+      `${backend}/domain/auth/bad-routes.ts`,
+      `${backend}/domain/bad-aggregate-internal.ts`,
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('no-restricted-imports');
+    });
   });
 
-  it('should reject a returned object with several properties on one line', async () => {
-    expect(await violationsOf('src/style/bad-returned-object.ts')).toContain(
-      'homedex/returned-object-one-per-line',
+  describe('style', () => {
+    it.each(['src/style/ok-returned-object.ts', 'src/style/ok-arrows-and-methods.ts'])(
+      'should allow %s',
+      async (file) => {
+        // When / Then
+        expect(await violationsOf(file)).toEqual([]);
+      },
     );
+
+    it.each([
+      ['src/style/bad-returned-object.ts', 'homedex/returned-object-one-per-line'],
+      ['src/style/bad-function-declaration.ts', 'func-style'],
+      ['src/style/bad-function-expression.ts', 'no-restricted-syntax'],
+      ['src/style/bad-callback-function.ts', 'prefer-arrow-callback'],
+      ['src/style/bad-braceless-if.ts', 'curly'],
+    ])('should reject %s with %s', async (file, rule) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain(rule);
+    });
   });
 });

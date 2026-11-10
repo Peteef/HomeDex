@@ -18,12 +18,12 @@ export interface UserRepository {
   setArchivedAt(id: number, archivedAt: number | null): void;
 }
 
-function isUniqueViolation(error: unknown): boolean {
+const isUniqueViolation = (error: unknown): boolean => {
   return error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
-}
+};
 
 // The repository knows how the database reports a taken name, so it translates it.
-function failIfTaken<T>(username: string, write: () => T): T {
+const failIfTaken = <T>(username: string, write: () => T): T => {
   try {
     return write();
   } catch (error) {
@@ -32,9 +32,9 @@ function failIfTaken<T>(username: string, write: () => T): T {
     }
     throw error;
   }
-}
+};
 
-export function userRepository(db: Storage): UserRepository {
+export const userRepository = (db: Storage): UserRepository => {
   const insertUser = db.prepare(
     'INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?) RETURNING *',
   );
@@ -47,32 +47,32 @@ export function userRepository(db: Storage): UserRepository {
   const replacePasswordHash = db.prepare('UPDATE users SET password_hash = ? WHERE id = ?');
   const replaceArchivedAt = db.prepare('UPDATE users SET archived_at = ? WHERE id = ?');
 
-  function insert(username: string, passwordHash: string, createdAt: number): UserRow {
+  const insert = (username: string, passwordHash: string, createdAt: number): UserRow => {
     return failIfTaken(
       username,
       () => insertUser.get(username, passwordHash, createdAt) as UserRow,
     );
-  }
+  };
 
-  function findByUsername(username: string): UserRow | undefined {
+  const findByUsername = (username: string): UserRow | undefined => {
     return selectByUsername.get(username) as UserRow | undefined;
-  }
+  };
 
-  function list(includeArchived: boolean): UserRow[] {
+  const list = (includeArchived: boolean): UserRow[] => {
     return (includeArchived ? selectAll : selectActive).all() as UserRow[];
-  }
+  };
 
-  function updateUsername(id: number, username: string): void {
+  const updateUsername = (id: number, username: string): void => {
     failIfTaken(username, () => renameUser.run(username, id));
-  }
+  };
 
-  function updatePasswordHash(id: number, passwordHash: string): void {
+  const updatePasswordHash = (id: number, passwordHash: string): void => {
     replacePasswordHash.run(passwordHash, id);
-  }
+  };
 
-  function setArchivedAt(id: number, archivedAt: number | null): void {
+  const setArchivedAt = (id: number, archivedAt: number | null): void => {
     replaceArchivedAt.run(archivedAt, id);
-  }
+  };
 
   return {
     insert,
@@ -82,4 +82,4 @@ export function userRepository(db: Storage): UserRepository {
     updatePasswordHash,
     setArchivedAt,
   };
-}
+};

@@ -122,19 +122,39 @@ const returnedObjectOnePerLine = {
     return {
       ReturnStatement(node) {
         const object = node.argument;
-        if (object?.type !== 'ObjectExpression' || object.properties.length < 2) return;
+        if (object?.type !== 'ObjectExpression' || object.properties.length < 2) {
+          return;
+        }
         const lines = object.properties.map((property) => property.loc.start.line);
-        if (new Set(lines).size !== lines.length)
+        if (new Set(lines).size !== lines.length) {
           context.report({ node: object, messageId: 'split' });
+        }
       },
     };
   },
 };
 
+// Functions are arrow functions. Methods of classes and objects stay methods, because they are
+// part of a type's shape (and ESLint rules themselves are objects with a `create` method).
+const notMethod =
+  ":not(MethodDefinition, Property[method=true], Property[kind='get'], Property[kind='set'])";
+
 /** @type {import('eslint').Linter.Config} */
 export const styleRules = {
   plugins: { homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } } },
-  rules: { 'homedex/returned-object-one-per-line': 'error' },
+  rules: {
+    'homedex/returned-object-one-per-line': 'error',
+    curly: ['error', 'all'],
+    'func-style': ['error', 'expression'],
+    'prefer-arrow-callback': 'error',
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: `${notMethod} > FunctionExpression`,
+        message: 'Use an arrow function instead of a function expression.',
+      },
+    ],
+  },
 };
 
 export default defineConfig(
@@ -172,8 +192,9 @@ export default defineConfig(
     ...boundaryRules,
   },
   ...domainRules,
-  { files: ['src/**/*.{ts,tsx}'], ...styleRules },
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,
+  // After prettier, which turns `curly` off; with 'all' the two tools do not conflict.
+  { files: ['**/*.{js,ts,tsx}'], ...styleRules },
 );

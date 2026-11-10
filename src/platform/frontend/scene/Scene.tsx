@@ -6,7 +6,7 @@ const BACKGROUND_SRC = '/media/scene/background.svg';
 
 const layers: SceneLayer[] = [{ src: BACKGROUND_SRC }];
 
-export function Scene() {
+export const Scene = () => {
   return (
     <div aria-hidden="true" className="fixed inset-0 -z-10 overflow-hidden">
       {layers.map((layer) => (
@@ -19,4 +19,4 @@ export function Scene() {
       ))}
     </div>
   );
-}
+};

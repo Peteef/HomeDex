@@ -18,7 +18,7 @@ interface Migration {
   file: string;
 }
 
-function listMigrations(directory: string): Migration[] {
+const listMigrations = (directory: string): Migration[] => {
   const migrations = fs
     .readdirSync(directory)
     .filter((name) => name.endsWith('.sql'))
@@ -42,12 +42,12 @@ function listMigrations(directory: string): Migration[] {
     seen.add(version);
   }
   return migrations;
-}
+};
 
 // Applies the pending migrations of one scope ("platform" or a module id) in order and
 // returns the names it applied. Before the app is live, migrations are edited in place and the
 // data folder is reset, so applied files are not checked for changes.
-export function runMigrations(db: Storage, scope: string, directory: string): string[] {
+export const runMigrations = (db: Storage, scope: string, directory: string): string[] => {
   db.exec(CREATE_TABLE);
   const applied = new Set(
     db
@@ -60,7 +60,9 @@ export function runMigrations(db: Storage, scope: string, directory: string): st
   );
   const appliedNow: string[] = [];
   for (const migration of listMigrations(directory)) {
-    if (applied.has(migration.version)) continue;
+    if (applied.has(migration.version)) {
+      continue;
+    }
     const sql = fs.readFileSync(migration.file, 'utf8');
     db.transaction(() => {
       db.exec(sql);
@@ -69,4 +71,4 @@ export function runMigrations(db: Storage, scope: string, directory: string): st
     appliedNow.push(migration.name);
   }
   return appliedNow;
-}
+};

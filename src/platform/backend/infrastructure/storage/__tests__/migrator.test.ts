@@ -30,29 +30,44 @@ describe('migrator', () => {
   });
 
   it('should apply the migrations in numeric order', () => {
+    // Given
     write('002_second.sql', 'CREATE TABLE second (id INTEGER REFERENCES first (id));');
     write('001_first.sql', 'CREATE TABLE first (id INTEGER PRIMARY KEY);');
-    expect(runMigrations(db, 'demo', dir)).toEqual(['001_first.sql', '002_second.sql']);
+
+    // When
+    const applied = runMigrations(db, 'demo', dir);
+
+    // Then
+    expect(applied).toEqual(['001_first.sql', '002_second.sql']);
     expect(tables()).toEqual(expect.arrayContaining(['first', 'second']));
   });
 
   it('should skip migrations that were already applied', () => {
+    // Given
     write('001_first.sql', 'CREATE TABLE first (id INTEGER PRIMARY KEY);');
     runMigrations(db, 'demo', dir);
     write('002_second.sql', 'CREATE TABLE second (id INTEGER PRIMARY KEY);');
+
+    // When / Then
     expect(runMigrations(db, 'demo', dir)).toEqual(['002_second.sql']);
     expect(runMigrations(db, 'demo', dir)).toEqual([]);
   });
 
   it('should track every scope separately when two scopes use the same numbers', () => {
+    // Given
     write('001_first.sql', 'CREATE TABLE IF NOT EXISTS shared (id INTEGER PRIMARY KEY);');
+
+    // When / Then
     expect(runMigrations(db, 'platform', dir)).toEqual(['001_first.sql']);
     expect(runMigrations(db, 'other-module', dir)).toEqual(['001_first.sql']);
   });
 
   it('should roll back a failing migration and keep the earlier ones when the SQL is broken', () => {
+    // Given
     write('001_first.sql', 'CREATE TABLE first (id INTEGER PRIMARY KEY);');
     write('002_broken.sql', 'CREATE TABLE half (id INTEGER); NOT VALID SQL;');
+
+    // When / Then
     expect(() => runMigrations(db, 'demo', dir)).toThrow();
     expect(tables()).toContain('first');
     expect(tables()).not.toContain('half');
@@ -61,18 +76,27 @@ describe('migrator', () => {
   });
 
   it('should reject a file whose name is not NNN_name.sql', () => {
+    // Given
     write('create-users.sql', 'SELECT 1;');
+
+    // When / Then
     expect(() => runMigrations(db, 'demo', dir)).toThrow(/Invalid migration file name/);
   });
 
   it('should reject two files with the same number', () => {
+    // Given
     write('001_first.sql', 'SELECT 1;');
     write('001_other.sql', 'SELECT 1;');
+
+    // When / Then
     expect(() => runMigrations(db, 'demo', dir)).toThrow(/Duplicate migration number 1/);
   });
 
   it('should create the platform tables when the real migrations run', () => {
+    // When
     const real = createTestDatabase();
+
+    // Then
     const names = (
       real.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as {
         name: string;

@@ -42,32 +42,34 @@ interface AccountUpdate {
 const isWithinLimits = (username: string, password: string): boolean =>
   username.length <= MAX_USERNAME_LENGTH && password.length <= MAX_PASSWORD_LENGTH;
 
-export function accountsService(
+export const accountsService = (
   db: Storage,
   { revokeSessions, argon2Params = DEFAULT_ARGON2_PARAMS, now = Date.now }: AccountsOptions,
-): AccountsService {
+): AccountsService => {
   const users = userRepository(db);
   const dummyHash = lazy(() => hashPassword(DUMMY_PASSWORD, argon2Params));
 
-  function requireUser(username: string): UserRow {
+  const requireUser = (username: string): UserRow => {
     const user = users.findByUsername(username);
-    if (!user) throw new AccountError('not_found', `No user named "${username}"`);
+    if (!user) {
+      throw new AccountError('not_found', `No user named "${username}"`);
+    }
     return user;
-  }
+  };
 
-  function requireActiveUser(username: string): UserRow {
+  const requireActiveUser = (username: string): UserRow => {
     const user = requireUser(username);
     if (user.archived_at !== null) {
       throw new AccountError('archived', `User "${user.username}" is archived`);
     }
     return user;
-  }
+  };
 
-  async function hashValidPassword(password: string): Promise<string> {
+  const hashValidPassword = async (password: string): Promise<string> => {
     return hashPassword(validate(passwordSchema, password), argon2Params);
-  }
+  };
 
-  async function prepareUpdate(changes: AccountEdit): Promise<AccountUpdate> {
+  const prepareUpdate = async (changes: AccountEdit): Promise<AccountUpdate> => {
     return {
       ...(changes.username !== undefined && {
         username: validate(usernameSchema, changes.username),
@@ -76,57 +78,61 @@ export function accountsService(
         passwordHash: await hashValidPassword(changes.password),
       }),
     };
-  }
+  };
 
-  function applyUpdate(user: UserRow, update: AccountUpdate): void {
+  const applyUpdate = (user: UserRow, update: AccountUpdate): void => {
     db.transaction(() => {
-      if (update.username !== undefined) users.updateUsername(user.id, update.username);
+      if (update.username !== undefined) {
+        users.updateUsername(user.id, update.username);
+      }
       if (update.passwordHash !== undefined) {
         users.updatePasswordHash(user.id, update.passwordHash);
         revokeSessions(user.id);
       }
     })();
-  }
+  };
 
-  async function create(username: string, password: string): Promise<Account> {
+  const create = async (username: string, password: string): Promise<Account> => {
     const validUsername = validate(usernameSchema, username);
     const passwordHash = await hashValidPassword(password);
     return toAccount(users.insert(validUsername, passwordHash, now()));
-  }
+  };
 
-  function list({ includeArchived = false }: { includeArchived?: boolean } = {}): Account[] {
+  const list = ({ includeArchived = false }: { includeArchived?: boolean } = {}): Account[] => {
     return users.list(includeArchived).map(toAccount);
-  }
+  };
 
-  async function edit(username: string, changes: AccountEdit): Promise<Account> {
+  const edit = async (username: string, changes: AccountEdit): Promise<Account> => {
     const user = requireActiveUser(username);
     const update = await prepareUpdate(changes);
     applyUpdate(user, update);
     return toAccount(requireUser(update.username ?? user.username));
-  }
+  };
 
-  function archive(username: string): Account {
+  const archive = (username: string): Account => {
     const user = requireUser(username);
     db.transaction(() => {
       users.setArchivedAt(user.id, now());
       revokeSessions(user.id);
     })();
     return toAccount(requireUser(user.username));
-  }
+  };
 
-  function restore(username: string): Account {
+  const restore = (username: string): Account => {
     const user = requireUser(username);
     users.setArchivedAt(user.id, null);
     return toAccount(requireUser(user.username));
-  }
+  };
 
-  async function authenticate(username: string, password: string): Promise<Account | null> {
-    if (!isWithinLimits(username, password)) return null;
+  const authenticate = async (username: string, password: string): Promise<Account | null> => {
+    if (!isWithinLimits(username, password)) {
+      return null;
+    }
     const user = users.findByUsername(username);
     // An unknown user still costs one hash check, so timing does not reveal which names exist.
     const valid = await verifyPassword(password, user?.password_hash ?? (await dummyHash()));
     return user && valid && user.archived_at === null ? toAccount(user) : null;
-  }
+  };
 
   return {
     create,
@@ -136,4 +142,4 @@ export function accountsService(
     restore,
     authenticate,
   };
-}
+};

@@ -5,7 +5,7 @@ import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from './status.ts';
 const INVALID_JSON_RESPONSE = { error: 'Invalid request body' };
 const INTERNAL_ERROR_RESPONSE = { error: 'Internal error' };
 
-function isClientError(error: unknown): boolean {
+const isClientError = (error: unknown): boolean => {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -14,7 +14,7 @@ function isClientError(error: unknown): boolean {
     error.status >= BAD_REQUEST &&
     error.status < INTERNAL_SERVER_ERROR
   );
-}
+};
 
 export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {
   // Express can no longer change a response that has started, so it closes the connection.

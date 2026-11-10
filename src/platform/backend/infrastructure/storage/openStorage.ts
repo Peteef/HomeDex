@@ -8,13 +8,13 @@ const DATABASE_FILE = 'homedex.db';
 const PLATFORM_SCOPE = 'platform';
 const PLATFORM_MIGRATIONS_DIR = path.join(import.meta.dirname, 'migrations');
 
-export function migratePlatform(db: Database.Database): void {
+export const migratePlatform = (db: Database.Database): void => {
   runMigrations(db, PLATFORM_SCOPE, PLATFORM_MIGRATIONS_DIR);
-}
+};
 
-export function openStorage(dataDir: string): Database.Database {
+export const openStorage = (dataDir: string): Database.Database => {
   fs.mkdirSync(dataDir, { recursive: true });
   const db = openDatabase(path.join(dataDir, DATABASE_FILE));
   migratePlatform(db);
   return db;
-}
+};

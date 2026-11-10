@@ -23,21 +23,21 @@ export interface SessionService {
   revokeAllFor(userId: number): void;
 }
 
-function hashToken(token: string): string {
+const hashToken = (token: string): string => {
   return createHash('sha256').update(token).digest('hex');
-}
+};
 
 const shouldSlide = (lastSeenAt: number, current: number): boolean =>
   current - lastSeenAt >= SLIDE_AFTER_MS;
 
-export function sessionService(
+export const sessionService = (
   db: Storage,
   { ttlDays, now = Date.now }: SessionServiceOptions,
-): SessionService {
+): SessionService => {
   const sessions = sessionRepository(db);
   const ttlMs = ttlDays * MS_PER_DAY;
 
-  function create(userId: number, userAgent: string | undefined): IssuedSession {
+  const create = (userId: number, userAgent: string | undefined): IssuedSession => {
     const current = now();
     sessions.deleteExpired(current);
     const token = randomBytes(TOKEN_BYTES).toString(TOKEN_ENCODING);
@@ -53,28 +53,32 @@ export function sessionService(
       token,
       expiresAt,
     };
-  }
+  };
 
-  function resolve(token: string): ResolvedSession | null {
+  const resolve = (token: string): ResolvedSession | null => {
     const tokenHash = hashToken(token);
     const current = now();
     const row = sessions.findActive(tokenHash, current);
-    if (!row) return null;
+    if (!row) {
+      return null;
+    }
     const renewedUntil = shouldSlide(row.last_seen_at, current) ? current + ttlMs : null;
-    if (renewedUntil !== null) sessions.touch(tokenHash, current, renewedUntil);
+    if (renewedUntil !== null) {
+      sessions.touch(tokenHash, current, renewedUntil);
+    }
     return {
       user: { id: row.user_id, username: row.username },
       renewedUntil,
     };
-  }
+  };
 
-  function revoke(token: string): void {
+  const revoke = (token: string): void => {
     sessions.delete(hashToken(token));
-  }
+  };
 
-  function revokeAllFor(userId: number): void {
+  const revokeAllFor = (userId: number): void => {
     sessions.deleteForUser(userId);
-  }
+  };
 
   return {
     create,
@@ -82,4 +86,4 @@ export function sessionService(
     revoke,
     revokeAllFor,
   };
-}
+};

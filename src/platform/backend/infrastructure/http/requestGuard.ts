@@ -6,17 +6,17 @@ const JSON_TYPE = 'application/json';
 export const FOREIGN_ORIGIN_RESPONSE = { error: 'Foreign origin' };
 export const JSON_REQUIRED_RESPONSE = { error: 'Content-Type must be application/json' };
 
-function isSameOrigin(origin: string, req: Request): boolean {
+const isSameOrigin = (origin: string, req: Request): boolean => {
   try {
     return new URL(origin).host === req.host;
   } catch {
     return false;
   }
-}
+};
 
-function isJson(contentType: string | undefined): boolean {
+const isJson = (contentType: string | undefined): boolean => {
   return contentType?.split(';')[0]?.trim().toLowerCase() === JSON_TYPE;
-}
+};
 
 // CSRF defence next to SameSite=Lax cookies: browsers always send Origin on cross-site writes
 // and cannot send application/json from a plain form. A missing Origin means a non-browser client.

@@ -18,10 +18,10 @@ export interface DomainServicesOptions {
 // The domain layer's single entrypoint: it wires the domains together, so the server and the
 // CLI get the same services. Domains never import each other's internals; connections between
 // them are made here.
-export function domainServices(
+export const domainServices = (
   storage: Storage,
   { sessionTtlDays, argon2Params, now }: DomainServicesOptions,
-): DomainServices {
+): DomainServices => {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
     ...(now && { now }),
@@ -37,4 +37,4 @@ export function domainServices(
     accounts,
     sessions,
   };
-}
+};

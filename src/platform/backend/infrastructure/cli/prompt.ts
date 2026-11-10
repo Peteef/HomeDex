@@ -8,20 +8,20 @@ const YES = /^y(es)?$/i;
 
 export const hasTerminal = (): boolean => process.stdin.isTTY;
 
-export async function ask(question: string): Promise<string> {
+export const ask = async (question: string): Promise<string> => {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
     return (await rl.question(question)).trim();
   } finally {
     rl.close();
   }
-}
+};
 
-export async function confirm(question: string): Promise<boolean> {
+export const confirm = async (question: string): Promise<boolean> => {
   return YES.test(await ask(`${question} [y/N] `));
-}
+};
 
-export function askHidden(question: string): Promise<string> {
+export const askHidden = (question: string): Promise<string> => {
   process.stdout.write(question);
   const { stdin } = process;
   stdin.setRawMode(true);
@@ -51,12 +51,14 @@ export function askHidden(question: string): Promise<string> {
     };
     stdin.on('data', onData);
   });
-}
+};
 
-export async function readPipedPassword(): Promise<string> {
+export const readPipedPassword = async (): Promise<string> => {
   const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  for await (const chunk of process.stdin) {
+    chunks.push(chunk as Buffer);
+  }
   return Buffer.concat(chunks)
     .toString('utf8')
     .replace(/\r?\n$/, '');
-}
+};
