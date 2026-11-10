@@ -1,0 +1,76 @@
+{
+  "name": "homedex",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A private, Pokémon-themed launch pad for home and personal life.",
+  "engines": {
+    "node": ">=26 <27"
+  },
+  "imports": {
+    "#platform/backend": "./platform/backend/api/index.ts",
+    "#platform/frontend": "./platform/frontend/api/index.ts"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"node --watch platform/backend/main.ts\" \"vite\"",
+    "build": "vite build",
+    "start": "node platform/backend/main.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "fix": "prettier --write . && eslint . --fix",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/vite": "4.3.5",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/supertest": "7.2.1",
+    "@vitejs/plugin-react": "6.3.0",
+    "concurrently": "10.0.7",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-boundaries": "7.4.2",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "husky": "9.1.7",
+    "jsdom": "31.0.0",
+    "lint-staged": "17.6.0",
+    "prettier": "3.9.10",
+    "prettier-plugin-tailwindcss": "0.8.1",
+    "supertest": "7.3.2",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.7",
+    "vitest": "5.1.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js}": [
+      "prettier --write --ignore-unknown",
+      "eslint --fix --max-warnings 0 --no-warn-ignored"
+    ],
+    "*.{json,md,css,html,yml,yaml,webmanifest}": "prettier --write --ignore-unknown"
+  }
+}

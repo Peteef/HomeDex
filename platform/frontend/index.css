@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-dex-red: #b91c1c;
+  --color-dex-ink: #1f2937;
+  --color-dex-paper: #fff7ed;
+}
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  margin: 0;
+  color: var(--color-dex-ink);
+  background: var(--color-dex-paper);
+}

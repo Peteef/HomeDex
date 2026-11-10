@@ -2,7 +2,7 @@
 
 ## The idea
 
-HomeDex is a private, Pokémon-themed launch pad for home and personal life. Think of a browser start page for personal stuff: a greeting, a quick-find input and a grid of tiles that open links or small modules. Two users, used from PC, laptop and iPhone.
+HomeDex is a private, Pokémon-themed launch pad for home and personal life. Think of a browser start page for personal stuff: a greeting, a quick-find input and a grid of tiles that open links or small modules. Two users (more are possible), used from PC, laptop and iPhone.
 
 It is a platform first. New tiles and modules are added over time, mostly by prompting an agent, so the core must stay small, clear and easy to extend.
 
@@ -10,7 +10,7 @@ It is a platform first. New tiles and modules are added over time, mostly by pro
 
 - **Simple and lightweight.** No paid services. Prefer popular, well-maintained libraries and justify every new dependency.
 - **Modular.** Adding a module never means editing the core.
-- **Private.** Never exposed publicly. No registration, two pre-created users.
+- **Private.** Never exposed publicly. No registration, accounts are created with the CLI.
 - **Mobile-first.** It has to feel right on a phone before a desktop.
 - **Popular, transferable technology.** This is also a learning project, so choose mainstream tools over exotic ones.
 
@@ -18,18 +18,21 @@ It is a platform first. New tiles and modules are added over time, mostly by pro
 
 If a script below does not exist yet, creating it is part of project setup.
 
-- `npm run dev`: local development.
+- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart.
+- `npm run build`: builds the UI to `dist/web`. `npm start`: production server (API plus built UI).
 - `npm test`: unit tests (Vitest).
 - `npm run test:e2e`: Playwright end-to-end tests, including phone viewports.
 - `npm run fix`: formats and auto-fixes everything with Prettier and ESLint. One command, so formatting is never a discussion.
 - `npm run verify`: typecheck, lint (including the module boundary rules), format check, unit tests and build. CI runs the same command.
-- A command to create the two users.
+- `npm run users -- list | create | edit | remove`: the account CLI. There is no registration and no artificial limit on accounts.
 
 ## Tech
 
-- TypeScript in strict mode everywhere. Node.js LTS, pinned in `.nvmrc` and in the Docker image.
-- Frontend: React with Vite (build tooling only). Backend: Express with TypeScript, kept simple while the backend is small.
-- Storage: SQLite behind a thin storage layer.
+- TypeScript in strict mode everywhere, with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and in the Docker image.
+- The backend runs `.ts` files directly with Node's native type stripping, so there is no backend build step. Use `import type`, write relative imports with the `.ts` extension, and avoid enums and namespaces.
+- Frontend: React with Vite (build tooling only), React Router, TanStack Query, Tailwind CSS 4, and `lucide-react` as the built-in icon set. Backend: Express with TypeScript, kept simple while the backend is small. `zod` validates config, requests and manifests.
+- Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
+- Public APIs are package.json `imports` aliases: `#platform/backend` and `#platform/frontend`. Modules import the platform only through them.
 - Packaging: one Docker container serving the API and the built UI, built for both x86 and ARM.
 - Tooling: npm, Prettier and ESLint, Vitest, Playwright, GitHub Actions.
 - One npm package. Modules are folders, not separate packages, for now.
@@ -58,7 +61,7 @@ modules/
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
 - A tile is either a link or a module, and is shared or personal. Pins are per user.
-- Dev and prod differ only through configuration (HTTPS, secure cookies, backups), never through code. Dev runs plain HTTP on the local network.
+- Dev and prod differ only through configuration (HTTPS, secure cookies, backups), never through code. Dev runs plain HTTP on the local network. HTTPS-only headers (HSTS, `upgrade-insecure-requests`) follow `COOKIE_SECURE`, because they break plain HTTP in Safari.
 - The background scene is built in layers (background plus separate sprites) so it can change and be animated later. All art loads from one configurable assets location.
 
 ## Security and privacy
@@ -66,7 +69,7 @@ modules/
 - **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
 - Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
 - Tests, fixtures and examples use fake data only.
-- Users are created by a command on first run, never from committed files.
+- Accounts are created by the CLI, never from committed files.
 - No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
 - Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
 
@@ -81,7 +84,7 @@ modules/
 
 - **Every change comes as a GitHub Pull Request.** Work on a branch and open a PR. Never commit or push to `master`.
 - **Never merge, and never merge branches yourself, unless the owner explicitly asks.** The owner reviews, approves and merges.
-- Every PR is reviewed and approved before it is merged. Address each review comment by fixing it or explaining why not, and wait for approval.
+- The default branch is `master`. Agents open PRs with the owner's GitHub account, and GitHub does not allow approving your own PR, so approval means the owner's review comments plus the owner's merge. CI checks (`verify`, `e2e`, `secrets`) must be green. Address each review comment by fixing it or explaining why not, and wait for the owner's go-ahead.
 - Keep each PR cohesive, with one purpose and a short description of what changed, why and how it was tested. Larger PRs are fine, especially early in the project. Avoid extreme ones touching tens or hundreds of files, and split those. Use a draft PR for unfinished work instead of "WIP" in the title.
 
 ### Naming
@@ -94,9 +97,10 @@ modules/
 
 - Ask when something is unclear instead of guessing, and do not build beyond what was asked.
 - **Done means, before you open a PR:**
-    1. `npm run fix` and then `npm run verify` pass.
-    2. New behavior has tests. Never disable or weaken a check to make it pass.
-    3. UI changes are checked at both phone widths.
-    4. Your diff contains no secrets, personal data or local paths.
-    5. The branch, commit and PR names follow the naming rules.
+  1. `npm run fix` and then `npm run verify` pass.
+  2. New behavior has tests. Never disable or weaken a check to make it pass.
+  3. UI changes are checked at both phone widths.
+  4. Your diff contains no secrets, personal data or local paths.
+  5. The branch, commit and PR names follow the naming rules.
+- Planning docs (PRD, plans, module PRDs) live outside the repository and are provided by the owner. `modules/README.md` is the in-repo guide to the module contract.
 - Keep this file short and current. When a decision changes how we build, update it in the same PR. Do not add rules that lint or tooling already enforce.
