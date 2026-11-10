@@ -44,7 +44,7 @@ test.describe('smoke', () => {
       await page.goto('/some/deep/link');
 
       // Then
-      await expect(page.getByRole('heading', { name: 'HomeDex' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
     });
   });
 

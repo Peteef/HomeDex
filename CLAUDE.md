@@ -42,7 +42,7 @@ If a script below does not exist yet, creating it is part of project setup.
 ```
 src/                    all application code
   platform/             the core: everything generic
-    frontend/           app shell, home screen, shared UI components
+    frontend/           components/ (generic, pure), pages/ (route screens), app skeleton
     backend/            domain/ (logic per area), routes/ (HTTP endpoints), infrastructure/, api/ (public API)
   modules/
     <name>/             one folder per module
@@ -66,7 +66,8 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - A factory defines small single-purpose functions and ends with `return { create, list, ... }` of function references, never inline functions. A returned object with several properties is written one property per line; lint enforces it. Prefer several small functions over one long one.
 - Expected domain failures are thrown as `Error` subclasses (for example `AccountError`) and caught at the edge (route, CLI). Optional input is `field?: T`; a stored value that can be empty is `T | null`, mapped directly from the database.
 - Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a domain folder move to `types.ts` in that folder (error classes to `errors.ts`). Internal shapes, such as a database row, stay with their code. No global `types.ts`.
-- Generic, reusable UI components live in the platform. UI that belongs to one module stays in that module.
+- Frontend layout (`platform/frontend/`): `components/<name>/` holds generic, reusable components, one folder each with only its own files (component, tests, helpers). `pages/<name>/` holds one route screen with its dedicated components, hooks and data. `App.tsx`, `AppLayout.tsx`, `routes.ts` and `sceneLayers.ts` are the app skeleton at the base. Components never import pages or the skeleton (lint enforces it). UI that belongs to one module stays in that module.
+- Components are pure: everything comes in through props, with no data fetching, business logic or global state (local UI state such as an open menu is fine). Pages own the logic, through hooks for anything reusable, and compose components. There is no separate container layer: the page is the container.
 
 ## Architecture guidelines
 
@@ -93,6 +94,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - Functional elements sit in a translucent panel over the background scene. Text contrast is at least 4.5:1 on any background.
 - Modern 2D style with Pokémon-inspired wording: "Party" for pinned tiles, Dex numbers on entries ("No. 001"), "Dex" for the full tile list.
 - Animation is optional polish and respects the "reduce motion" setting.
+- Colours, radii and fonts come from the `@theme` tokens in `platform/frontend/index.css`, never raw values. Fonts are system fonts, so nothing is fetched at runtime. PWA icons live in `public/`, scene art in `assets/`.
 
 ## Git and pull requests
 

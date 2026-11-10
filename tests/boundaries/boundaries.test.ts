@@ -2,7 +2,7 @@ import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { boundaryRules, domainRules, styleRules } from '../../eslint.config.js';
+import { boundaryRules, domainRules, frontendRules, styleRules } from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -18,6 +18,7 @@ const violationsOf = async (file: string): Promise<string[]> => {
         settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
       },
       ...domainRules,
+      frontendRules,
       styleRules,
     ],
   });
@@ -73,6 +74,23 @@ describe('lint rules', () => {
       // When / Then
       expect(await violationsOf(file)).toContain('no-restricted-imports');
     });
+  });
+
+  describe('frontend components', () => {
+    const components = 'src/platform/frontend/components';
+
+    it('should allow a component to use another component', async () => {
+      // When / Then
+      expect(await violationsOf(`${components}/panel/ok-sibling-component.ts`)).toEqual([]);
+    });
+
+    it.each([`${components}/panel/bad-page.ts`, `${components}/panel/bad-routes.ts`])(
+      'should reject %s',
+      async (file) => {
+        // When / Then
+        expect(await violationsOf(file)).toContain('no-restricted-imports');
+      },
+    );
   });
 
   describe('style', () => {
