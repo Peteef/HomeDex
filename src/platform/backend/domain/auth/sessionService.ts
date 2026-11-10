@@ -49,7 +49,10 @@ export function sessionService(
       expiresAt,
       userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
     });
-    return { token, expiresAt };
+    return {
+      token,
+      expiresAt,
+    };
   }
 
   function resolve(token: string): ResolvedSession | null {
@@ -59,7 +62,10 @@ export function sessionService(
     if (!row) return null;
     const renewedUntil = shouldSlide(row.last_seen_at, current) ? current + ttlMs : null;
     if (renewedUntil !== null) sessions.touch(tokenHash, current, renewedUntil);
-    return { user: { id: row.user_id, username: row.username }, renewedUntil };
+    return {
+      user: { id: row.user_id, username: row.username },
+      renewedUntil,
+    };
   }
 
   function revoke(token: string): void {

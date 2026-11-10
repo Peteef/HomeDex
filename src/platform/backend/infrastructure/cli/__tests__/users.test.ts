@@ -18,7 +18,11 @@ describe('users CLI', () => {
       input,
       encoding: 'utf8',
     });
-    return { code: result.status, out: result.stdout, err: result.stderr };
+    return {
+      code: result.status,
+      out: result.stdout,
+      err: result.stderr,
+    };
   };
 
   beforeEach(() => {

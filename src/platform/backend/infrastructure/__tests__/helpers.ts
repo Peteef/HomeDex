@@ -44,7 +44,11 @@ export function createTestApp(
     now: () => clock.now,
     ...overrides,
   });
-  return { app, db, clock };
+  return {
+    app,
+    db,
+    clock,
+  };
 }
 
 export function testServices(db: Database.Database): DomainServices {

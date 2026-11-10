@@ -2,7 +2,7 @@ import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { boundaryRules, domainRules } from '../../eslint.config.js';
+import { boundaryRules, domainRules, styleRules } from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -18,6 +18,7 @@ async function violationsOf(file: string): Promise<string[]> {
         settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
       },
       ...domainRules,
+      styleRules,
     ],
   });
   const [result] = await eslint.lintFiles([file]);
@@ -66,5 +67,17 @@ describe('domain rules', () => {
     `${backend}/domain/bad-aggregate-internal.ts`,
   ])('should reject %s', async (file) => {
     expect(await violationsOf(file)).toContain('no-restricted-imports');
+  });
+});
+
+describe('style rules', () => {
+  it('should allow a returned object with one property per line', async () => {
+    expect(await violationsOf('src/style/ok-returned-object.ts')).toEqual([]);
+  });
+
+  it('should reject a returned object with several properties on one line', async () => {
+    expect(await violationsOf('src/style/bad-returned-object.ts')).toContain(
+      'homedex/returned-object-one-per-line',
+    );
   });
 });

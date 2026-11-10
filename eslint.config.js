@@ -106,6 +106,37 @@ export const domainRules = [
   },
 ];
 
+// A returned object with several properties is written one property per line, as in
+// `return { create, list }` spread over lines. Prettier keeps an object expanded when its first
+// property is on a new line, so the two tools agree.
+const returnedObjectOnePerLine = {
+  meta: {
+    type: 'layout',
+    schema: [],
+    messages: {
+      split:
+        'Write a returned object with its first property on a new line and one property per line.',
+    },
+  },
+  create(context) {
+    return {
+      ReturnStatement(node) {
+        const object = node.argument;
+        if (object?.type !== 'ObjectExpression' || object.properties.length < 2) return;
+        const lines = object.properties.map((property) => property.loc.start.line);
+        if (new Set(lines).size !== lines.length)
+          context.report({ node: object, messageId: 'split' });
+      },
+    };
+  },
+};
+
+/** @type {import('eslint').Linter.Config} */
+export const styleRules = {
+  plugins: { homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } } },
+  rules: { 'homedex/returned-object-one-per-line': 'error' },
+};
+
 export default defineConfig(
   {
     ignores: [
@@ -141,6 +172,7 @@ export default defineConfig(
     ...boundaryRules,
   },
   ...domainRules,
+  { files: ['src/**/*.{ts,tsx}'], ...styleRules },
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,

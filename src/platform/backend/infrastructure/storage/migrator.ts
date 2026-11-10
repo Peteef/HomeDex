@@ -28,7 +28,11 @@ function listMigrations(directory: string): Migration[] {
       if (!match?.[1]) {
         throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
       }
-      return { version: Number(match[1]), name, file: path.join(directory, name) };
+      return {
+        version: Number(match[1]),
+        name,
+        file: path.join(directory, name),
+      };
     });
   const seen = new Set<number>();
   for (const { version, name } of migrations) {
