@@ -21,12 +21,11 @@ export default defineConfig({
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run build && node src/platform/backend/main.ts',
+    command: 'npm run build && npm start',
     url: `http://127.0.0.1:${String(port)}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      NODE_ENV: 'production',
       PORT: String(port),
       HOST: '127.0.0.1',
       DATA_DIR: '.e2e-data',

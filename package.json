@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "concurrently -n api,web -c blue,magenta \"node --watch src/platform/backend/main.ts\" \"vite\"",
     "build": "vite build",
-    "start": "node src/platform/backend/main.ts",
+    "start": "NODE_ENV=production node src/platform/backend/main.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
