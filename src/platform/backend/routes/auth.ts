@@ -5,7 +5,7 @@ import type { AccountsService } from '../domain/accounts/index.ts';
 import type { SessionService } from '../domain/auth/index.ts';
 import { currentUser } from '../infrastructure/http/auth/currentUser.ts';
 import type { SessionCookies } from '../infrastructure/http/auth/sessionCookie.ts';
-import { HTTP_STATUS } from '../infrastructure/http/status.ts';
+import { BAD_REQUEST, NO_CONTENT, UNAUTHORIZED } from '../infrastructure/http/status.ts';
 
 const INVALID_REQUEST_RESPONSE = { error: 'Username and password are required' };
 const INVALID_CREDENTIALS_RESPONSE = { error: 'Invalid username or password' };
@@ -35,12 +35,12 @@ export function authRoutes({
   router.post('/login', limitLogins, async (req, res) => {
     const body = loginSchema.safeParse(req.body);
     if (!body.success) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json(INVALID_REQUEST_RESPONSE);
+      res.status(BAD_REQUEST).json(INVALID_REQUEST_RESPONSE);
       return;
     }
     const account = await accounts.authenticate(body.data.username, body.data.password);
     if (!account) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).json(INVALID_CREDENTIALS_RESPONSE);
+      res.status(UNAUTHORIZED).json(INVALID_CREDENTIALS_RESPONSE);
       return;
     }
     const session = sessions.create(account.id, req.get('user-agent'));
@@ -52,7 +52,7 @@ export function authRoutes({
     const token = cookies.read(req);
     if (token !== undefined) sessions.revoke(token);
     cookies.clear(res);
-    res.status(HTTP_STATUS.NO_CONTENT).end();
+    res.status(NO_CONTENT).end();
   });
 
   router.get('/me', authenticated, (req, res) => {

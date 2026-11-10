@@ -69,7 +69,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 
 ## Architecture guidelines
 
-- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes come from `HTTP_STATUS` (`infrastructure/http/status.ts`).
+- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes are the named constants of `infrastructure/http/status.ts`, imported directly (`BAD_REQUEST`, not `HTTP_STATUS.BAD_REQUEST`).
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
 - Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.

@@ -1,10 +1,8 @@
-export const HTTP_STATUS = {
-  OK: 200,
-  NO_CONTENT: 204,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  UNSUPPORTED_MEDIA_TYPE: 415,
-  INTERNAL_SERVER_ERROR: 500,
-} as const;
+export const OK = 200;
+export const NO_CONTENT = 204;
+export const BAD_REQUEST = 400;
+export const UNAUTHORIZED = 401;
+export const FORBIDDEN = 403;
+export const NOT_FOUND = 404;
+export const UNSUPPORTED_MEDIA_TYPE = 415;
+export const INTERNAL_SERVER_ERROR = 500;
