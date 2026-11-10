@@ -6,10 +6,7 @@ import type { SessionService } from './sessionService.ts';
 const HTTP_UNAUTHORIZED = 401;
 export const NOT_AUTHENTICATED_RESPONSE = { error: 'Not authenticated' };
 
-export function createRequireAuth(
-  sessions: SessionService,
-  cookies: SessionCookies,
-): RequestHandler {
+export function requireAuth(sessions: SessionService, cookies: SessionCookies): RequestHandler {
   return (req, res, next) => {
     const token = cookies.read(req);
     const session = token === undefined ? null : sessions.resolve(token);

@@ -4,10 +4,10 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { createApp } from '../app.ts';
 import { loadConfig } from '../config.ts';
-import type { ScryptParams } from '../accounts/password.ts';
-import { createAccountsService } from '../accounts/accountsService.ts';
-import { openDatabase } from '../storage/db.ts';
-import { migratePlatform } from '../storage/index.ts';
+import type { ScryptParams } from '../accounts/index.ts';
+import { services } from '../services.ts';
+import type { Services } from '../services.ts';
+import { migratePlatform, openDatabase } from '../storage/index.ts';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
 const IN_MEMORY = ':memory:';
@@ -41,8 +41,12 @@ export function createTestApp(env: Record<string, string> = {}): TestApp {
   return { app, db, clock };
 }
 
+export function testServices(db: Database.Database): Services {
+  return services(db, loadConfig({}), { scryptParams: FAST_SCRYPT });
+}
+
 export async function createTestUser(db: Database.Database, username: string): Promise<void> {
-  await createAccountsService(db, { scryptParams: FAST_SCRYPT }).create(username, TEST_PASSWORD);
+  await testServices(db).accounts.create(username, TEST_PASSWORD);
 }
 
 export function postJson(app: Express, url: string, body?: unknown): request.Test {

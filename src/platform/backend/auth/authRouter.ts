@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import type { AccountsService } from '../accounts/accountsService.ts';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../accounts/validation.ts';
+import type { AccountsService } from '../accounts/index.ts';
 import { LOGIN_PATH, LOGOUT_PATH, ME_PATH } from '../constants.ts';
 import { currentUser } from './currentUser.ts';
+import { loginRateLimit } from './internal/loginRateLimit.ts';
 import type { SessionCookies } from './sessionCookie.ts';
 import type { SessionService } from './sessionService.ts';
 
@@ -15,8 +15,8 @@ const INVALID_REQUEST_RESPONSE = { error: 'Username and password are required' }
 const INVALID_CREDENTIALS_RESPONSE = { error: 'Invalid username or password' };
 
 const loginSchema = z.object({
-  username: z.string().min(1).max(MAX_USERNAME_LENGTH),
-  password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
+  username: z.string().min(1),
+  password: z.string().min(1),
 });
 
 export interface AuthRouterOptions {
@@ -24,19 +24,17 @@ export interface AuthRouterOptions {
   sessions: SessionService;
   cookies: SessionCookies;
   requireAuth: RequestHandler;
-  loginRateLimit: RequestHandler;
 }
 
-export function createAuthRouter({
+export function authRouter({
   accounts,
   sessions,
   cookies,
-  requireAuth,
-  loginRateLimit,
+  requireAuth: authenticated,
 }: AuthRouterOptions): Router {
   const router = Router();
 
-  router.post(LOGIN_PATH, loginRateLimit, async (req, res) => {
+  router.post(LOGIN_PATH, loginRateLimit(), async (req, res) => {
     const body = loginSchema.safeParse(req.body);
     if (!body.success) {
       res.status(HTTP_BAD_REQUEST).json(INVALID_REQUEST_RESPONSE);
@@ -59,7 +57,7 @@ export function createAuthRouter({
     res.status(HTTP_NO_CONTENT).end();
   });
 
-  router.get(ME_PATH, requireAuth, (req, res) => {
+  router.get(ME_PATH, authenticated, (req, res) => {
     res.json({ user: currentUser(req) });
   });
 

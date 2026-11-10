@@ -48,6 +48,36 @@ export const boundaryRules = {
   },
 };
 
+// A backend domain is a folder under src/platform/backend with an index.ts as its public entrypoint.
+// Code outside the domain imports only that index.ts, never the files behind it.
+const BACKEND_DIR = 'src/platform/backend';
+const BACKEND_DOMAINS = ['accounts', 'auth', 'storage'];
+
+const restrictToEntrypoints = (domains) => ({
+  'no-restricted-imports': [
+    'error',
+    {
+      patterns: domains.map((domain) => ({
+        group: [`**/${domain}/**`, `!**/${domain}/index.ts`],
+        message: `Import the ${domain} domain only through its index.ts.`,
+      })),
+    },
+  ],
+});
+
+/** @type {import('eslint').Linter.Config[]} */
+export const domainEntrypointRules = [
+  ...BACKEND_DOMAINS.map((domain) => ({
+    files: [`${BACKEND_DIR}/${domain}/**/*.ts`],
+    rules: restrictToEntrypoints(BACKEND_DOMAINS.filter((other) => other !== domain)),
+  })),
+  {
+    files: [`${BACKEND_DIR}/**/*.ts`],
+    ignores: BACKEND_DOMAINS.map((domain) => `${BACKEND_DIR}/${domain}/**`),
+    rules: restrictToEntrypoints(BACKEND_DOMAINS),
+  },
+];
+
 export default defineConfig(
   {
     ignores: [
@@ -82,6 +112,7 @@ export default defineConfig(
     files: ['src/**/*.{ts,tsx}'],
     ...boundaryRules,
   },
+  ...domainEntrypointRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,

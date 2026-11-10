@@ -1,4 +1,4 @@
-import type { Storage } from '../storage/db.ts';
+import type { Storage } from '../../storage/index.ts';
 
 export interface UserRow {
   id: number;
@@ -17,7 +17,7 @@ export interface UserRepository {
   setArchivedAt(id: number, archivedAt: number | null): void;
 }
 
-export function createUserRepository(db: Storage): UserRepository {
+export function userRepository(db: Storage): UserRepository {
   const insert = db.prepare(
     'INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?) RETURNING *',
   );

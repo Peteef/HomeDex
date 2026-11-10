@@ -8,7 +8,7 @@ export interface SessionCookies {
   clear(res: Response): void;
 }
 
-export function createSessionCookies(secure: boolean, now: () => number): SessionCookies {
+export function sessionCookies(secure: boolean, now: () => number): SessionCookies {
   const base: CookieOptions = { httpOnly: true, sameSite: 'lax', secure, path: '/' };
   return {
     read(req) {

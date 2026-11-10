@@ -2,18 +2,14 @@ import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
-import { createAccountsService } from './accounts/accountsService.ts';
-import type { ScryptParams } from './accounts/password.ts';
-import { createAuthRouter } from './auth/authRouter.ts';
-import { createLoginRateLimit } from './auth/loginRateLimit.ts';
-import { createRequireAuth } from './auth/requireAuth.ts';
-import { createSessionCookies } from './auth/sessionCookie.ts';
-import { createSessionService } from './auth/sessionService.ts';
+import type { ScryptParams } from './accounts/index.ts';
+import { authRouter, requireAuth, sessionCookies } from './auth/index.ts';
 import type { Config } from './config.ts';
 import { API_PATH, AUTH_PATH, HEALTH_PATH, MEDIA_PATH } from './constants.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
-import type { Storage } from './storage/db.ts';
+import { services } from './services.ts';
+import type { Storage } from './storage/index.ts';
 
 const INDEX_FILE = 'index.html';
 const HEALTH_RESPONSE = { status: 'ok' };
@@ -59,22 +55,15 @@ export function createApp({
   app.get(HEALTH_PATH, (_req, res) => {
     res.json(HEALTH_RESPONSE);
   });
-  const accounts = createAccountsService(storage, {
+  const { accounts, sessions } = services(storage, config, {
     now,
     ...(scryptParams && { scryptParams }),
   });
-  const sessions = createSessionService(storage, { ttlDays: config.SESSION_TTL_DAYS, now });
-  const cookies = createSessionCookies(https, now);
+  const cookies = sessionCookies(https, now);
   app.use(API_PATH, cookieParser(), requestGuard, express.json());
   app.use(
     AUTH_PATH,
-    createAuthRouter({
-      accounts,
-      sessions,
-      cookies,
-      requireAuth: createRequireAuth(sessions, cookies),
-      loginRateLimit: createLoginRateLimit(),
-    }),
+    authRouter({ accounts, sessions, cookies, requireAuth: requireAuth(sessions, cookies) }),
   );
   // Without this, an unknown API path would reach the SPA fallback below and return HTML.
   app.use(API_PATH, (_req, res) => {

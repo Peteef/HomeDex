@@ -1,4 +1,4 @@
-import type { Storage } from '../storage/db.ts';
+import type { Storage } from '../../storage/index.ts';
 
 export interface SessionUserRow {
   user_id: number;
@@ -23,7 +23,7 @@ export interface SessionRepository {
   deleteExpired(now: number): void;
 }
 
-export function createSessionRepository(db: Storage): SessionRepository {
+export function sessionRepository(db: Storage): SessionRepository {
   const insert = db.prepare(
     `INSERT INTO sessions (token_hash, user_id, created_at, last_seen_at, expires_at, user_agent)
      VALUES (?, ?, ?, ?, ?, ?)`,

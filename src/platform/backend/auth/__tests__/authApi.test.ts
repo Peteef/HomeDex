@@ -1,10 +1,14 @@
 import request from 'supertest';
 import type { Response } from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createTestApp, createTestUser, postJson, TEST_PASSWORD } from '../../__tests__/helpers.ts';
+import {
+  createTestApp,
+  createTestUser,
+  postJson,
+  TEST_PASSWORD,
+  testServices,
+} from '../../__tests__/helpers.ts';
 import type { TestApp } from '../../__tests__/helpers.ts';
-import { createAccountsService } from '../../accounts/accountsService.ts';
-import { FAST_SCRYPT } from '../../__tests__/helpers.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -82,7 +86,7 @@ describe('auth API', () => {
     });
 
     it('should reject the login when the account is archived', async () => {
-      createAccountsService(ctx.db, { scryptParams: FAST_SCRYPT }).archive('ash');
+      testServices(ctx.db).accounts.archive('ash');
       expect((await login()).status).toBe(401);
     });
 
@@ -147,7 +151,7 @@ describe('auth API', () => {
 
     it('should answer 401 when the account was archived after login', async () => {
       const cookie = await loggedInCookie();
-      createAccountsService(ctx.db, { scryptParams: FAST_SCRYPT }).archive('ash');
+      testServices(ctx.db).accounts.archive('ash');
       const response = await request(ctx.app).get('/api/auth/me').set('Cookie', cookie);
       expect(response.status).toBe(401);
     });

@@ -1,8 +1,9 @@
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { AccountError, createAccountsService } from '../accounts/accountsService.ts';
-import type { Account, AccountsService } from '../accounts/accountsService.ts';
+import { AccountError } from '../accounts/index.ts';
+import type { Account, AccountsService } from '../accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
+import { services } from '../services.ts';
 import { openStorage } from '../storage/index.ts';
 import { ask, askHidden, confirm, hasTerminal, readPipedPassword } from './prompt.ts';
 
@@ -137,7 +138,7 @@ async function run(argv: string[]): Promise<void> {
   const config = loadConfig();
   const db = openStorage(path.resolve(config.DATA_DIR));
   try {
-    const accounts = createAccountsService(db);
+    const { accounts } = services(db, config);
     switch (command) {
       case 'list':
         printAccounts(accounts.list({ includeArchived: values.all ?? false }));

@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDatabase, createTestUser } from '../../__tests__/helpers.ts';
-import { createSessionService, SLIDE_AFTER_MS } from '../sessionService.ts';
+import { sessionService, SLIDE_AFTER_MS } from '../sessionService.ts';
 import type { SessionService } from '../sessionService.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -19,7 +19,7 @@ describe('session service', () => {
   beforeEach(async () => {
     db = createTestDatabase();
     clock = { now: Date.UTC(2026, 0, 1) };
-    sessions = createSessionService(db, { ttlDays: TTL_DAYS, now: () => clock.now });
+    sessions = sessionService(db, { ttlDays: TTL_DAYS, now: () => clock.now });
     await createTestUser(db, 'ash');
     userId = (db.prepare('SELECT id FROM users').get() as { id: number }).id;
   });

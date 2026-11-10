@@ -1,39 +1,23 @@
 import type { z } from 'zod';
-import type { Storage } from '../storage/db.ts';
-import { createSessionRepository } from '../auth/sessionRepository.ts';
-import { DEFAULT_SCRYPT_PARAMS, hashPassword, verifyPassword } from './password.ts';
-import type { ScryptParams } from './password.ts';
-import { createUserRepository } from './userRepository.ts';
-import type { UserRow } from './userRepository.ts';
-import { passwordSchema, usernameSchema } from './validation.ts';
+import type { Storage } from '../storage/index.ts';
+import { AccountError } from './errors.ts';
+import { DEFAULT_SCRYPT_PARAMS, hashPassword, verifyPassword } from './internal/password.ts';
+import type { ScryptParams } from './internal/password.ts';
+import type { Account, AccountEdit } from './types.ts';
+import { userRepository } from './internal/userRepository.ts';
+import type { UserRow } from './internal/userRepository.ts';
+import {
+  MAX_PASSWORD_LENGTH,
+  MAX_USERNAME_LENGTH,
+  passwordSchema,
+  usernameSchema,
+} from './internal/validation.ts';
 
 const DUMMY_PASSWORD = 'timing-equalizer';
 
-export type AccountErrorCode = 'invalid' | 'taken' | 'not_found' | 'archived';
-
-export class AccountError extends Error {
-  readonly code: AccountErrorCode;
-
-  constructor(code: AccountErrorCode, message: string) {
-    super(message);
-    this.name = 'AccountError';
-    this.code = code;
-  }
-}
-
-export interface Account {
-  id: number;
-  username: string;
-  createdAt: number;
-  archivedAt: number | null;
-}
-
-export interface AccountEdit {
-  username?: string;
-  password?: string;
-}
-
-export interface AccountsOptions {
+interface AccountsOptions {
+  // Called when an account loses access: archived, or its password changed.
+  revokeSessions: (userId: number) => void;
   scryptParams?: ScryptParams;
   now?: () => number;
 }
@@ -68,12 +52,11 @@ function isUniqueViolation(error: unknown): boolean {
   return error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
 }
 
-export function createAccountsService(
+export function accountsService(
   db: Storage,
-  { scryptParams = DEFAULT_SCRYPT_PARAMS, now = Date.now }: AccountsOptions = {},
+  { revokeSessions, scryptParams = DEFAULT_SCRYPT_PARAMS, now = Date.now }: AccountsOptions,
 ): AccountsService {
-  const users = createUserRepository(db);
-  const sessions = createSessionRepository(db);
+  const users = userRepository(db);
   let dummyHash: Promise<string> | undefined;
 
   function requireUser(username: string): UserRow {
@@ -115,7 +98,7 @@ export function createAccountsService(
           if (newUsername !== undefined) users.updateUsername(user.id, newUsername);
           if (newHash !== undefined) {
             users.updatePasswordHash(user.id, newHash);
-            sessions.deleteForUser(user.id);
+            revokeSessions(user.id);
           }
         })();
       } catch (error) {
@@ -131,7 +114,7 @@ export function createAccountsService(
       const user = requireUser(username);
       db.transaction(() => {
         users.setArchivedAt(user.id, now());
-        sessions.deleteForUser(user.id);
+        revokeSessions(user.id);
       })();
       return toAccount(requireUser(user.username));
     },
@@ -143,6 +126,8 @@ export function createAccountsService(
     },
 
     async authenticate(username, password) {
+      if (username.length > MAX_USERNAME_LENGTH || password.length > MAX_PASSWORD_LENGTH)
+        return null;
       const user = users.findByUsername(username);
       // An unknown user still costs one hash check, so timing does not reveal which names exist.
       dummyHash ??= hashPassword(DUMMY_PASSWORD, scryptParams);

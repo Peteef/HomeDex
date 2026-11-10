@@ -61,6 +61,8 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - **Dependencies point one way.** Modules use only the platform's public API. The platform never imports a module by name and finds modules through their manifests. Modules never import each other. Lint rules enforce this in `verify`.
 - **Removing or disabling a module is one action:** delete its folder, or set `enabled: false` in its manifest. Nothing else may reference it.
 - **A module owns its data.** Its tables are prefixed with the module name and created by its own migrations. Removing the code leaves the data in place. Deleting data is a separate, deliberate step.
+- Backend domains (`accounts`, `auth`, `storage`) are folders with an `index.ts` as their only public entrypoint. Other code imports a domain only through it; lint enforces this. The index exports the service factory, its interface and the models. Helpers and repositories live in the domain's `internal/` folder. To add a domain, extend `BACKEND_DOMAINS` in `eslint.config.js`. Factories are named after what they build (`accountsService()`, not `createAccountsService()`).
+- Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a domain folder move to `types.ts` in that folder (error classes to `errors.ts`). Internal shapes, such as a database row, stay with their code. No global `types.ts`.
 - Generic, reusable UI components live in the platform. UI that belongs to one module stays in that module.
 
 ## Architecture guidelines

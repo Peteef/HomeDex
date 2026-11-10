@@ -1,9 +1,5 @@
 import type { Request } from 'express';
-
-export interface CurrentUser {
-  id: number;
-  username: string;
-}
+import type { CurrentUser } from './types.ts';
 
 const users = new WeakMap<Request, CurrentUser>();
 

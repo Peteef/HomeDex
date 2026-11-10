@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { Storage } from '../storage/db.ts';
-import type { CurrentUser } from './currentUser.ts';
-import { createSessionRepository } from './sessionRepository.ts';
+import type { Storage } from '../storage/index.ts';
+import { sessionRepository } from './internal/sessionRepository.ts';
+import type { IssuedSession, ResolvedSession } from './types.ts';
 
 const TOKEN_BYTES = 32;
 const TOKEN_ENCODING = 'base64url';
@@ -11,37 +11,27 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 export const SLIDE_AFTER_MS = MS_PER_HOUR;
 const MAX_USER_AGENT_LENGTH = 256;
 
-export interface SessionServiceOptions {
+interface SessionServiceOptions {
   ttlDays: number;
   now?: () => number;
-}
-
-export interface IssuedSession {
-  token: string;
-  expiresAt: number;
-}
-
-export interface ResolvedSession {
-  user: CurrentUser;
-  // Set when the expiry was just extended, so the cookie can be renewed too.
-  renewedUntil: number | null;
 }
 
 export interface SessionService {
   create(userId: number, userAgent: string | undefined): IssuedSession;
   resolve(token: string): ResolvedSession | null;
   revoke(token: string): void;
+  revokeAllFor(userId: number): void;
 }
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export function createSessionService(
+export function sessionService(
   db: Storage,
   { ttlDays, now = Date.now }: SessionServiceOptions,
 ): SessionService {
-  const sessions = createSessionRepository(db);
+  const sessions = sessionRepository(db);
   const ttlMs = ttlDays * MS_PER_DAY;
 
   return {
@@ -75,6 +65,10 @@ export function createSessionService(
 
     revoke: (token) => {
       sessions.delete(hashToken(token));
+    },
+
+    revokeAllFor: (userId) => {
+      sessions.deleteForUser(userId);
     },
   };
 }

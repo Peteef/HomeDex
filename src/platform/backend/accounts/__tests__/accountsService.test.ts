@@ -1,9 +1,11 @@
 import type Database from 'better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createSessionService } from '../../auth/sessionService.ts';
+import { sessionService } from '../../auth/index.ts';
+import type { SessionService } from '../../auth/index.ts';
 import { createTestDatabase, FAST_SCRYPT, TEST_PASSWORD } from '../../__tests__/helpers.ts';
-import { AccountError, createAccountsService } from '../accountsService.ts';
+import { accountsService } from '../accountsService.ts';
 import type { AccountsService } from '../accountsService.ts';
+import { AccountError } from '../errors.ts';
 
 async function codeOf(promise: Promise<unknown> | (() => unknown)): Promise<string | undefined> {
   try {
@@ -17,10 +19,17 @@ async function codeOf(promise: Promise<unknown> | (() => unknown)): Promise<stri
 describe('accounts service', () => {
   let db: Database.Database;
   let accounts: AccountsService;
+  let sessions: SessionService;
 
   beforeEach(() => {
     db = createTestDatabase();
-    accounts = createAccountsService(db, { scryptParams: FAST_SCRYPT });
+    sessions = sessionService(db, { ttlDays: 1 });
+    accounts = accountsService(db, {
+      scryptParams: FAST_SCRYPT,
+      revokeSessions: (userId) => {
+        sessions.revokeAllFor(userId);
+      },
+    });
   });
 
   it('should create an account that can authenticate', async () => {
@@ -52,6 +61,12 @@ describe('accounts service', () => {
   it('should reject the username when it is already taken regardless of case', async () => {
     await accounts.create('ash', TEST_PASSWORD);
     expect(await codeOf(accounts.create('ASH', TEST_PASSWORD))).toBe('taken');
+  });
+
+  it('should reject the login without hashing when the input is longer than the limits', async () => {
+    await accounts.create('ash', TEST_PASSWORD);
+    expect(await accounts.authenticate('ash', 'x'.repeat(129))).toBeNull();
+    expect(await accounts.authenticate('a'.repeat(33), TEST_PASSWORD)).toBeNull();
   });
 
   it('should reject a password shorter than 8 characters', async () => {
@@ -87,7 +102,6 @@ describe('accounts service', () => {
     it('should change the password and sign the user out of every device', async () => {
       const user = await accounts.create('ash', TEST_PASSWORD);
       const other = await accounts.create('misty', TEST_PASSWORD);
-      const sessions = createSessionService(db, { ttlDays: 1 });
       const ashSession = sessions.create(user.id, undefined);
       const mistySession = sessions.create(other.id, undefined);
 
@@ -101,7 +115,6 @@ describe('accounts service', () => {
 
     it('should keep the sessions when only the username changes', async () => {
       const user = await accounts.create('ash', TEST_PASSWORD);
-      const sessions = createSessionService(db, { ttlDays: 1 });
       const session = sessions.create(user.id, undefined);
       await accounts.edit('ash', { username: 'ash2' });
       expect(sessions.resolve(session.token)?.user.username).toBe('ash2');
@@ -124,7 +137,6 @@ describe('accounts service', () => {
   describe('archive and restore', () => {
     it('should block the login and revoke the sessions when the account is archived', async () => {
       const user = await accounts.create('ash', TEST_PASSWORD);
-      const sessions = createSessionService(db, { ttlDays: 1 });
       const session = sessions.create(user.id, undefined);
 
       accounts.archive('ash');
