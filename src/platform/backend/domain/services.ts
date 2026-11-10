@@ -1,5 +1,5 @@
 import { accountsService } from './accounts/index.ts';
-import type { AccountsService, ScryptParams } from './accounts/index.ts';
+import type { AccountsService, Argon2Params } from './accounts/index.ts';
 import { sessionService } from './auth/index.ts';
 import type { SessionService } from './auth/index.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
@@ -11,7 +11,7 @@ export interface DomainServices {
 
 export interface DomainServicesOptions {
   sessionTtlDays: number;
-  scryptParams?: ScryptParams;
+  argon2Params?: Argon2Params;
   now?: () => number;
 }
 
@@ -20,7 +20,7 @@ export interface DomainServicesOptions {
 // them are made here.
 export function domainServices(
   storage: Storage,
-  { sessionTtlDays, scryptParams, now }: DomainServicesOptions,
+  { sessionTtlDays, argon2Params, now }: DomainServicesOptions,
 ): DomainServices {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
@@ -30,7 +30,7 @@ export function domainServices(
     revokeSessions: (userId) => {
       sessions.revokeAllFor(userId);
     },
-    ...(scryptParams && { scryptParams }),
+    ...(argon2Params && { argon2Params }),
     ...(now && { now }),
   });
   return { accounts, sessions };

@@ -1,9 +1,9 @@
-import type { z } from 'zod';
 import type { Storage } from '../../infrastructure/storage/index.ts';
 import { AccountError } from './errors.ts';
-import { DEFAULT_SCRYPT_PARAMS, hashPassword, verifyPassword } from './internal/password.ts';
-import type { ScryptParams } from './internal/password.ts';
-import type { Account, AccountEdit } from './types.ts';
+import { lazy } from './internal/lazy.ts';
+import { DEFAULT_ARGON2_PARAMS, hashPassword, verifyPassword } from './internal/password.ts';
+import type { Argon2Params } from './internal/password.ts';
+import { toAccount } from './internal/toAccount.ts';
 import { userRepository } from './internal/userRepository.ts';
 import type { UserRow } from './internal/userRepository.ts';
 import {
@@ -11,14 +11,16 @@ import {
   MAX_USERNAME_LENGTH,
   passwordSchema,
   usernameSchema,
+  validate,
 } from './internal/validation.ts';
+import type { Account, AccountEdit } from './types.ts';
 
 const DUMMY_PASSWORD = 'timing-equalizer';
 
 interface AccountsOptions {
   // Called when an account loses access: archived, or its password changed.
   revokeSessions: (userId: number) => void;
-  scryptParams?: ScryptParams;
+  argon2Params?: Argon2Params;
   now?: () => number;
 }
 
@@ -31,33 +33,21 @@ export interface AccountsService {
   authenticate(username: string, password: string): Promise<Account | null>;
 }
 
-function toAccount(row: UserRow): Account {
-  return {
-    id: row.id,
-    username: row.username,
-    createdAt: row.created_at,
-    archivedAt: row.archived_at,
-  };
+// A validated edit, ready to be written.
+interface AccountUpdate {
+  username?: string;
+  passwordHash?: string;
 }
 
-function validate<T>(schema: z.ZodType<T>, value: unknown): T {
-  const result = schema.safeParse(value);
-  if (!result.success) {
-    throw new AccountError('invalid', result.error.issues[0]?.message ?? 'Invalid value');
-  }
-  return result.data;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
-}
+const isWithinLimits = (username: string, password: string): boolean =>
+  username.length <= MAX_USERNAME_LENGTH && password.length <= MAX_PASSWORD_LENGTH;
 
 export function accountsService(
   db: Storage,
-  { revokeSessions, scryptParams = DEFAULT_SCRYPT_PARAMS, now = Date.now }: AccountsOptions,
+  { revokeSessions, argon2Params = DEFAULT_ARGON2_PARAMS, now = Date.now }: AccountsOptions,
 ): AccountsService {
   const users = userRepository(db);
-  let dummyHash: Promise<string> | undefined;
+  const dummyHash = lazy(() => hashPassword(DUMMY_PASSWORD, argon2Params));
 
   function requireUser(username: string): UserRow {
     const user = users.findByUsername(username);
@@ -65,75 +55,78 @@ export function accountsService(
     return user;
   }
 
-  return {
-    async create(username, password) {
-      const validUsername = validate(usernameSchema, username);
-      const validPassword = validate(passwordSchema, password);
-      const passwordHash = await hashPassword(validPassword, scryptParams);
-      try {
-        return toAccount(users.insert(validUsername, passwordHash, now()));
-      } catch (error) {
-        if (isUniqueViolation(error)) {
-          throw new AccountError('taken', `Username "${validUsername}" is already taken`);
-        }
-        throw error;
-      }
-    },
+  function requireActiveUser(username: string): UserRow {
+    const user = requireUser(username);
+    if (user.archived_at !== null) {
+      throw new AccountError('archived', `User "${user.username}" is archived`);
+    }
+    return user;
+  }
 
-    list: ({ includeArchived = false } = {}) => users.list(includeArchived).map(toAccount),
+  async function hashValidPassword(password: string): Promise<string> {
+    return hashPassword(validate(passwordSchema, password), argon2Params);
+  }
 
-    async edit(username, changes) {
-      const user = requireUser(username);
-      if (user.archived_at !== null) {
-        throw new AccountError('archived', `User "${user.username}" is archived`);
-      }
-      const newUsername =
-        changes.username === undefined ? undefined : validate(usernameSchema, changes.username);
-      const newHash =
-        changes.password === undefined
-          ? undefined
-          : await hashPassword(validate(passwordSchema, changes.password), scryptParams);
-      try {
-        db.transaction(() => {
-          if (newUsername !== undefined) users.updateUsername(user.id, newUsername);
-          if (newHash !== undefined) {
-            users.updatePasswordHash(user.id, newHash);
-            revokeSessions(user.id);
-          }
-        })();
-      } catch (error) {
-        if (isUniqueViolation(error)) {
-          throw new AccountError('taken', `Username "${newUsername ?? ''}" is already taken`);
-        }
-        throw error;
-      }
-      return toAccount(requireUser(newUsername ?? user.username));
-    },
+  async function prepareUpdate(changes: AccountEdit): Promise<AccountUpdate> {
+    return {
+      ...(changes.username !== undefined && {
+        username: validate(usernameSchema, changes.username),
+      }),
+      ...(changes.password !== undefined && {
+        passwordHash: await hashValidPassword(changes.password),
+      }),
+    };
+  }
 
-    archive(username) {
-      const user = requireUser(username);
-      db.transaction(() => {
-        users.setArchivedAt(user.id, now());
+  function applyUpdate(user: UserRow, update: AccountUpdate): void {
+    db.transaction(() => {
+      if (update.username !== undefined) users.updateUsername(user.id, update.username);
+      if (update.passwordHash !== undefined) {
+        users.updatePasswordHash(user.id, update.passwordHash);
         revokeSessions(user.id);
-      })();
-      return toAccount(requireUser(user.username));
-    },
+      }
+    })();
+  }
 
-    restore(username) {
-      const user = requireUser(username);
-      users.setArchivedAt(user.id, null);
-      return toAccount(requireUser(user.username));
-    },
+  async function create(username: string, password: string): Promise<Account> {
+    const validUsername = validate(usernameSchema, username);
+    const passwordHash = await hashValidPassword(password);
+    return toAccount(users.insert(validUsername, passwordHash, now()));
+  }
 
-    async authenticate(username, password) {
-      if (username.length > MAX_USERNAME_LENGTH || password.length > MAX_PASSWORD_LENGTH)
-        return null;
-      const user = users.findByUsername(username);
-      // An unknown user still costs one hash check, so timing does not reveal which names exist.
-      dummyHash ??= hashPassword(DUMMY_PASSWORD, scryptParams);
-      const valid = await verifyPassword(password, user?.password_hash ?? (await dummyHash));
-      if (!user || !valid || user.archived_at !== null) return null;
-      return toAccount(user);
-    },
-  };
+  function list({ includeArchived = false }: { includeArchived?: boolean } = {}): Account[] {
+    return users.list(includeArchived).map(toAccount);
+  }
+
+  async function edit(username: string, changes: AccountEdit): Promise<Account> {
+    const user = requireActiveUser(username);
+    const update = await prepareUpdate(changes);
+    applyUpdate(user, update);
+    return toAccount(requireUser(update.username ?? user.username));
+  }
+
+  function archive(username: string): Account {
+    const user = requireUser(username);
+    db.transaction(() => {
+      users.setArchivedAt(user.id, now());
+      revokeSessions(user.id);
+    })();
+    return toAccount(requireUser(user.username));
+  }
+
+  function restore(username: string): Account {
+    const user = requireUser(username);
+    users.setArchivedAt(user.id, null);
+    return toAccount(requireUser(user.username));
+  }
+
+  async function authenticate(username: string, password: string): Promise<Account | null> {
+    if (!isWithinLimits(username, password)) return null;
+    const user = users.findByUsername(username);
+    // An unknown user still costs one hash check, so timing does not reveal which names exist.
+    const valid = await verifyPassword(password, user?.password_hash ?? (await dummyHash()));
+    return user && valid && user.archived_at === null ? toAccount(user) : null;
+  }
+
+  return { create, list, edit, archive, restore, authenticate };
 }

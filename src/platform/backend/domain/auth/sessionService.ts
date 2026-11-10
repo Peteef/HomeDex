@@ -27,6 +27,9 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+const shouldSlide = (lastSeenAt: number, current: number): boolean =>
+  current - lastSeenAt >= SLIDE_AFTER_MS;
+
 export function sessionService(
   db: Storage,
   { ttlDays, now = Date.now }: SessionServiceOptions,
@@ -34,41 +37,38 @@ export function sessionService(
   const sessions = sessionRepository(db);
   const ttlMs = ttlDays * MS_PER_DAY;
 
-  return {
-    create(userId, userAgent) {
-      const current = now();
-      sessions.deleteExpired(current);
-      const token = randomBytes(TOKEN_BYTES).toString(TOKEN_ENCODING);
-      const expiresAt = current + ttlMs;
-      sessions.insert({
-        tokenHash: hashToken(token),
-        userId,
-        now: current,
-        expiresAt,
-        userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
-      });
-      return { token, expiresAt };
-    },
+  function create(userId: number, userAgent: string | undefined): IssuedSession {
+    const current = now();
+    sessions.deleteExpired(current);
+    const token = randomBytes(TOKEN_BYTES).toString(TOKEN_ENCODING);
+    const expiresAt = current + ttlMs;
+    sessions.insert({
+      tokenHash: hashToken(token),
+      userId,
+      now: current,
+      expiresAt,
+      userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
+    });
+    return { token, expiresAt };
+  }
 
-    resolve(token) {
-      const tokenHash = hashToken(token);
-      const current = now();
-      const row = sessions.findActive(tokenHash, current);
-      if (!row) return null;
-      let renewedUntil: number | null = null;
-      if (current - row.last_seen_at >= SLIDE_AFTER_MS) {
-        renewedUntil = current + ttlMs;
-        sessions.touch(tokenHash, current, renewedUntil);
-      }
-      return { user: { id: row.user_id, username: row.username }, renewedUntil };
-    },
+  function resolve(token: string): ResolvedSession | null {
+    const tokenHash = hashToken(token);
+    const current = now();
+    const row = sessions.findActive(tokenHash, current);
+    if (!row) return null;
+    const renewedUntil = shouldSlide(row.last_seen_at, current) ? current + ttlMs : null;
+    if (renewedUntil !== null) sessions.touch(tokenHash, current, renewedUntil);
+    return { user: { id: row.user_id, username: row.username }, renewedUntil };
+  }
 
-    revoke: (token) => {
-      sessions.delete(hashToken(token));
-    },
+  function revoke(token: string): void {
+    sessions.delete(hashToken(token));
+  }
 
-    revokeAllFor: (userId) => {
-      sessions.deleteForUser(userId);
-    },
-  };
+  function revokeAllFor(userId: number): void {
+    sessions.deleteForUser(userId);
+  }
+
+  return { create, resolve, revoke, revokeAllFor };
 }

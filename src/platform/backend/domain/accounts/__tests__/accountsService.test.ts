@@ -4,7 +4,7 @@ import { sessionService } from '../../auth/index.ts';
 import type { SessionService } from '../../auth/index.ts';
 import {
   createTestDatabase,
-  FAST_SCRYPT,
+  FAST_ARGON2,
   TEST_PASSWORD,
 } from '../../../infrastructure/__tests__/helpers.ts';
 import { accountsService } from '../accountsService.ts';
@@ -29,7 +29,7 @@ describe('accounts service', () => {
     db = createTestDatabase();
     sessions = sessionService(db, { ttlDays: 1 });
     accounts = accountsService(db, {
-      scryptParams: FAST_SCRYPT,
+      argon2Params: FAST_ARGON2,
       revokeSessions: (userId) => {
         sessions.revokeAllFor(userId);
       },
@@ -45,7 +45,7 @@ describe('accounts service', () => {
     await accounts.create('ash', TEST_PASSWORD);
     const row = db.prepare('SELECT password_hash FROM users').get() as { password_hash: string };
     expect(row.password_hash).not.toContain(TEST_PASSWORD);
-    expect(row.password_hash.startsWith('scrypt$')).toBe(true);
+    expect(row.password_hash.startsWith('$argon2id$')).toBe(true);
   });
 
   it('should ignore the case of the username when authenticating', async () => {
@@ -101,6 +101,23 @@ describe('accounts service', () => {
       await accounts.edit('ash', { username: 'ash-ketchum' });
       expect(await accounts.authenticate('ash-ketchum', TEST_PASSWORD)).not.toBeNull();
       expect(await accounts.authenticate('ash', TEST_PASSWORD)).toBeNull();
+    });
+
+    it('should change the username and the password together', async () => {
+      await accounts.create('ash', TEST_PASSWORD);
+      await accounts.edit('ash', { username: 'ash2', password: 'brand-new-password' });
+      expect(await accounts.authenticate('ash2', 'brand-new-password')).not.toBeNull();
+      expect(await accounts.authenticate('ash2', TEST_PASSWORD)).toBeNull();
+      expect(await accounts.authenticate('ash', 'brand-new-password')).toBeNull();
+    });
+
+    it('should leave everything unchanged when the new username is taken and the password changes too', async () => {
+      await accounts.create('ash', TEST_PASSWORD);
+      await accounts.create('misty', TEST_PASSWORD);
+      expect(
+        await codeOf(accounts.edit('ash', { username: 'misty', password: 'brand-new-password' })),
+      ).toBe('taken');
+      expect(await accounts.authenticate('ash', TEST_PASSWORD)).not.toBeNull();
     });
 
     it('should change the password and sign the user out of every device', async () => {

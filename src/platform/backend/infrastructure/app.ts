@@ -2,7 +2,7 @@ import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
-import type { ScryptParams } from '../domain/accounts/index.ts';
+import type { Argon2Params } from '../domain/accounts/index.ts';
 import { domainServices } from '../domain/services.ts';
 import { apiRoutes } from '../routes/index.ts';
 import type { Config } from './config.ts';
@@ -14,10 +14,10 @@ import { sessionCookies } from './http/auth/sessionCookie.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
 import type { Storage } from './storage/index.ts';
+import { HTTP_STATUS } from './http/status.ts';
 
 const INDEX_FILE = 'index.html';
 const API_NOT_FOUND_RESPONSE = { error: 'Not found' };
-const HTTP_NOT_FOUND = 404;
 
 export interface AppOptions {
   config: Config;
@@ -25,7 +25,7 @@ export interface AppOptions {
   webDir: string;
   assetsDir: string;
   // Overrides for tests: a cheap password hash, a controllable clock and a small login limit.
-  scryptParams?: ScryptParams;
+  argon2Params?: Argon2Params;
   loginLimit?: LoginLimit;
   now?: () => number;
 }
@@ -35,7 +35,7 @@ export function createApp({
   storage,
   webDir,
   assetsDir,
-  scryptParams,
+  argon2Params,
   loginLimit,
   now = Date.now,
 }: AppOptions): express.Express {
@@ -60,7 +60,7 @@ export function createApp({
   const { accounts, sessions } = domainServices(storage, {
     sessionTtlDays: config.SESSION_TTL_DAYS,
     now,
-    ...(scryptParams && { scryptParams }),
+    ...(argon2Params && { argon2Params }),
   });
   const cookies = sessionCookies(https, now);
   app.use(
@@ -78,7 +78,7 @@ export function createApp({
   );
   // Without this, an unknown API path would reach the SPA fallback below and return HTML.
   app.use(API_PATH, (_req, res) => {
-    res.status(HTTP_NOT_FOUND).json(API_NOT_FOUND_RESPONSE);
+    res.status(HTTP_STATUS.NOT_FOUND).json(API_NOT_FOUND_RESPONSE);
   });
   app.use(API_PATH, apiErrorHandler);
 

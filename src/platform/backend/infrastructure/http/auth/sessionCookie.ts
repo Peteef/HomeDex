@@ -10,16 +10,18 @@ export interface SessionCookies {
 
 export function sessionCookies(secure: boolean, now: () => number): SessionCookies {
   const base: CookieOptions = { httpOnly: true, sameSite: 'lax', secure, path: '/' };
-  return {
-    read(req) {
-      const value: unknown = req.cookies[SESSION_COOKIE];
-      return typeof value === 'string' && value !== '' ? value : undefined;
-    },
-    set(res, token, expiresAt) {
-      res.cookie(SESSION_COOKIE, token, { ...base, maxAge: expiresAt - now() });
-    },
-    clear(res) {
-      res.clearCookie(SESSION_COOKIE, base);
-    },
-  };
+  function read(req: Request): string | undefined {
+    const value: unknown = req.cookies[SESSION_COOKIE];
+    return typeof value === 'string' && value !== '' ? value : undefined;
+  }
+
+  function set(res: Response, token: string, expiresAt: number): void {
+    res.cookie(SESSION_COOKIE, token, { ...base, maxAge: expiresAt - now() });
+  }
+
+  function clear(res: Response): void {
+    res.clearCookie(SESSION_COOKIE, base);
+  }
+
+  return { read, set, clear };
 }

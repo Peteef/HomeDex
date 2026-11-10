@@ -1,57 +1,63 @@
-import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { argon2, randomBytes, timingSafeEqual } from 'node:crypto';
 
-const ALGORITHM = 'scrypt';
-const SEPARATOR = '$';
-const KEY_LENGTH = 64;
+const ALGORITHM = 'argon2id';
+const VERSION = 19;
 const SALT_LENGTH = 16;
+const TAG_LENGTH = 32;
 const ENCODING = 'base64';
-const SCRYPT_MEMORY_FACTOR = 128;
-const MEMORY_HEADROOM = 2;
+const PADDING = /=+$/;
+const PHC_FORMAT = /^\$argon2id\$v=19\$m=(\d+),t=(\d+),p=(\d+)\$([^$]+)\$([^$]+)$/;
 
-export interface ScryptParams {
-  N: number;
-  r: number;
-  p: number;
+export interface Argon2Params {
+  // In KiB.
+  memory: number;
+  passes: number;
+  parallelism: number;
 }
 
-// OWASP's first scrypt recommendation: 128 MiB of memory.
-export const DEFAULT_SCRYPT_PARAMS: ScryptParams = { N: 2 ** 17, r: 8, p: 1 };
+// OWASP's first Argon2id recommendation: 19 MiB, 2 passes, 1 lane.
+export const DEFAULT_ARGON2_PARAMS: Argon2Params = { memory: 19456, passes: 2, parallelism: 1 };
 
-function derive(password: string, salt: Buffer, { N, r, p }: ScryptParams): Promise<Buffer> {
-  const maxmem = SCRYPT_MEMORY_FACTOR * N * r * MEMORY_HEADROOM;
+function derive(
+  password: string,
+  salt: Buffer,
+  { memory, passes, parallelism }: Argon2Params,
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    scrypt(password, salt, KEY_LENGTH, { N, r, p, maxmem }, (error, key) => {
-      if (error) reject(error);
-      else resolve(key);
-    });
+    argon2(
+      ALGORITHM,
+      { message: password, nonce: salt, parallelism, tagLength: TAG_LENGTH, memory, passes },
+      (error, key) => {
+        if (error) reject(error);
+        else resolve(key);
+      },
+    );
   });
 }
 
-// The stored form carries its own parameters, so the cost can be raised without breaking old hashes.
+const encode = (bytes: Buffer): string => bytes.toString(ENCODING).replace(PADDING, '');
+
+// The result is a PHC string, which carries its own parameters, so the cost can be raised
+// without breaking existing hashes.
 export async function hashPassword(
   password: string,
-  params: ScryptParams = DEFAULT_SCRYPT_PARAMS,
+  params: Argon2Params = DEFAULT_ARGON2_PARAMS,
 ): Promise<string> {
   const salt = randomBytes(SALT_LENGTH);
   const key = await derive(password, salt, params);
-  return [
-    ALGORITHM,
-    String(params.N),
-    String(params.r),
-    String(params.p),
-    salt.toString(ENCODING),
-    key.toString(ENCODING),
-  ].join(SEPARATOR);
+  const cost = `m=${String(params.memory)},t=${String(params.passes)},p=${String(params.parallelism)}`;
+  return `$${ALGORITHM}$v=${String(VERSION)}$${cost}$${encode(salt)}$${encode(key)}`;
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const [algorithm, n, r, p, salt, key] = stored.split(SEPARATOR);
-  if (algorithm !== ALGORITHM || !n || !r || !p || !salt || !key) return false;
-  const expected = Buffer.from(key, ENCODING);
-  const actual = await derive(password, Buffer.from(salt, ENCODING), {
-    N: Number(n),
-    r: Number(r),
-    p: Number(p),
+  const match = PHC_FORMAT.exec(stored);
+  if (!match) return false;
+  const [, memory, passes, parallelism, salt, key] = match;
+  const expected = Buffer.from(key ?? '', ENCODING);
+  const actual = await derive(password, Buffer.from(salt ?? '', ENCODING), {
+    memory: Number(memory),
+    passes: Number(passes),
+    parallelism: Number(parallelism),
   });
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }

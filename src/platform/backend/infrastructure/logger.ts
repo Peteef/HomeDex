@@ -4,14 +4,16 @@ export interface Logger {
   error(message: string, ...details: unknown[]): void;
 }
 
-export const logger: Logger = {
-  info: (message, ...details) => {
-    console.log(message, ...details);
-  },
-  warn: (message, ...details) => {
-    console.warn(message, ...details);
-  },
-  error: (message, ...details) => {
-    console.error(message, ...details);
-  },
-};
+function info(message: string, ...details: unknown[]): void {
+  console.log(message, ...details);
+}
+
+function warn(message: string, ...details: unknown[]): void {
+  console.warn(message, ...details);
+}
+
+function error(message: string, ...details: unknown[]): void {
+  console.error(message, ...details);
+}
+
+export const logger: Logger = { info, warn, error };

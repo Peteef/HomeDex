@@ -1,9 +1,8 @@
 import type { Request, RequestHandler } from 'express';
+import { HTTP_STATUS } from './status.ts';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const JSON_TYPE = 'application/json';
-const HTTP_FORBIDDEN = 403;
-const HTTP_UNSUPPORTED_MEDIA_TYPE = 415;
 export const FOREIGN_ORIGIN_RESPONSE = { error: 'Foreign origin' };
 export const JSON_REQUIRED_RESPONSE = { error: 'Content-Type must be application/json' };
 
@@ -28,11 +27,11 @@ export const requestGuard: RequestHandler = (req, res, next) => {
   }
   const origin = req.get('origin');
   if (origin !== undefined && !isSameOrigin(origin, req)) {
-    res.status(HTTP_FORBIDDEN).json(FOREIGN_ORIGIN_RESPONSE);
+    res.status(HTTP_STATUS.FORBIDDEN).json(FOREIGN_ORIGIN_RESPONSE);
     return;
   }
   if (!isJson(req.get('content-type'))) {
-    res.status(HTTP_UNSUPPORTED_MEDIA_TYPE).json(JSON_REQUIRED_RESPONSE);
+    res.status(HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE).json(JSON_REQUIRED_RESPONSE);
     return;
   }
   next();

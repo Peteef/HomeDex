@@ -5,7 +5,7 @@ import type { Express } from 'express';
 import { createApp } from '../app.ts';
 import type { LoginLimit } from '../http/auth/loginRateLimit.ts';
 import { loadConfig } from '../config.ts';
-import type { ScryptParams } from '../../domain/accounts/index.ts';
+import type { Argon2Params } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
 import type { DomainServices } from '../../domain/services.ts';
 import { migratePlatform, openDatabase } from '../storage/index.ts';
@@ -14,7 +14,7 @@ const root = path.resolve(import.meta.dirname, '../../../../..');
 const IN_MEMORY = ':memory:';
 const SESSION_TTL_DAYS = 365;
 
-export const FAST_SCRYPT: ScryptParams = { N: 16, r: 1, p: 1 };
+export const FAST_ARGON2: Argon2Params = { memory: 8, passes: 1, parallelism: 1 };
 export const TEST_PASSWORD = 'correct-horse-battery';
 
 export function createTestDatabase(): Database.Database {
@@ -40,7 +40,7 @@ export function createTestApp(
     storage: db,
     webDir: path.join(root, 'dist/web'),
     assetsDir: path.join(root, 'assets'),
-    scryptParams: FAST_SCRYPT,
+    argon2Params: FAST_ARGON2,
     now: () => clock.now,
     ...overrides,
   });
@@ -48,7 +48,7 @@ export function createTestApp(
 }
 
 export function testServices(db: Database.Database): DomainServices {
-  return domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, scryptParams: FAST_SCRYPT });
+  return domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, argon2Params: FAST_ARGON2 });
 }
 
 export async function createTestUser(db: Database.Database, username: string): Promise<void> {
