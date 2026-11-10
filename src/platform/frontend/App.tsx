@@ -1,10 +1,10 @@
 import { Route, Routes } from 'react-router';
-import { HomePage } from './shell/HomePage.tsx';
-import { LoginPage } from './shell/LoginPage.tsx';
-import { ModulePage } from './shell/ModulePage.tsx';
-import { NotFoundPage } from './shell/NotFoundPage.tsx';
-import { ShellLayout } from './shell/ShellLayout.tsx';
-import { HOME_PATH, LOGIN_PATH, MODULE_ROUTE_PATTERN } from './shell/routes.ts';
+import { HomePage } from './pages/home/HomePage.tsx';
+import { LoginPage } from './pages/login/LoginPage.tsx';
+import { ModulePage } from './pages/module/ModulePage.tsx';
+import { NotFoundPage } from './pages/not-found/NotFoundPage.tsx';
+import { ShellLayout } from './ShellLayout.tsx';
+import { HOME_PATH, LOGIN_PATH, MODULE_ROUTE_PATTERN } from './routes.ts';
 
 export const App = () => {
   return (

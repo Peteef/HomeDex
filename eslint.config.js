@@ -106,6 +106,23 @@ export const domainRules = [
   },
 ];
 
+// Frontend layout: components/ are generic and pure, pages/ are the route screens that build the
+// platform out of them. Dependencies point one way, so components never import pages or the app
+// skeleton (App, ShellLayout, routes, scene layers).
+const FRONTEND_DIR = 'src/platform/frontend';
+const notAppCode = [
+  {
+    group: ['**/pages/**', '**/App.tsx', '**/ShellLayout.tsx', '**/routes.ts', '**/sceneLayers.ts'],
+    message: 'Components are generic: they must not import pages or the app skeleton.',
+  },
+];
+
+/** @type {import('eslint').Linter.Config} */
+export const frontendRules = {
+  files: [`${FRONTEND_DIR}/components/**/*.{ts,tsx}`],
+  rules: restrictImports(notAppCode),
+};
+
 // A returned object with several properties is written one property per line, as in
 // `return { create, list }` spread over lines. Prettier keeps an object expanded when its first
 // property is on a new line, so the two tools agree.
@@ -192,6 +209,7 @@ export default defineConfig(
     ...boundaryRules,
   },
   ...domainRules,
+  frontendRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,
