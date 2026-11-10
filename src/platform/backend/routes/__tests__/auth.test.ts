@@ -21,9 +21,8 @@ const cookieHeader = (response: Response): string => {
   return cookie.split(';')[0] ?? '';
 };
 
-const setCookieOf = (response: Response): string => {
-  return (response.headers['set-cookie'] as string[] | undefined)?.join('\n') ?? '';
-};
+const setCookieOf = (response: Response): string =>
+  (response.headers['set-cookie'] as string[] | undefined)?.join('\n') ?? '';
 
 describe('auth API', () => {
   let ctx: TestApp;

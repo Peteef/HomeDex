@@ -17,9 +17,8 @@ export const ask = async (question: string): Promise<string> => {
   }
 };
 
-export const confirm = async (question: string): Promise<boolean> => {
-  return YES.test(await ask(`${question} [y/N] `));
-};
+export const confirm = async (question: string): Promise<boolean> =>
+  YES.test(await ask(`${question} [y/N] `));
 
 export const askHidden = (question: string): Promise<string> => {
   process.stdout.write(question);

@@ -51,17 +51,15 @@ export const createTestApp = (
   };
 };
 
-export const testServices = (db: Database.Database): DomainServices => {
-  return domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, argon2Params: FAST_ARGON2 });
-};
+export const testServices = (db: Database.Database): DomainServices =>
+  domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, argon2Params: FAST_ARGON2 });
 
 export const createTestUser = async (db: Database.Database, username: string): Promise<void> => {
   await testServices(db).accounts.create(username, TEST_PASSWORD);
 };
 
-export const postJson = (app: Express, url: string, body?: unknown): request.Test => {
-  return request(app)
+export const postJson = (app: Express, url: string, body?: unknown): request.Test =>
+  request(app)
     .post(url)
     .set('Content-Type', 'application/json')
     .send(JSON.stringify(body ?? {}));
-};

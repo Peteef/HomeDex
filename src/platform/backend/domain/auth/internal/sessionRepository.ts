@@ -44,9 +44,8 @@ export const sessionRepository = (db: Storage): SessionRepository => {
     insertSession.run(s.tokenHash, s.userId, s.now, s.now, s.expiresAt, s.userAgent);
   };
 
-  const findActive = (tokenHash: string, now: number): SessionUserRow | undefined => {
-    return selectActive.get(tokenHash, now) as SessionUserRow | undefined;
-  };
+  const findActive = (tokenHash: string, now: number): SessionUserRow | undefined =>
+    selectActive.get(tokenHash, now) as SessionUserRow | undefined;
 
   const touch = (tokenHash: string, now: number, expiresAt: number): void => {
     updateExpiry.run(now, expiresAt, tokenHash);

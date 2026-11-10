@@ -32,9 +32,8 @@ const options = {
   all: { type: 'boolean' },
 } as const;
 
-const formatDate = (timestamp: number): string => {
-  return new Date(timestamp).toLocaleDateString(DATE_LOCALE);
-};
+const formatDate = (timestamp: number): string =>
+  new Date(timestamp).toLocaleDateString(DATE_LOCALE);
 
 const printAccounts = (accounts: Account[]): void => {
   if (accounts.length === 0) {

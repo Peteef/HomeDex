@@ -16,9 +16,8 @@ export interface TileProps {
 
 const DEX_NUMBER_DIGITS = 3;
 
-export const formatDexNo = (dexNo: number): string => {
-  return `No. ${String(dexNo).padStart(DEX_NUMBER_DIGITS, '0')}`;
-};
+export const formatDexNo = (dexNo: number): string =>
+  `No. ${String(dexNo).padStart(DEX_NUMBER_DIGITS, '0')}`;
 
 const LINK_CLASSES =
   'focus-visible:outline-dex-ink flex h-full flex-col gap-1 rounded-2xl p-3 focus-visible:outline-3 focus-visible:outline-offset-2';

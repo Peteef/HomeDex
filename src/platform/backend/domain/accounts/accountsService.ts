@@ -65,20 +65,17 @@ export const accountsService = (
     return user;
   };
 
-  const hashValidPassword = async (password: string): Promise<string> => {
-    return hashPassword(validate(passwordSchema, password), argon2Params);
-  };
+  const hashValidPassword = async (password: string): Promise<string> =>
+    hashPassword(validate(passwordSchema, password), argon2Params);
 
-  const prepareUpdate = async (changes: AccountEdit): Promise<AccountUpdate> => {
-    return {
-      ...(changes.username !== undefined && {
-        username: validate(usernameSchema, changes.username),
-      }),
-      ...(changes.password !== undefined && {
-        passwordHash: await hashValidPassword(changes.password),
-      }),
-    };
-  };
+  const prepareUpdate = async (changes: AccountEdit): Promise<AccountUpdate> => ({
+    ...(changes.username !== undefined && {
+      username: validate(usernameSchema, changes.username),
+    }),
+    ...(changes.password !== undefined && {
+      passwordHash: await hashValidPassword(changes.password),
+    }),
+  });
 
   const applyUpdate = (user: UserRow, update: AccountUpdate): void => {
     db.transaction(() => {
@@ -98,9 +95,8 @@ export const accountsService = (
     return toAccount(users.insert(validUsername, passwordHash, now()));
   };
 
-  const list = ({ includeArchived = false }: { includeArchived?: boolean } = {}): Account[] => {
-    return users.list(includeArchived).map(toAccount);
-  };
+  const list = ({ includeArchived = false }: { includeArchived?: boolean } = {}): Account[] =>
+    users.list(includeArchived).map(toAccount);
 
   const edit = async (username: string, changes: AccountEdit): Promise<Account> => {
     const user = requireActiveUser(username);

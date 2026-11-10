@@ -52,10 +52,7 @@ export const ICON_NAMES = Object.keys(ICONS) as IconName[];
 
 export const FALLBACK_ICON: LucideIcon = CircleHelp;
 
-const isIconName = (name: string): name is IconName => {
-  return Object.hasOwn(ICONS, name);
-};
+const isIconName = (name: string): name is IconName => Object.hasOwn(ICONS, name);
 
-export const resolveIcon = (name: string): LucideIcon => {
-  return isIconName(name) ? ICONS[name] : FALLBACK_ICON;
-};
+export const resolveIcon = (name: string): LucideIcon =>
+  isIconName(name) ? ICONS[name] : FALLBACK_ICON;

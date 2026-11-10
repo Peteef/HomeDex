@@ -8,6 +8,4 @@ export interface IconProps extends Omit<LucideProps, 'ref'> {
 
 // createElement, not JSX: the registry returns stable module-level components, which the
 // react-hooks "components created during render" rule cannot tell from a component made in render.
-export const Icon = ({ name, ...rest }: IconProps) => {
-  return createElement(resolveIcon(name), rest);
-};
+export const Icon = ({ name, ...rest }: IconProps) => createElement(resolveIcon(name), rest);

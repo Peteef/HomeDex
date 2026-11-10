@@ -18,8 +18,8 @@ export const DEFAULT_LOGIN_LIMIT: LoginLimit = {
 export const loginRateLimit = ({
   windowMs,
   maxFailedAttempts,
-}: LoginLimit = DEFAULT_LOGIN_LIMIT): RequestHandler => {
-  return rateLimit({
+}: LoginLimit = DEFAULT_LOGIN_LIMIT): RequestHandler =>
+  rateLimit({
     windowMs,
     limit: maxFailedAttempts,
     skipSuccessfulRequests: true,
@@ -27,4 +27,3 @@ export const loginRateLimit = ({
     legacyHeaders: false,
     message: TOO_MANY_ATTEMPTS_RESPONSE,
   });
-};

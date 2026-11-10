@@ -12,9 +12,8 @@ const channel = (value: number): number => {
   return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
 };
 
-const luminance = ([r, g, b]: Rgb): number => {
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-};
+const luminance = ([r, g, b]: Rgb): number =>
+  0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 
 const contrast = (a: Rgb, b: Rgb): number => {
   const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
@@ -29,9 +28,8 @@ const tokenValue = (name: string): string => {
   return match[1].trim();
 };
 
-const parseHex = (hex: string): Rgb => {
-  return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)) as Rgb;
-};
+const parseHex = (hex: string): Rgb =>
+  [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)) as Rgb;
 
 const solid = (name: string): Rgb => parseHex(tokenValue(name));
 

@@ -23,9 +23,7 @@ export interface SessionService {
   revokeAllFor(userId: number): void;
 }
 
-const hashToken = (token: string): string => {
-  return createHash('sha256').update(token).digest('hex');
-};
+const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
 
 const shouldSlide = (lastSeenAt: number, current: number): boolean =>
   current - lastSeenAt >= SLIDE_AFTER_MS;
