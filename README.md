@@ -1,2 +1,96 @@
 # HomeDex
-Personal platform and home launch pad
+
+A private, Pokémon-themed launch pad for home and personal life. Think of a browser start page for personal things: a greeting, a quick-find box and a grid of tiles that open links or small modules.
+
+It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
+
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Accounts, tiles and modules are coming next, so for now the app shows a placeholder page.
+
+## Goals
+
+- **Launch pad first.** Quick to open, quick to find, quick to leave for the thing you need.
+- **Modular.** New tiles and modules are added without touching the core.
+- **Private and simple.** No registration, no paid services, no secrets in the repository.
+- **Mobile-first.** It has to feel right on a phone before a desktop.
+
+## Tech
+
+TypeScript everywhere, running on Node.js 26.
+
+| Part     | Technology                                                                    |
+| -------- | ----------------------------------------------------------------------------- |
+| Frontend | React, Vite, Tailwind CSS                                                     |
+| Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
+| Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
+| Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
+| Planned  | SQLite storage, accounts, React Router, TanStack Query, Docker packaging      |
+
+## Getting started
+
+You need [nvm](https://github.com/nvm-sh/nvm) (or any way to get Node.js 26) and npm.
+
+```bash
+nvm use
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173.
+
+To try it on a phone, connect it to the same Wi-Fi and open `http://<your computer's address>:5173`.
+
+To run it the way production does (one process serving the API and the built UI):
+
+```bash
+npm run build
+npm start
+```
+
+Then open http://localhost:3000.
+
+## Commands
+
+| Command            | What it does                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload                            |
+| `npm run build`    | Builds the UI into `dist/web`                                                                       |
+| `npm start`        | Production server (API plus built UI)                                                               |
+| `npm test`         | Unit tests                                                                                          |
+| `npm run test:e2e` | End-to-end tests against the production build (first run: `npx playwright install webkit chromium`) |
+| `npm run fix`      | Formats and auto-fixes everything                                                                   |
+| `npm run verify`   | Typecheck, lint, format check, unit tests and build. CI runs the same                               |
+
+## Configuration
+
+Settings come from environment variables. Copy `.env.example` to `.env` to change them. All have defaults.
+
+| Variable           | Default    | Meaning                                                      |
+| ------------------ | ---------- | ------------------------------------------------------------ |
+| `PORT`             | `3000`     | Port of the backend and of the production server             |
+| `HOST`             | `0.0.0.0`  | Address to listen on (all interfaces, so phones can connect) |
+| `DATA_DIR`         | `./data`   | Where runtime data will live (git-ignored)                   |
+| `ASSETS_DIR`       | `./assets` | Folder with all art, served at `/media`                      |
+| `COOKIE_SECURE`    | `false`    | Set to `true` once HTTPS is on                               |
+| `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in                            |
+| `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                         |
+
+## Project layout
+
+```
+src/
+  platform/    the core: server, app shell, shared UI (frontend/ and backend/)
+  modules/     one folder per module, each with its own UI, routes and data
+e2e/           end-to-end tests
+tests/         tests of the repository itself (the module boundary rules)
+assets/        placeholder art, loaded at runtime from ASSETS_DIR
+```
+
+Unit tests sit in `__tests__/` folders next to the code they test.
+
+The core and the modules are kept apart on purpose: a module can only use the platform's public API, never the core's internals or another module, and lint enforces this. Removing a module means deleting its folder.
+
+## Contributing
+
+Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e` and a secret scan on every PR.
+
+Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
