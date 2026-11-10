@@ -124,8 +124,9 @@ export const frontendRules = {
 };
 
 // A returned object with several properties is written one property per line, as in
-// `return { create, list }` spread over lines. Prettier keeps an object expanded when its first
-// property is on a new line, so the two tools agree.
+// `return { create, list }` spread over lines. This also covers an arrow function that returns an
+// object directly (`=> ({ a, b })`). Prettier keeps an object expanded when its first property is
+// on a new line, so the two tools agree.
 const returnedObjectOnePerLine = {
   meta: {
     type: 'layout',
@@ -136,16 +137,21 @@ const returnedObjectOnePerLine = {
     },
   },
   create(context) {
+    const check = (object) => {
+      if (object?.type !== 'ObjectExpression' || object.properties.length < 2) {
+        return;
+      }
+      const lines = object.properties.map((property) => property.loc.start.line);
+      if (new Set(lines).size !== lines.length) {
+        context.report({ node: object, messageId: 'split' });
+      }
+    };
     return {
       ReturnStatement(node) {
-        const object = node.argument;
-        if (object?.type !== 'ObjectExpression' || object.properties.length < 2) {
-          return;
-        }
-        const lines = object.properties.map((property) => property.loc.start.line);
-        if (new Set(lines).size !== lines.length) {
-          context.report({ node: object, messageId: 'split' });
-        }
+        check(node.argument);
+      },
+      ArrowFunctionExpression(node) {
+        check(node.body);
       },
     };
   },
@@ -162,6 +168,7 @@ export const styleRules = {
   rules: {
     'homedex/returned-object-one-per-line': 'error',
     curly: ['error', 'all'],
+    'arrow-body-style': ['error', 'as-needed'],
     'func-style': ['error', 'expression'],
     'prefer-arrow-callback': 'error',
     'no-restricted-syntax': [

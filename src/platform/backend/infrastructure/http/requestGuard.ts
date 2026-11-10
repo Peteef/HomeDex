@@ -14,9 +14,8 @@ const isSameOrigin = (origin: string, req: Request): boolean => {
   }
 };
 
-const isJson = (contentType: string | undefined): boolean => {
-  return contentType?.split(';')[0]?.trim().toLowerCase() === JSON_TYPE;
-};
+const isJson = (contentType: string | undefined): boolean =>
+  contentType?.split(';')[0]?.trim().toLowerCase() === JSON_TYPE;
 
 // CSRF defence next to SameSite=Lax cookies: browsers always send Origin on cross-site writes
 // and cannot send application/json from a plain form. A missing Origin means a non-browser client.

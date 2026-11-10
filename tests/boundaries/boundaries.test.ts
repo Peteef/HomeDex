@@ -108,6 +108,8 @@ describe('lint rules', () => {
       ['src/style/bad-function-expression.ts', 'no-restricted-syntax'],
       ['src/style/bad-callback-function.ts', 'prefer-arrow-callback'],
       ['src/style/bad-braceless-if.ts', 'curly'],
+      ['src/style/bad-braced-arrow.ts', 'arrow-body-style'],
+      ['src/style/bad-concise-object.ts', 'homedex/returned-object-one-per-line'],
     ])('should reject %s with %s', async (file, rule) => {
       // When / Then
       expect(await violationsOf(file)).toContain(rule);

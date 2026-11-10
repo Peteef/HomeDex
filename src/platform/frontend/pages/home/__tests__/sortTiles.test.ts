@@ -3,9 +3,10 @@ import { sortTiles } from '../sortTiles.ts';
 
 const titles = (tiles: { title: string }[]) => tiles.map((tile) => tile.title);
 const tile = (title: string) => ({ title });
-const pinnedTitles = (...pinned: string[]) => {
-  return (candidate: { title: string }) => pinned.includes(candidate.title);
-};
+const pinnedTitles =
+  (...pinned: string[]) =>
+  (candidate: { title: string }) =>
+    pinned.includes(candidate.title);
 
 describe('sortTiles', () => {
   it('should sort alphabetically when nothing is pinned', () => {

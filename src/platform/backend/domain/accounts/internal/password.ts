@@ -22,8 +22,8 @@ const derive = (
   password: string,
   salt: Buffer,
   { memory, passes, parallelism }: Argon2Params,
-): Promise<Buffer> => {
-  return new Promise((resolve, reject) => {
+): Promise<Buffer> =>
+  new Promise((resolve, reject) => {
     argon2(
       ALGORITHM,
       { message: password, nonce: salt, parallelism, tagLength: TAG_LENGTH, memory, passes },
@@ -36,7 +36,6 @@ const derive = (
       },
     );
   });
-};
 
 const encode = (bytes: Buffer): string => bytes.toString(ENCODING).replace(PADDING, '');
 

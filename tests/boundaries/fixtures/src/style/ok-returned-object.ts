@@ -7,6 +7,9 @@ export const service = (): { create: () => void; list: () => void } => {
   };
 };
 
-export const single = (): { only: number } => {
-  return { only: 1 };
-};
+export const single = (): { only: number } => ({ only: 1 });
+
+export const pair = (): { a: number; b: number } => ({
+  a: 1,
+  b: 2,
+});

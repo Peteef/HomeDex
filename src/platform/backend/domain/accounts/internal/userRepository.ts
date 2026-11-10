@@ -18,9 +18,8 @@ export interface UserRepository {
   setArchivedAt(id: number, archivedAt: number | null): void;
 }
 
-const isUniqueViolation = (error: unknown): boolean => {
-  return error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
-};
+const isUniqueViolation = (error: unknown): boolean =>
+  error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
 
 // The repository knows how the database reports a taken name, so it translates it.
 const failIfTaken = <T>(username: string, write: () => T): T => {
@@ -47,20 +46,14 @@ export const userRepository = (db: Storage): UserRepository => {
   const replacePasswordHash = db.prepare('UPDATE users SET password_hash = ? WHERE id = ?');
   const replaceArchivedAt = db.prepare('UPDATE users SET archived_at = ? WHERE id = ?');
 
-  const insert = (username: string, passwordHash: string, createdAt: number): UserRow => {
-    return failIfTaken(
-      username,
-      () => insertUser.get(username, passwordHash, createdAt) as UserRow,
-    );
-  };
+  const insert = (username: string, passwordHash: string, createdAt: number): UserRow =>
+    failIfTaken(username, () => insertUser.get(username, passwordHash, createdAt) as UserRow);
 
-  const findByUsername = (username: string): UserRow | undefined => {
-    return selectByUsername.get(username) as UserRow | undefined;
-  };
+  const findByUsername = (username: string): UserRow | undefined =>
+    selectByUsername.get(username) as UserRow | undefined;
 
-  const list = (includeArchived: boolean): UserRow[] => {
-    return (includeArchived ? selectAll : selectActive).all() as UserRow[];
-  };
+  const list = (includeArchived: boolean): UserRow[] =>
+    (includeArchived ? selectAll : selectActive).all() as UserRow[];
 
   const updateUsername = (id: number, username: string): void => {
     failIfTaken(username, () => renameUser.run(username, id));
