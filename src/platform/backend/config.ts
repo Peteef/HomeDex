@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { z } from 'zod';
 
 export const DEFAULT_PORT = 3000;
@@ -6,6 +7,7 @@ const DEFAULT_HOST = '0.0.0.0';
 const DEFAULT_DATA_DIR = './data';
 const DEFAULT_ASSETS_DIR = './assets';
 const DEFAULT_SESSION_TTL_DAYS = 365;
+const ENV_FILE = '.env';
 
 const booleanFlag = z.enum(['true', 'false']).transform((value) => value === 'true');
 
@@ -31,4 +33,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Invalid configuration: ${problems}`);
   }
   return result.data;
+}
+
+export function loadEnvFile(file = ENV_FILE): void {
+  if (fs.existsSync(file)) process.loadEnvFile(file);
 }

@@ -67,6 +67,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 
 - Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names and the expected values in tests stay literal.
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
+- Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
 - A tile is either a link or a module, and is shared or personal. Pins are per user.
 - Dev and prod differ only through configuration (HTTPS, secure cookies, backups), never through code. Dev runs plain HTTP on the local network. HTTPS-only headers (HSTS, `upgrade-insecure-requests`) follow `COOKIE_SECURE`, because they break plain HTTP in Safari.
