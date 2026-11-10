@@ -93,6 +93,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - Functional elements sit in a translucent panel over the background scene. Text contrast is at least 4.5:1 on any background.
 - Modern 2D style with Pokémon-inspired wording: "Party" for pinned tiles, Dex numbers on entries ("No. 001"), "Dex" for the full tile list.
 - Animation is optional polish and respects the "reduce motion" setting.
+- Colours, radii and fonts come from the `@theme` tokens in `platform/frontend/index.css`, never raw values. Fonts are system fonts, so nothing is fetched at runtime. PWA icons live in `public/`, scene art in `assets/`.
 
 ## Git and pull requests
 

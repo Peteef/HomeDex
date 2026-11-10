@@ -1,15 +1,20 @@
-import { Scene } from './scene/Scene.tsx';
+import { Route, Routes } from 'react-router';
+import { HomePage } from './shell/HomePage.tsx';
+import { LoginPage } from './shell/LoginPage.tsx';
+import { ModulePage } from './shell/ModulePage.tsx';
+import { NotFoundPage } from './shell/NotFoundPage.tsx';
+import { ShellLayout } from './shell/ShellLayout.tsx';
+import { HOME_PATH, LOGIN_PATH, MODULE_ROUTE_PATTERN } from './shell/routes.ts';
 
 export const App = () => {
   return (
-    <>
-      <Scene />
-      <main className="flex min-h-dvh items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <section className="border-dex-red w-full max-w-md rounded-2xl border-4 bg-white/85 p-6 text-center shadow-lg backdrop-blur">
-          <h1 className="text-3xl font-bold">HomeDex</h1>
-          <p className="text-dex-ink mt-2 text-base">Your private launch pad. Coming soon.</p>
-        </section>
-      </main>
-    </>
+    <Routes>
+      <Route element={<ShellLayout />}>
+        <Route path={HOME_PATH} element={<HomePage />} />
+        <Route path={LOGIN_PATH} element={<LoginPage />} />
+        <Route path={MODULE_ROUTE_PATTERN} element={<ModulePage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 };

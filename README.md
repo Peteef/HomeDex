@@ -19,12 +19,12 @@ TypeScript everywhere, running on Node.js 26.
 
 | Part     | Technology                                                                    |
 | -------- | ----------------------------------------------------------------------------- |
-| Frontend | React, Vite, Tailwind CSS                                                     |
+| Frontend | React, Vite, React Router, Tailwind CSS, lucide-react icons                   |
 | Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
 | Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
-| Planned  | React Router, TanStack Query, Docker packaging                                |
+| Planned  | TanStack Query, Docker packaging                                              |
 
 ## Getting started
 
