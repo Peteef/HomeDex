@@ -65,6 +65,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 
 ## Architecture guidelines
 
+- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names and the expected values in tests stay literal.
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
 - A tile is either a link or a module, and is shared or personal. Pins are per user.
