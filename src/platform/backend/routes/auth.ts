@@ -23,13 +23,13 @@ export interface AuthRoutesOptions {
   loginRateLimit: RequestHandler;
 }
 
-export function authRoutes({
+export const authRoutes = ({
   accounts,
   sessions,
   cookies,
   requireAuth: authenticated,
   loginRateLimit: limitLogins,
-}: AuthRoutesOptions): Router {
+}: AuthRoutesOptions): Router => {
   const router = Router();
 
   router.post('/login', limitLogins, async (req, res) => {
@@ -50,7 +50,9 @@ export function authRoutes({
 
   router.post('/logout', (req, res) => {
     const token = cookies.read(req);
-    if (token !== undefined) sessions.revoke(token);
+    if (token !== undefined) {
+      sessions.revoke(token);
+    }
     cookies.clear(res);
     res.status(NO_CONTENT).end();
   });
@@ -60,4 +62,4 @@ export function authRoutes({
   });
 
   return router;
-}
+};

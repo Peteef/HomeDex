@@ -23,7 +23,7 @@ export interface SessionRepository {
   deleteExpired(now: number): void;
 }
 
-export function sessionRepository(db: Storage): SessionRepository {
+export const sessionRepository = (db: Storage): SessionRepository => {
   const insertSession = db.prepare(
     `INSERT INTO sessions (token_hash, user_id, created_at, last_seen_at, expires_at, user_agent)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -40,29 +40,29 @@ export function sessionRepository(db: Storage): SessionRepository {
   const deleteByUser = db.prepare('DELETE FROM sessions WHERE user_id = ?');
   const deleteBefore = db.prepare('DELETE FROM sessions WHERE expires_at <= ?');
 
-  function insert(s: NewSession): void {
+  const insert = (s: NewSession): void => {
     insertSession.run(s.tokenHash, s.userId, s.now, s.now, s.expiresAt, s.userAgent);
-  }
+  };
 
-  function findActive(tokenHash: string, now: number): SessionUserRow | undefined {
+  const findActive = (tokenHash: string, now: number): SessionUserRow | undefined => {
     return selectActive.get(tokenHash, now) as SessionUserRow | undefined;
-  }
+  };
 
-  function touch(tokenHash: string, now: number, expiresAt: number): void {
+  const touch = (tokenHash: string, now: number, expiresAt: number): void => {
     updateExpiry.run(now, expiresAt, tokenHash);
-  }
+  };
 
-  function remove(tokenHash: string): void {
+  const remove = (tokenHash: string): void => {
     deleteByToken.run(tokenHash);
-  }
+  };
 
-  function deleteForUser(userId: number): void {
+  const deleteForUser = (userId: number): void => {
     deleteByUser.run(userId);
-  }
+  };
 
-  function deleteExpired(now: number): void {
+  const deleteExpired = (now: number): void => {
     deleteBefore.run(now);
-  }
+  };
 
   return {
     insert,
@@ -72,4 +72,4 @@ export function sessionRepository(db: Storage): SessionRepository {
     deleteForUser,
     deleteExpired,
   };
-}
+};

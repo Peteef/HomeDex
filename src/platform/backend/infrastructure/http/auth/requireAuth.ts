@@ -6,7 +6,7 @@ import { UNAUTHORIZED } from '../status.ts';
 
 export const NOT_AUTHENTICATED_RESPONSE = { error: 'Not authenticated' };
 
-export function requireAuth(sessions: SessionService, cookies: SessionCookies): RequestHandler {
+export const requireAuth = (sessions: SessionService, cookies: SessionCookies): RequestHandler => {
   return (req, res, next) => {
     const token = cookies.read(req);
     const session = token === undefined ? null : sessions.resolve(token);
@@ -14,8 +14,10 @@ export function requireAuth(sessions: SessionService, cookies: SessionCookies): 
       res.status(UNAUTHORIZED).json(NOT_AUTHENTICATED_RESPONSE);
       return;
     }
-    if (session.renewedUntil !== null) cookies.set(res, token, session.renewedUntil);
+    if (session.renewedUntil !== null) {
+      cookies.set(res, token, session.renewedUntil);
+    }
     setCurrentUser(req, session.user);
     next();
   };
-}
+};

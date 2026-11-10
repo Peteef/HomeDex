@@ -24,7 +24,7 @@ const schema = z.object({
 
 export type Config = z.infer<typeof schema>;
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
   const result = schema.safeParse(env);
   if (!result.success) {
     const problems = result.error.issues
@@ -33,8 +33,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Invalid configuration: ${problems}`);
   }
   return result.data;
-}
+};
 
-export function loadEnvFile(file = ENV_FILE): void {
-  if (fs.existsSync(file)) process.loadEnvFile(file);
-}
+export const loadEnvFile = (file = ENV_FILE): void => {
+  if (fs.existsSync(file)) {
+    process.loadEnvFile(file);
+  }
+};

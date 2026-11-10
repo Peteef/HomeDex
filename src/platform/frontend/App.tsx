@@ -1,6 +1,6 @@
 import { Scene } from './scene/Scene.tsx';
 
-export function App() {
+export const App = () => {
   return (
     <>
       <Scene />
@@ -12,4 +12,4 @@ export function App() {
       </main>
     </>
   );
-}
+};

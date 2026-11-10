@@ -32,11 +32,11 @@ const options = {
   all: { type: 'boolean' },
 } as const;
 
-function formatDate(timestamp: number): string {
+const formatDate = (timestamp: number): string => {
   return new Date(timestamp).toLocaleDateString(DATE_LOCALE);
-}
+};
 
-function printAccounts(accounts: Account[]): void {
+const printAccounts = (accounts: Account[]): void => {
   if (accounts.length === 0) {
     console.log('No accounts yet. Create one with: npm run users -- create');
     return;
@@ -45,28 +45,34 @@ function printAccounts(accounts: Account[]): void {
     const status = account.archivedAt === null ? '' : '  (archived)';
     console.log(`${account.username}  created ${formatDate(account.createdAt)}${status}`);
   }
-}
+};
 
-async function readNewPassword(flag: string | undefined, label: string): Promise<string> {
-  if (flag !== undefined) return flag;
-  if (!hasTerminal()) return readPipedPassword();
+const readNewPassword = async (flag: string | undefined, label: string): Promise<string> => {
+  if (flag !== undefined) {
+    return flag;
+  }
+  if (!hasTerminal()) {
+    return readPipedPassword();
+  }
   const password = await askHidden(`${label}: `);
-  if (password === '') return password;
+  if (password === '') {
+    return password;
+  }
   if ((await askHidden('Repeat password: ')) !== password) {
     throw new UsageError('The passwords do not match');
   }
   return password;
-}
+};
 
-function requireTerminal(missing: string): never {
+const requireTerminal = (missing: string): never => {
   throw new UsageError(`Missing ${missing}, and there is no terminal to ask for it`);
-}
+};
 
-async function create(
+const create = async (
   accounts: AccountsService,
   positional: string[],
   flags: { username?: string | undefined; password?: string | undefined },
-): Promise<void> {
+): Promise<void> => {
   const username =
     flags.username ??
     positional[0] ??
@@ -74,26 +80,33 @@ async function create(
   const password = await readNewPassword(flags.password, 'Password');
   const account = await accounts.create(username, password);
   console.log(`Created account "${account.username}".`);
-}
+};
 
-async function edit(
+const edit = async (
   accounts: AccountsService,
   positional: string[],
   flags: { username?: string | undefined; password?: string | undefined },
-): Promise<void> {
+): Promise<void> => {
   const [target] = positional;
-  if (!target) throw new UsageError('edit needs a username');
+  if (!target) {
+    throw new UsageError('edit needs a username');
+  }
   let { username, password } = flags;
   if (username === undefined && password === undefined) {
-    if (!hasTerminal())
+    if (!hasTerminal()) {
       throw new UsageError('Nothing to change: pass --username and/or --password');
+    }
     const answer = await ask(`New username (empty keeps "${target}"): `);
-    if (answer !== '') username = answer;
+    if (answer !== '') {
+      username = answer;
+    }
     const newPassword = await readNewPassword(
       undefined,
       'New password (empty keeps the current one)',
     );
-    if (newPassword !== '') password = newPassword;
+    if (newPassword !== '') {
+      password = newPassword;
+    }
   }
   if (username === undefined && password === undefined) {
     console.log('Nothing changed.');
@@ -105,18 +118,24 @@ async function edit(
   };
   const account = await accounts.edit(target, changes);
   console.log(`Updated account "${account.username}".`);
-  if (password !== undefined) console.log("All of this user's devices were signed out.");
-}
+  if (password !== undefined) {
+    console.log("All of this user's devices were signed out.");
+  }
+};
 
-async function archive(
+const archive = async (
   accounts: AccountsService,
   positional: string[],
   flags: { yes?: boolean | undefined },
-): Promise<void> {
+): Promise<void> => {
   const [target] = positional;
-  if (!target) throw new UsageError('archive needs a username');
+  if (!target) {
+    throw new UsageError('archive needs a username');
+  }
   if (!flags.yes) {
-    if (!hasTerminal()) throw new UsageError('Pass --yes to archive without a terminal');
+    if (!hasTerminal()) {
+      throw new UsageError('Pass --yes to archive without a terminal');
+    }
     const question = `Archive "${target}"? They will be signed out and unable to log in.`;
     if (!(await confirm(question))) {
       console.log('Cancelled.');
@@ -125,14 +144,16 @@ async function archive(
   }
   const account = accounts.archive(target);
   console.log(`Archived account "${account.username}".`);
-}
+};
 
-async function run(argv: string[]): Promise<void> {
+const run = async (argv: string[]): Promise<void> => {
   const {
     values,
     positionals: [command, ...positional],
   } = parseArgs({ args: argv, options, allowPositionals: true });
-  if (!command) throw new UsageError(USAGE);
+  if (!command) {
+    throw new UsageError(USAGE);
+  }
 
   loadEnvFile();
   const config = loadConfig();
@@ -154,7 +175,9 @@ async function run(argv: string[]): Promise<void> {
         break;
       case 'restore': {
         const [target] = positional;
-        if (!target) throw new UsageError('restore needs a username');
+        if (!target) {
+          throw new UsageError('restore needs a username');
+        }
         console.log(`Restored account "${accounts.restore(target).username}".`);
         break;
       }
@@ -164,7 +187,7 @@ async function run(argv: string[]): Promise<void> {
   } finally {
     db.close();
   }
-}
+};
 
 try {
   await run(process.argv.slice(2));

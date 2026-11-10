@@ -30,7 +30,7 @@ export interface AppOptions {
   now?: () => number;
 }
 
-export function createApp({
+export const createApp = ({
   config,
   storage,
   webDir,
@@ -38,7 +38,7 @@ export function createApp({
   argon2Params,
   loginLimit,
   now = Date.now,
-}: AppOptions): express.Express {
+}: AppOptions): express.Express => {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY);
@@ -92,4 +92,4 @@ export function createApp({
   }
 
   return app;
-}
+};
