@@ -104,6 +104,19 @@ test.describe('shell', () => {
       await expect(pin).toHaveAttribute('aria-pressed', 'true');
     });
 
+    test('should show a pointer cursor over the pin control', async ({ page }) => {
+      // Given
+      await page.goto('/');
+
+      // When
+      const cursor = await page
+        .getByRole('button', { name: 'Pin Finances' })
+        .evaluate((element) => getComputedStyle(element).cursor);
+
+      // Then
+      expect(cursor).toBe('pointer');
+    });
+
     test('should show a pinned tile first and put it back when it is unpinned', async ({
       page,
     }) => {

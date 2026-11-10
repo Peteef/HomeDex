@@ -38,6 +38,13 @@
   padding-left: max(0.75rem, env(safe-area-inset-left));
 }
 
+@layer base {
+  /* Tailwind 4 no longer gives buttons a pointer cursor. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 html,
 body,
 #root {
