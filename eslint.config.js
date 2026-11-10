@@ -48,6 +48,95 @@ export const boundaryRules = {
   },
 };
 
+// Backend layout: domain/<name>/ holds the logic of one area behind an index.ts, the only file
+// other code may import. infrastructure/ holds the technical side (HTTP, storage, config, CLI).
+// Domains use infrastructure only through the storage entrypoint.
+const BACKEND_DIR = 'src/platform/backend';
+const DOMAIN_DIR = `${BACKEND_DIR}/domain`;
+const DOMAINS = ['accounts', 'auth'];
+
+const entrypointOnly = (folder) => ({
+  group: [`**/${folder}/**`, `!**/${folder}/index.ts`],
+  message: `Import ${folder} only through its index.ts.`,
+});
+const siblingDomains = (domain) =>
+  DOMAINS.filter((other) => other !== domain).map((other) => entrypointOnly(other));
+const storageEntrypointOnly = {
+  // The directory is re-included first, because gitignore-style patterns cannot re-include a file
+  // inside an excluded directory.
+  group: [
+    '**/infrastructure/**',
+    '!**/infrastructure/storage',
+    '!**/infrastructure/storage/index.ts',
+  ],
+  message: 'Domains may use infrastructure only through storage/index.ts.',
+};
+const notRoutes = {
+  group: ['**/routes/**'],
+  message: 'Domains must not depend on routes.',
+};
+const restrictImports = (patterns) => ({ 'no-restricted-imports': ['error', { patterns }] });
+
+/** @type {import('eslint').Linter.Config[]} */
+export const domainRules = [
+  ...DOMAINS.flatMap((domain) => [
+    {
+      files: [`${DOMAIN_DIR}/${domain}/**/*.ts`],
+      rules: restrictImports([...siblingDomains(domain), storageEntrypointOnly, notRoutes]),
+    },
+    // Tests may use the shared test helpers from infrastructure.
+    {
+      files: [`${DOMAIN_DIR}/${domain}/**/__tests__/**/*.ts`],
+      rules: restrictImports(siblingDomains(domain)),
+    },
+  ]),
+  // domain/services.ts and any other file directly in domain/ may use every domain, through its index.ts.
+  {
+    files: [`${DOMAIN_DIR}/*.ts`],
+    rules: restrictImports([
+      ...DOMAINS.map((domain) => entrypointOnly(domain)),
+      storageEntrypointOnly,
+      notRoutes,
+    ]),
+  },
+  {
+    files: [`${BACKEND_DIR}/**/*.ts`],
+    ignores: [`${DOMAIN_DIR}/**`],
+    rules: restrictImports(DOMAINS.map((domain) => entrypointOnly(`domain/${domain}`))),
+  },
+];
+
+// A returned object with several properties is written one property per line, as in
+// `return { create, list }` spread over lines. Prettier keeps an object expanded when its first
+// property is on a new line, so the two tools agree.
+const returnedObjectOnePerLine = {
+  meta: {
+    type: 'layout',
+    schema: [],
+    messages: {
+      split:
+        'Write a returned object with its first property on a new line and one property per line.',
+    },
+  },
+  create(context) {
+    return {
+      ReturnStatement(node) {
+        const object = node.argument;
+        if (object?.type !== 'ObjectExpression' || object.properties.length < 2) return;
+        const lines = object.properties.map((property) => property.loc.start.line);
+        if (new Set(lines).size !== lines.length)
+          context.report({ node: object, messageId: 'split' });
+      },
+    };
+  },
+};
+
+/** @type {import('eslint').Linter.Config} */
+export const styleRules = {
+  plugins: { homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } } },
+  rules: { 'homedex/returned-object-one-per-line': 'error' },
+};
+
 export default defineConfig(
   {
     ignores: [
@@ -82,6 +171,8 @@ export default defineConfig(
     files: ['src/**/*.{ts,tsx}'],
     ...boundaryRules,
   },
+  ...domainRules,
+  { files: ['src/**/*.{ts,tsx}'], ...styleRules },
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,

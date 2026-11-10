@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { E2E_DATA_DIR } from './e2e/fixtures.ts';
 
 const port = 3100;
 
@@ -21,14 +22,14 @@ export default defineConfig({
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run build && npm start',
+    command: 'npm run build && node e2e/prepare-data.ts && npm start',
     url: `http://127.0.0.1:${String(port)}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
       PORT: String(port),
       HOST: '127.0.0.1',
-      DATA_DIR: '.e2e-data',
+      DATA_DIR: E2E_DATA_DIR,
     },
   },
 });

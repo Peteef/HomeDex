@@ -6,12 +6,18 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../app.ts';
 import { loadConfig } from '../config.ts';
+import { createTestDatabase } from './helpers.ts';
 
-const root = path.resolve(import.meta.dirname, '../../../..');
+const root = path.resolve(import.meta.dirname, '../../../../..');
 const assetsDir = path.join(root, 'assets');
 
 describe('app', () => {
-  const app = createApp({ config: loadConfig({}), webDir: path.join(root, 'dist/web'), assetsDir });
+  const app = createApp({
+    config: loadConfig({}),
+    storage: createTestDatabase(),
+    webDir: path.join(root, 'dist/web'),
+    assetsDir,
+  });
 
   it('should answer the health check with security headers', async () => {
     const response = await request(app).get('/api/health');
@@ -29,6 +35,7 @@ describe('app', () => {
   it('should force HTTPS when HTTPS is on', async () => {
     const secureApp = createApp({
       config: loadConfig({ COOKIE_SECURE: 'true' }),
+      storage: createTestDatabase(),
       webDir: path.join(root, 'dist/web'),
       assetsDir,
     });
@@ -65,6 +72,7 @@ describe('app in production', () => {
   it('should return a JSON 404 when the API route is unknown, not the app page', async () => {
     const production = createApp({
       config: loadConfig({ NODE_ENV: 'production' }),
+      storage: createTestDatabase(),
       webDir,
       assetsDir,
     });
@@ -76,6 +84,7 @@ describe('app in production', () => {
   it('should serve the app page when a non-API route is unknown', async () => {
     const production = createApp({
       config: loadConfig({ NODE_ENV: 'production' }),
+      storage: createTestDatabase(),
       webDir,
       assetsDir,
     });
@@ -86,9 +95,16 @@ describe('app in production', () => {
 
 describe('native TypeScript execution', () => {
   it('should run the real entry point with plain node', async () => {
-    const child = spawn('node', ['src/platform/backend/main.ts'], {
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'homedex-data-'));
+    const child = spawn('node', ['src/platform/backend/infrastructure/main.ts'], {
       cwd: root,
-      env: { ...process.env, PORT: '3917', HOST: '127.0.0.1', NODE_ENV: 'test' },
+      env: {
+        ...process.env,
+        PORT: '3917',
+        HOST: '127.0.0.1',
+        NODE_ENV: 'test',
+        DATA_DIR: dataDir,
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     try {
@@ -105,6 +121,7 @@ describe('native TypeScript execution', () => {
       expect(await response.json()).toEqual({ status: 'ok' });
     } finally {
       child.kill();
+      fs.rmSync(dataDir, { recursive: true, force: true });
     }
   });
 });
@@ -112,6 +129,6 @@ describe('native TypeScript execution', () => {
 describe('import aliases', () => {
   it('should resolve #platform/backend through package.json imports', async () => {
     const api = await import('#platform/backend');
-    expect(typeof api).toBe('object');
+    expect(typeof api.currentUser).toBe('function');
   });
 });

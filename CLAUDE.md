@@ -43,7 +43,7 @@ If a script below does not exist yet, creating it is part of project setup.
 src/                    all application code
   platform/             the core: everything generic
     frontend/           app shell, home screen, shared UI components
-    backend/            server, accounts, storage layer, module loader
+    backend/            domain/ (logic per area), routes/ (HTTP endpoints), infrastructure/, api/ (public API)
   modules/
     <name>/             one folder per module
       manifest          id, name, icon, route, enabled
@@ -61,12 +61,17 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - **Dependencies point one way.** Modules use only the platform's public API. The platform never imports a module by name and finds modules through their manifests. Modules never import each other. Lint rules enforce this in `verify`.
 - **Removing or disabling a module is one action:** delete its folder, or set `enabled: false` in its manifest. Nothing else may reference it.
 - **A module owns its data.** Its tables are prefixed with the module name and created by its own migrations. Removing the code leaves the data in place. Deleting data is a separate, deliberate step.
+- Backend layout: `domain/<name>/` holds the logic of one area (accounts, auth) behind an `index.ts`, the only file other code may import; it exports the service factory, its interface and the models. Repositories and helpers live in the domain's `internal/` folder and define how a use case uses the database. `domain/services.ts` is the domain layer's single entrypoint: it wires the domains together for the server and the CLI. `routes/` holds every HTTP endpoint, one file per resource with its own paths, thin: validate, call a domain service, shape the response. `infrastructure/` holds the technical side: Express plumbing (guards, error handler, cookies, rate limit), storage (connection, migrations), config, logger, the CLI, `app.ts` and `main.ts`. Domains use infrastructure only through `infrastructure/storage/index.ts` and never import routes or each other's internals; lint enforces this. To add a domain, extend `DOMAINS` in `eslint.config.js`. Factories are named after what they build (`accountsService()`, not `createAccountsService()`).
+- A factory defines small single-purpose functions and ends with `return { create, list, ... }` of function references, never inline functions. A returned object with several properties is written one property per line; lint enforces it. Prefer several small functions over one long one.
+- Expected domain failures are thrown as `Error` subclasses (for example `AccountError`) and caught at the edge (route, CLI). Optional input is `field?: T`; a stored value that can be empty is `T | null`, mapped directly from the database.
+- Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a domain folder move to `types.ts` in that folder (error classes to `errors.ts`). Internal shapes, such as a database row, stay with their code. No global `types.ts`.
 - Generic, reusable UI components live in the platform. UI that belongs to one module stays in that module.
 
 ## Architecture guidelines
 
-- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names and the expected values in tests stay literal.
+- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes are the named constants of `infrastructure/http/status.ts`, imported directly (`BAD_REQUEST`, not `HTTP_STATUS.BAD_REQUEST`).
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
+- Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
 - A tile is either a link or a module, and is shared or personal. Pins are per user.
 - Dev and prod differ only through configuration (HTTPS, secure cookies, backups), never through code. Dev runs plain HTTP on the local network. HTTPS-only headers (HSTS, `upgrade-insecure-requests`) follow `COOKIE_SECURE`, because they break plain HTTP in Safari.

@@ -4,7 +4,7 @@ A private, Pokémon-themed launch pad for home and personal life. Think of a bro
 
 It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Accounts, tiles and modules are coming next, so for now the app shows a placeholder page.
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage and accounts (with the `users` CLI and the login API) are in; tiles, modules and the login screen are coming next, so for now the app shows a placeholder page.
 
 ## Goals
 
@@ -23,7 +23,8 @@ TypeScript everywhere, running on Node.js 26.
 | Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
-| Planned  | SQLite storage, accounts, React Router, TanStack Query, Docker packaging      |
+| Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
+| Planned  | React Router, TanStack Query, Docker packaging                                |
 
 ## Getting started
 
@@ -57,6 +58,7 @@ Then open http://localhost:3000.
 | `npm start`        | Production server (API plus built UI)                                                               |
 | `npm test`         | Unit tests                                                                                          |
 | `npm run test:e2e` | End-to-end tests against the production build (first run: `npx playwright install webkit chromium`) |
+| `npm run users --` | Account CLI: `list`, `create`, `edit`, `archive`, `restore` (see below)                             |
 | `npm run fix`      | Formats and auto-fixes everything                                                                   |
 | `npm run verify`   | Typecheck, lint, format check, unit tests and build. CI runs the same                               |
 
@@ -64,15 +66,28 @@ Then open http://localhost:3000.
 
 Settings come from environment variables. Copy `.env.example` to `.env` to change them. All have defaults.
 
-| Variable           | Default    | Meaning                                                      |
-| ------------------ | ---------- | ------------------------------------------------------------ |
-| `PORT`             | `3000`     | Port of the backend and of the production server             |
-| `HOST`             | `0.0.0.0`  | Address to listen on (all interfaces, so phones can connect) |
-| `DATA_DIR`         | `./data`   | Where runtime data will live (git-ignored)                   |
-| `ASSETS_DIR`       | `./assets` | Folder with all art, served at `/media`                      |
-| `COOKIE_SECURE`    | `false`    | Set to `true` once HTTPS is on                               |
-| `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in                            |
-| `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                         |
+| Variable           | Default    | Meaning                                                          |
+| ------------------ | ---------- | ---------------------------------------------------------------- |
+| `PORT`             | `3000`     | Port of the backend and of the production server                 |
+| `HOST`             | `0.0.0.0`  | Address to listen on (all interfaces, so phones can connect)     |
+| `DATA_DIR`         | `./data`   | Where runtime data lives, the SQLite file included (git-ignored) |
+| `ASSETS_DIR`       | `./assets` | Folder with all art, served at `/media`                          |
+| `COOKIE_SECURE`    | `false`    | Set to `true` once HTTPS is on                                   |
+| `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in                                |
+| `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                             |
+
+## Accounts
+
+There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
+
+```bash
+npm run users -- create
+npm run users -- list
+npm run users -- edit <username> --password <new password>
+npm run users -- archive <username>
+```
+
+Archiving blocks an account from logging in and signs it out everywhere, but keeps its data. `restore` undoes it. Changing a password signs out all of that user's devices. Passwords need at least 8 characters.
 
 ## Project layout
 
