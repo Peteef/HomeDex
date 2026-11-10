@@ -23,5 +23,9 @@ export function sessionCookies(secure: boolean, now: () => number): SessionCooki
     res.clearCookie(SESSION_COOKIE, base);
   }
 
-  return { read, set, clear };
+  return {
+    read,
+    set,
+    clear,
+  };
 }

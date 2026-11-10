@@ -70,5 +70,10 @@ export function sessionService(
     sessions.deleteForUser(userId);
   }
 
-  return { create, resolve, revoke, revokeAllFor };
+  return {
+    create,
+    resolve,
+    revoke,
+    revokeAllFor,
+  };
 }

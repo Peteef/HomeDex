@@ -16,4 +16,8 @@ function error(message: string, ...details: unknown[]): void {
   console.error(message, ...details);
 }
 
-export const logger: Logger = { info, warn, error };
+export const logger: Logger = {
+  info,
+  warn,
+  error,
+};

@@ -128,5 +128,12 @@ export function accountsService(
     return user && valid && user.archived_at === null ? toAccount(user) : null;
   }
 
-  return { create, list, edit, archive, restore, authenticate };
+  return {
+    create,
+    list,
+    edit,
+    archive,
+    restore,
+    authenticate,
+  };
 }

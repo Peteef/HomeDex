@@ -33,5 +33,8 @@ export function domainServices(
     ...(argon2Params && { argon2Params }),
     ...(now && { now }),
   });
-  return { accounts, sessions };
+  return {
+    accounts,
+    sessions,
+  };
 }

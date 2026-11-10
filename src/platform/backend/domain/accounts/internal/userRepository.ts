@@ -74,5 +74,12 @@ export function userRepository(db: Storage): UserRepository {
     replaceArchivedAt.run(archivedAt, id);
   }
 
-  return { insert, findByUsername, list, updateUsername, updatePasswordHash, setArchivedAt };
+  return {
+    insert,
+    findByUsername,
+    list,
+    updateUsername,
+    updatePasswordHash,
+    setArchivedAt,
+  };
 }

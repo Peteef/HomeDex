@@ -64,5 +64,12 @@ export function sessionRepository(db: Storage): SessionRepository {
     deleteBefore.run(now);
   }
 
-  return { insert, findActive, touch, delete: remove, deleteForUser, deleteExpired };
+  return {
+    insert,
+    findActive,
+    touch,
+    delete: remove,
+    deleteForUser,
+    deleteExpired,
+  };
 }
