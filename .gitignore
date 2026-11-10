@@ -1,0 +1,52 @@
+# --- HomeDex: user data and secrets (never commit) ---
+/data/
+/backups/
+.env
+.env.*
+!.env.example
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+*-journal
+*-wal
+*-shm
+
+# Keys and certificates (local HTTPS, VPN, mkcert, etc.)
+*.pem
+*.key
+*.crt
+*.p12
+
+# Local Docker overrides
+docker-compose.override.yml
+
+# --- Dependencies and build output ---
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# --- Tests and tooling caches ---
+coverage/
+playwright-report/
+test-results/
+.eslintcache
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Editors and IDEs ---
+.idea/
+*.iml
+.vscode/
+
+# --- Operating system ---
+.DS_Store
+Thumbs.db
+
+# --- Claude Code (local, per-machine settings) ---
+.claude/settings.local.json
