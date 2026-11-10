@@ -1,9 +1,10 @@
 export interface SceneLayer {
   src: string;
-  className?: string;
 }
 
-const layers: SceneLayer[] = [{ src: '/media/scene/background.svg' }];
+const BACKGROUND_SRC = '/media/scene/background.svg';
+
+const layers: SceneLayer[] = [{ src: BACKGROUND_SRC }];
 
 export function Scene() {
   return (
@@ -13,7 +14,7 @@ export function Scene() {
           key={layer.src}
           src={layer.src}
           alt=""
-          className={`h-full w-full object-cover object-[60%_center] ${layer.className ?? ''}`}
+          className="h-full w-full object-cover object-[60%_center]"
         />
       ))}
     </div>

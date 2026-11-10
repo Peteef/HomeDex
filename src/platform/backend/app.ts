@@ -2,6 +2,12 @@ import path from 'node:path';
 import express from 'express';
 import helmet from 'helmet';
 import type { Config } from './config.ts';
+import { API_PATH, HEALTH_PATH, MEDIA_PATH } from './constants.ts';
+
+const INDEX_FILE = 'index.html';
+const HEALTH_RESPONSE = { status: 'ok' };
+const API_NOT_FOUND_RESPONSE = { error: 'Not found' };
+const HTTP_NOT_FOUND = 404;
 
 export interface AppOptions {
   config: Config;
@@ -28,19 +34,20 @@ export function createApp({ config, webDir, assetsDir }: AppOptions): express.Ex
     }),
   );
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok' });
+  app.get(HEALTH_PATH, (_req, res) => {
+    res.json(HEALTH_RESPONSE);
   });
-  app.use('/api', (_req, res) => {
-    res.status(404).json({ error: 'Not found' });
+  // Without this, an unknown API path would reach the SPA fallback below and return HTML.
+  app.use(API_PATH, (_req, res) => {
+    res.status(HTTP_NOT_FOUND).json(API_NOT_FOUND_RESPONSE);
   });
 
-  app.use('/media', express.static(assetsDir, { fallthrough: false }));
+  app.use(MEDIA_PATH, express.static(assetsDir, { fallthrough: false }));
 
   if (config.NODE_ENV === 'production') {
     app.use(express.static(webDir));
     app.use((_req, res) => {
-      res.sendFile(path.join(webDir, 'index.html'));
+      res.sendFile(path.join(webDir, INDEX_FILE));
     });
   }
 

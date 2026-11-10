@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../app.ts';
 import { loadConfig } from '../config.ts';
 
@@ -45,6 +47,40 @@ describe('app', () => {
     const response = await request(app).get('/media/scene/background.svg');
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('svg');
+  });
+});
+
+describe('app in production', () => {
+  let webDir: string;
+
+  beforeAll(() => {
+    webDir = fs.mkdtempSync(path.join(os.tmpdir(), 'homedex-web-'));
+    fs.writeFileSync(path.join(webDir, 'index.html'), '<title>fake app</title>');
+  });
+
+  afterAll(() => {
+    fs.rmSync(webDir, { recursive: true, force: true });
+  });
+
+  it('should return a JSON 404 when the API route is unknown, not the app page', async () => {
+    const production = createApp({
+      config: loadConfig({ NODE_ENV: 'production' }),
+      webDir,
+      assetsDir,
+    });
+    const response = await request(production).get('/api/nope');
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Not found' });
+  });
+
+  it('should serve the app page when a non-API route is unknown', async () => {
+    const production = createApp({
+      config: loadConfig({ NODE_ENV: 'production' }),
+      webDir,
+      assetsDir,
+    });
+    const response = await request(production).get('/some/deep/link');
+    expect(response.text).toContain('fake app');
   });
 });
 
