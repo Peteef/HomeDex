@@ -40,15 +40,21 @@ If a script below does not exist yet, creating it is part of project setup.
 ## Code structure
 
 ```
-platform/               the core: everything generic
-  frontend/             app shell, home screen, shared UI components
-  backend/              server, accounts, storage layer, module loader
-modules/
-  <name>/               one folder per module
-    manifest            id, name, icon, route, enabled
-    frontend/           the module's UI
-    backend/            the module's API routes and SQL migrations
+src/                    all application code
+  platform/             the core: everything generic
+    frontend/           app shell, home screen, shared UI components
+    backend/            server, accounts, storage layer, module loader
+  modules/
+    <name>/             one folder per module
+      manifest          id, name, icon, route, enabled
+      frontend/         the module's UI
+      backend/          the module's API routes and SQL migrations
+e2e/                    Playwright end-to-end tests
+tests/                  tests of the repository itself, such as the lint boundary rules
+assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 ```
+
+- **Unit tests live in a `__tests__/` folder next to the code they test**, created only where tests exist, so a module's tests stay inside the module. Test files are named `*.test.ts(x)`.
 
 - **Developing a module never changes `platform/`.** If a module needs something from the core, add it to the platform's public API first, as a separate change.
 - **Dependencies point one way.** Modules use only the platform's public API. The platform never imports a module by name and finds modules through their manifests. Modules never import each other. Lint rules enforce this in `verify`.

@@ -8,13 +8,13 @@
     "node": ">=26 <27"
   },
   "imports": {
-    "#platform/backend": "./platform/backend/api/index.ts",
-    "#platform/frontend": "./platform/frontend/api/index.ts"
+    "#platform/backend": "./src/platform/backend/api/index.ts",
+    "#platform/frontend": "./src/platform/frontend/api/index.ts"
   },
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,magenta \"node --watch platform/backend/main.ts\" \"vite\"",
+    "dev": "concurrently -n api,web -c blue,magenta \"node --watch src/platform/backend/main.ts\" \"vite\"",
     "build": "vite build",
-    "start": "node platform/backend/main.ts",
+    "start": "node src/platform/backend/main.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",

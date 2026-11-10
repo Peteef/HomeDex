@@ -1,10 +1,8 @@
 export interface SceneLayer {
   src: string;
-  /** Used for sprite layers later; the background has none. */
   className?: string;
 }
 
-/** Placeholder scene: layers are loaded from the configurable assets location (/media). */
 const layers: SceneLayer[] = [{ src: '/media/scene/background.svg' }];
 
 export function Scene() {

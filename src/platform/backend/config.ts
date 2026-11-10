@@ -15,7 +15,6 @@ const schema = z.object({
 
 export type Config = z.infer<typeof schema>;
 
-/** Reads and validates configuration. Dev and prod differ only through these values. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const result = schema.safeParse(env);
   if (!result.success) {

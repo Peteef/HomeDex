@@ -5,9 +5,7 @@ import type { Config } from './config.ts';
 
 export interface AppOptions {
   config: Config;
-  /** Folder with the built UI. Served only when it exists (production). */
   webDir: string;
-  /** Folder with all art, served at /media. */
   assetsDir: string;
 }
 
@@ -15,8 +13,8 @@ export function createApp({ config, webDir, assetsDir }: AppOptions): express.Ex
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY);
-  // HTTPS-only headers (upgrade-insecure-requests, HSTS) would break plain-HTTP use on the LAN
-  // (Safari upgrades every asset request to https). They are switched on with HTTPS config only.
+  // upgrade-insecure-requests and HSTS make Safari load everything over https, which breaks
+  // plain-HTTP use on the LAN, so they follow the HTTPS setting.
   const https = config.COOKIE_SECURE;
   app.use(
     helmet({

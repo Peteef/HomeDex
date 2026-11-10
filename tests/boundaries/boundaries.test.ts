@@ -25,17 +25,17 @@ async function violationsOf(file: string): Promise<string[]> {
 
 describe('module boundary rules', () => {
   it.each([
-    'platform/backend/ok-platform-internal.ts',
-    'modules/alpha/ok-own-file.ts',
-    'modules/alpha/ok-platform-api.ts',
+    'src/platform/backend/ok-platform-internal.ts',
+    'src/modules/alpha/ok-own-file.ts',
+    'src/modules/alpha/ok-platform-api.ts',
   ])('allows %s', async (file) => {
     expect(await violationsOf(file)).toEqual([]);
   });
 
   it.each([
-    'platform/backend/bad-imports-module.ts',
-    'modules/alpha/bad-other-module.ts',
-    'modules/alpha/bad-platform-internal.ts',
+    'src/platform/backend/bad-imports-module.ts',
+    'src/modules/alpha/bad-other-module.ts',
+    'src/modules/alpha/bad-platform-internal.ts',
   ])('rejects %s', async (file) => {
     expect(await violationsOf(file)).toContain('boundaries/dependencies');
   });

@@ -20,9 +20,8 @@ export default defineConfig({
     },
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
-  // Runs against the production build with a throwaway data folder (no real data is touched).
   webServer: {
-    command: 'npm run build && node platform/backend/main.ts',
+    command: 'npm run build && node src/platform/backend/main.ts',
     url: `http://127.0.0.1:${String(port)}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,

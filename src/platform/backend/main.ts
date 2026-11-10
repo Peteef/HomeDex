@@ -8,7 +8,7 @@ if (fs.existsSync('.env')) {
 }
 
 const config = loadConfig();
-const root = path.resolve(import.meta.dirname, '../..');
+const root = path.resolve(import.meta.dirname, '../../..');
 const app = createApp({
   config,
   webDir: path.join(root, 'dist/web'),

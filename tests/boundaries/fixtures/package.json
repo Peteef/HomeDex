@@ -1,1 +1,1 @@
-{"type":"module","imports":{"#platform/backend":"./platform/backend/api/index.ts"}}
+{"type":"module","imports":{"#platform/backend":"./src/platform/backend/api/index.ts"}}

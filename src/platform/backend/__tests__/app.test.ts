@@ -2,10 +2,10 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from './app.ts';
-import { loadConfig } from './config.ts';
+import { createApp } from '../app.ts';
+import { loadConfig } from '../config.ts';
 
-const root = path.resolve(import.meta.dirname, '../..');
+const root = path.resolve(import.meta.dirname, '../../../..');
 const assetsDir = path.join(root, 'assets');
 
 describe('app', () => {
@@ -50,7 +50,7 @@ describe('app', () => {
 
 describe('native TypeScript execution', () => {
   it('runs the real entry point with plain node, no build step', async () => {
-    const child = spawn('node', ['platform/backend/main.ts'], {
+    const child = spawn('node', ['src/platform/backend/main.ts'], {
       cwd: root,
       env: { ...process.env, PORT: '3917', HOST: '127.0.0.1', NODE_ENV: 'test' },
       stdio: ['ignore', 'pipe', 'pipe'],
