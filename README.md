@@ -24,7 +24,8 @@ TypeScript everywhere, running on Node.js 26.
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
 | Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
-| Planned  | TanStack Query, Docker packaging                                              |
+| Package  | One Docker image (API and built UI) for amd64 and arm64                       |
+| Planned  | TanStack Query                                                                |
 
 ## Getting started
 
