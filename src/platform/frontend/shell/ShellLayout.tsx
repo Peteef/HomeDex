@@ -5,7 +5,7 @@ export const ShellLayout = () => {
   return (
     <>
       <Scene />
-      <main className="safe-area flex min-h-dvh items-end justify-center sm:items-center">
+      <main className="safe-area flex min-h-dvh items-center justify-center">
         <Outlet />
       </main>
     </>

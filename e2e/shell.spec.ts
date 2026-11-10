@@ -68,6 +68,29 @@ test.describe('shell', () => {
     });
   }
 
+  test.describe('layout', () => {
+    test('should centre a short panel vertically when the screen is taller than the panel', async ({
+      page,
+    }) => {
+      // Given
+      await page.goto('/login');
+      const heading = page.getByRole('heading', { level: 1, name: 'Sign in' });
+      await expect(heading).toBeVisible();
+
+      // When
+      const { panelCentre, viewportCentre } = await heading.evaluate((element) => {
+        const box = (element.closest('main')?.firstElementChild ?? element).getBoundingClientRect();
+        return {
+          panelCentre: box.top + box.height / 2,
+          viewportCentre: window.innerHeight / 2,
+        };
+      });
+
+      // Then
+      expect(Math.abs(panelCentre - viewportCentre)).toBeLessThan(2);
+    });
+  });
+
   test.describe('home screen', () => {
     test('should pin and unpin a tile when its pin control is tapped', async ({ page }) => {
       // Given
