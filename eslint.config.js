@@ -48,33 +48,61 @@ export const boundaryRules = {
   },
 };
 
-// A backend domain is a folder under src/platform/backend with an index.ts as its public entrypoint.
-// Code outside the domain imports only that index.ts, never the files behind it.
+// Backend layout: domain/<name>/ holds the logic of one area behind an index.ts, the only file
+// other code may import. infrastructure/ holds the technical side (HTTP, storage, config, CLI).
+// Domains use infrastructure only through the storage entrypoint.
 const BACKEND_DIR = 'src/platform/backend';
-const BACKEND_DOMAINS = ['accounts', 'auth', 'storage'];
+const DOMAIN_DIR = `${BACKEND_DIR}/domain`;
+const DOMAINS = ['accounts', 'auth'];
 
-const restrictToEntrypoints = (domains) => ({
-  'no-restricted-imports': [
-    'error',
-    {
-      patterns: domains.map((domain) => ({
-        group: [`**/${domain}/**`, `!**/${domain}/index.ts`],
-        message: `Import the ${domain} domain only through its index.ts.`,
-      })),
-    },
-  ],
+const entrypointOnly = (folder) => ({
+  group: [`**/${folder}/**`, `!**/${folder}/index.ts`],
+  message: `Import ${folder} only through its index.ts.`,
 });
+const siblingDomains = (domain) =>
+  DOMAINS.filter((other) => other !== domain).map((other) => entrypointOnly(other));
+const storageEntrypointOnly = {
+  // The directory is re-included first, because gitignore-style patterns cannot re-include a file
+  // inside an excluded directory.
+  group: [
+    '**/infrastructure/**',
+    '!**/infrastructure/storage',
+    '!**/infrastructure/storage/index.ts',
+  ],
+  message: 'Domains may use infrastructure only through storage/index.ts.',
+};
+const notRoutes = {
+  group: ['**/routes/**'],
+  message: 'Domains must not depend on routes.',
+};
+const restrictImports = (patterns) => ({ 'no-restricted-imports': ['error', { patterns }] });
 
 /** @type {import('eslint').Linter.Config[]} */
-export const domainEntrypointRules = [
-  ...BACKEND_DOMAINS.map((domain) => ({
-    files: [`${BACKEND_DIR}/${domain}/**/*.ts`],
-    rules: restrictToEntrypoints(BACKEND_DOMAINS.filter((other) => other !== domain)),
-  })),
+export const domainRules = [
+  ...DOMAINS.flatMap((domain) => [
+    {
+      files: [`${DOMAIN_DIR}/${domain}/**/*.ts`],
+      rules: restrictImports([...siblingDomains(domain), storageEntrypointOnly, notRoutes]),
+    },
+    // Tests may use the shared test helpers from infrastructure.
+    {
+      files: [`${DOMAIN_DIR}/${domain}/**/__tests__/**/*.ts`],
+      rules: restrictImports(siblingDomains(domain)),
+    },
+  ]),
+  // domain/services.ts and any other file directly in domain/ may use every domain, through its index.ts.
+  {
+    files: [`${DOMAIN_DIR}/*.ts`],
+    rules: restrictImports([
+      ...DOMAINS.map((domain) => entrypointOnly(domain)),
+      storageEntrypointOnly,
+      notRoutes,
+    ]),
+  },
   {
     files: [`${BACKEND_DIR}/**/*.ts`],
-    ignores: BACKEND_DOMAINS.map((domain) => `${BACKEND_DIR}/${domain}/**`),
-    rules: restrictToEntrypoints(BACKEND_DOMAINS),
+    ignores: [`${DOMAIN_DIR}/**`],
+    rules: restrictImports(DOMAINS.map((domain) => entrypointOnly(`domain/${domain}`))),
   },
 ];
 
@@ -112,7 +140,7 @@ export default defineConfig(
     files: ['src/**/*.{ts,tsx}'],
     ...boundaryRules,
   },
-  ...domainEntrypointRules,
+  ...domainRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,

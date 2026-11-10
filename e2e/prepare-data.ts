@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { E2E_ARCHIVED_USER, E2E_DATA_DIR, E2E_USER } from './fixtures.ts';
 
-const USERS_CLI = 'src/platform/backend/cli/users.ts';
+const USERS_CLI = 'src/platform/backend/infrastructure/cli/users.ts';
 
 function users(...args: string[]): void {
   const result = spawnSync('node', [USERS_CLI, ...args], {

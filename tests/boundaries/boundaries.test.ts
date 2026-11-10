@@ -2,7 +2,7 @@ import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { boundaryRules, domainEntrypointRules } from '../../eslint.config.js';
+import { boundaryRules, domainRules } from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -17,7 +17,7 @@ async function violationsOf(file: string): Promise<string[]> {
         languageOptions: { parser: tseslint.parser },
         settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
       },
-      ...domainEntrypointRules,
+      ...domainRules,
     ],
   });
   const [result] = await eslint.lintFiles([file]);
@@ -42,19 +42,28 @@ describe('module boundary rules', () => {
   });
 });
 
-describe('domain entrypoint rules', () => {
+describe('domain rules', () => {
+  const backend = 'src/platform/backend';
+
   it.each([
-    'src/platform/backend/ok-domain-entrypoint.ts',
-    'src/platform/backend/accounts/ok-own-internal.ts',
-    'src/platform/backend/auth/ok-other-domain-entrypoint.ts',
+    `${backend}/infrastructure/ok-domain-entrypoint.ts`,
+    `${backend}/domain/accounts/ok-own-internal.ts`,
+    `${backend}/domain/auth/ok-other-domain-entrypoint.ts`,
+    `${backend}/domain/auth/ok-storage-entrypoint.ts`,
+    `${backend}/domain/auth/__tests__/ok-test-helper.ts`,
+    `${backend}/domain/ok-aggregate.ts`,
   ])('should allow %s', async (file) => {
     expect(await violationsOf(file)).toEqual([]);
   });
 
   it.each([
-    'src/platform/backend/bad-domain-internal.ts',
-    'src/platform/backend/bad-domain-file.ts',
-    'src/platform/backend/auth/bad-other-domain-internal.ts',
+    `${backend}/infrastructure/bad-domain-internal.ts`,
+    `${backend}/infrastructure/bad-domain-file.ts`,
+    `${backend}/domain/auth/bad-other-domain-internal.ts`,
+    `${backend}/domain/auth/bad-infrastructure.ts`,
+    `${backend}/domain/auth/bad-storage-internal.ts`,
+    `${backend}/domain/auth/bad-routes.ts`,
+    `${backend}/domain/bad-aggregate-internal.ts`,
   ])('should reject %s', async (file) => {
     expect(await violationsOf(file)).toContain('no-restricted-imports');
   });
