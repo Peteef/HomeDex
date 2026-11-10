@@ -28,7 +28,7 @@ describe('module boundary rules', () => {
     'src/platform/backend/ok-platform-internal.ts',
     'src/modules/alpha/ok-own-file.ts',
     'src/modules/alpha/ok-platform-api.ts',
-  ])('allows %s', async (file) => {
+  ])('should allow %s', async (file) => {
     expect(await violationsOf(file)).toEqual([]);
   });
 
@@ -36,7 +36,7 @@ describe('module boundary rules', () => {
     'src/platform/backend/bad-imports-module.ts',
     'src/modules/alpha/bad-other-module.ts',
     'src/modules/alpha/bad-platform-internal.ts',
-  ])('rejects %s', async (file) => {
+  ])('should reject %s', async (file) => {
     expect(await violationsOf(file)).toContain('boundaries/dependencies');
   });
 });

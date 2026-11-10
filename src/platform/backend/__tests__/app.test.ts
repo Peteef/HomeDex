@@ -11,20 +11,20 @@ const assetsDir = path.join(root, 'assets');
 describe('app', () => {
   const app = createApp({ config: loadConfig({}), webDir: path.join(root, 'dist/web'), assetsDir });
 
-  it('answers the health check with security headers', async () => {
+  it('should answer the health check with security headers', async () => {
     const response = await request(app).get('/api/health');
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok' });
     expect(response.headers['x-content-type-options']).toBe('nosniff');
   });
 
-  it('does not force HTTPS while HTTPS is off (plain HTTP on the LAN)', async () => {
+  it('should not force HTTPS when HTTPS is off', async () => {
     const response = await request(app).get('/api/health');
     expect(response.headers['content-security-policy']).not.toContain('upgrade-insecure-requests');
     expect(response.headers['strict-transport-security']).toBeUndefined();
   });
 
-  it('forces HTTPS when HTTPS is on', async () => {
+  it('should force HTTPS when HTTPS is on', async () => {
     const secureApp = createApp({
       config: loadConfig({ COOKIE_SECURE: 'true' }),
       webDir: path.join(root, 'dist/web'),
@@ -35,13 +35,13 @@ describe('app', () => {
     expect(response.headers['strict-transport-security']).toBeDefined();
   });
 
-  it('returns a JSON 404 for unknown API routes', async () => {
+  it('should return a JSON 404 when the API route is unknown', async () => {
     const response = await request(app).get('/api/nope');
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ error: 'Not found' });
   });
 
-  it('serves placeholder art from the assets folder at /media', async () => {
+  it('should serve art from the assets folder at /media', async () => {
     const response = await request(app).get('/media/scene/background.svg');
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('svg');
@@ -49,7 +49,7 @@ describe('app', () => {
 });
 
 describe('native TypeScript execution', () => {
-  it('runs the real entry point with plain node, no build step', async () => {
+  it('should run the real entry point with plain node', async () => {
     const child = spawn('node', ['src/platform/backend/main.ts'], {
       cwd: root,
       env: { ...process.env, PORT: '3917', HOST: '127.0.0.1', NODE_ENV: 'test' },
@@ -74,7 +74,7 @@ describe('native TypeScript execution', () => {
 });
 
 describe('import aliases', () => {
-  it('resolves #platform/backend through package.json imports', async () => {
+  it('should resolve #platform/backend through package.json imports', async () => {
     const api = await import('#platform/backend');
     expect(typeof api).toBe('object');
   });
