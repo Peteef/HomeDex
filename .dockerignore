@@ -24,7 +24,8 @@ test-results/
 *.tsbuildinfo
 *.log
 
-# Tests and tooling the image does not run
+# Tests and tooling the image does not run (scripts/ holds the development test user)
+scripts/
 **/__tests__/
 e2e/
 tests/

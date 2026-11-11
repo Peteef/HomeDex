@@ -54,7 +54,7 @@ Then open http://localhost:3000.
 
 | Command            | What it does                                                                                        |
 | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload                            |
+| `npm run dev`      | Development: creates the test user if missing, then Vite on port 5173 and the backend on port 3000  |
 | `npm run build`    | Builds the UI into `dist/web`                                                                       |
 | `npm start`        | Production server (API plus built UI)                                                               |
 | `npm test`         | Unit tests                                                                                          |
@@ -78,6 +78,8 @@ Settings come from environment variables. Copy `.env.example` to `.env` to chang
 | `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                             |
 
 ## Accounts
+
+In development, `npm run dev` creates a test user if it is missing: username `Tester`, password `test12345`. It exists only in your local `data/` folder. The script that creates it is never part of the production server or the Docker image, and it refuses to run when `NODE_ENV=production`.
 
 There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
 
