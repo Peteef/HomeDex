@@ -8,8 +8,9 @@
     "node": ">=26 <27"
   },
   "imports": {
-    "#platform/backend": "./src/platform/backend/api/index.ts",
-    "#platform/frontend": "./src/platform/frontend/api/index.ts"
+    "#platform/backend": "./src/platform/backend/public-api/index.ts",
+    "#platform/frontend": "./src/platform/frontend/public-api/index.ts",
+    "#platform/shared": "./src/platform/shared/public-api/index.ts"
   },
   "scripts": {
     "dev": "node scripts/dev-user.ts && concurrently -n api,web -c blue,magenta \"node --watch src/platform/backend/infrastructure/main.ts\" \"vite\"",

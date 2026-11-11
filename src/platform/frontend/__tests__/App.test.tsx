@@ -35,16 +35,6 @@ describe('App', () => {
       ).toBeInTheDocument();
     });
 
-    it('should show the module placeholder at /m/<anything>', async () => {
-      // When
-      await renderAt('/m/shopping-list/items');
-
-      // Then
-      expect(
-        screen.getByRole('heading', { level: 1, name: 'Module not available' }),
-      ).toBeInTheDocument();
-    });
-
     it('should show the not-found placeholder when the path is unknown', async () => {
       // When
       await renderAt('/nowhere');

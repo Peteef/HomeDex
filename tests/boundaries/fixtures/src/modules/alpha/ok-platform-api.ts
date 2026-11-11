@@ -1,2 +1,2 @@
-import { api } from '#platform/backend';
-export const ok = api;
+import { sharedApi } from '#platform/shared';
+export const ok = sharedApi;

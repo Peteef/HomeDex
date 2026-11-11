@@ -4,6 +4,7 @@ import request from 'supertest';
 import type { Express } from 'express';
 import { createApp } from '../app.ts';
 import type { LoginLimit } from '../http/auth/loginRateLimit.ts';
+import type { LoadedModule } from '../modules/types.ts';
 import { loadConfig } from '../config.ts';
 import type { Argon2Params } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
@@ -31,7 +32,7 @@ export interface TestApp {
 
 export const createTestApp = (
   env: Record<string, string> = {},
-  overrides: { loginLimit?: LoginLimit } = {},
+  overrides: { loginLimit?: LoginLimit; modules?: LoadedModule[] } = {},
 ): TestApp => {
   const db = createTestDatabase();
   const clock = { now: Date.now() };
@@ -39,6 +40,7 @@ export const createTestApp = (
   const app = createApp({
     config: loadConfig(env),
     storage: db,
+    modules: [],
     webDir: path.join(root, 'dist/web'),
     assetsDir: path.join(root, 'assets'),
     argon2Params: FAST_ARGON2,

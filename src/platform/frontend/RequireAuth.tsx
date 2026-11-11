@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
+import { LoadingStatus } from './components/loading-status/LoadingStatus.tsx';
 import { CurrentUserContext, redirectState, useSession } from './features/auth/index.ts';
 import { SessionUnavailablePage } from './pages/session-unavailable/SessionUnavailablePage.tsx';
 import { LOGIN_PATH } from './routes.ts';
@@ -8,11 +9,7 @@ export const RequireAuth = () => {
   const location = useLocation();
 
   if (session.isPending) {
-    return (
-      <p role="status" className="sr-only">
-        Loading…
-      </p>
-    );
+    return <LoadingStatus />;
   }
 
   if (session.data) {

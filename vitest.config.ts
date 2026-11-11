@@ -10,6 +10,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             'src/platform/backend/**/__tests__/**/*.test.ts',
+            'src/platform/shared/**/__tests__/**/*.test.ts',
             'src/modules/*/backend/**/__tests__/**/*.test.ts',
             'scripts/**/__tests__/**/*.test.ts',
             'tests/**/*.test.ts',

@@ -9,7 +9,82 @@ import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 // Platform never imports modules. A module imports only its own files and the platform public
-// APIs (#platform/*), never another module.
+// APIs (#platform/*), never another module. Inside a module, the layers mirror the platform:
+// frontend/ has pages, components and features, backend/ has domain and routes. The manifest uses
+// only #platform/shared, the frontend #platform/frontend and the backend #platform/backend.
+const SAME_MODULE = '{{ from.captured.id }}';
+const SAME_NAME = '{{ from.captured.name }}';
+
+const MODULE_ELEMENTS = [
+  { type: 'module-page', pattern: 'src/modules/*/frontend/pages/*', capture: ['id', 'name'] },
+  {
+    type: 'module-component',
+    pattern: 'src/modules/*/frontend/components/*',
+    capture: ['id', 'name'],
+  },
+  { type: 'module-feature', pattern: 'src/modules/*/frontend/features/*', capture: ['id', 'name'] },
+  { type: 'module-frontend', pattern: 'src/modules/*/frontend', capture: ['id'] },
+  { type: 'module-domain', pattern: 'src/modules/*/backend/domain/*', capture: ['id', 'name'] },
+  { type: 'module-routes', pattern: 'src/modules/*/backend/routes', capture: ['id'] },
+  { type: 'module-backend', pattern: 'src/modules/*/backend', capture: ['id'] },
+  { type: 'module', pattern: 'src/modules/*', capture: ['id'] },
+];
+
+const platformApi = (side) => ({
+  element: { type: 'platform' },
+  file: { path: `src/platform/${side}/public-api/index.ts` },
+});
+
+const inModule = (type) => ({ element: { type, captured: { id: SAME_MODULE } } });
+
+const sameElement = (type) => ({
+  element: { type, captured: { id: SAME_MODULE, name: SAME_NAME } },
+});
+
+const entrypointOf = (type, folder) => ({
+  ...inModule(type),
+  file: { path: `src/modules/*/${folder}/*/index.ts` },
+});
+
+const component = inModule('module-component');
+const featureEntrypoint = entrypointOf('module-feature', 'frontend/features');
+const domainEntrypoint = entrypointOf('module-domain', 'backend/domain');
+const manifest = { ...inModule('module'), file: { path: 'src/modules/*/manifest.ts' } };
+const frontendApis = [platformApi('frontend'), platformApi('shared')];
+const backendApis = [platformApi('backend'), platformApi('shared')];
+
+// For each element type of a module, what it may import.
+const MODULE_POLICIES = {
+  'module-component': [component, ...frontendApis],
+  'module-feature': [sameElement('module-feature'), featureEntrypoint, component, ...frontendApis],
+  'module-page': [
+    sameElement('module-page'),
+    component,
+    featureEntrypoint,
+    manifest,
+    ...frontendApis,
+  ],
+  'module-frontend': [
+    inModule('module-frontend'),
+    inModule('module-page'),
+    component,
+    featureEntrypoint,
+    manifest,
+    ...frontendApis,
+  ],
+  'module-domain': [sameElement('module-domain'), domainEntrypoint, ...backendApis],
+  'module-routes': [inModule('module-routes'), domainEntrypoint, ...backendApis],
+  'module-backend': [
+    inModule('module-backend'),
+    inModule('module-routes'),
+    domainEntrypoint,
+    manifest,
+    ...backendApis,
+  ],
+  // The manifest, and anything else at a module's root.
+  module: [platformApi('shared')],
+};
+
 /** @type {import('eslint').Linter.Config} */
 export const boundaryRules = {
   plugins: { boundaries },
@@ -17,7 +92,7 @@ export const boundaryRules = {
     'import/resolver': { typescript: { project: './tsconfig.json' } },
     'boundaries/elements': [
       { type: 'platform', pattern: 'src/platform/*', capture: ['side'] },
-      { type: 'module', pattern: 'src/modules/*', capture: ['id'] },
+      ...MODULE_ELEMENTS,
     ],
   },
   rules: {
@@ -31,18 +106,12 @@ export const boundaryRules = {
             from: { element: { type: 'platform' } },
             allow: { to: { element: { type: 'platform' } } },
           },
-          {
-            from: { element: { type: 'module' } },
-            allow: {
-              to: { element: { type: 'module', captured: { id: '{{ from.captured.id }}' } } },
-            },
-          },
-          {
-            from: { element: { type: 'module' } },
-            allow: {
-              to: { element: { type: 'platform' }, file: { path: 'src/platform/*/api/index.ts' } },
-            },
-          },
+          ...Object.entries(MODULE_POLICIES).flatMap(([type, targets]) =>
+            targets.map((to) => ({
+              from: { element: { type } },
+              allow: { to },
+            })),
+          ),
         ],
       },
     ],
@@ -117,7 +186,7 @@ export const domainRules = [
 // wires them. Features and libs are used only through their index.ts. Dependencies point one way:
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
-const FRONTEND_FEATURES = ['auth'];
+const FRONTEND_FEATURES = ['auth', 'modules'];
 const FRONTEND_LIBS = ['http'];
 
 const SKELETON = [

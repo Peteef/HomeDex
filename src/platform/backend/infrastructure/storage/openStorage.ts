@@ -5,7 +5,7 @@ import { openDatabase } from './db.ts';
 import { runMigrations } from './migrator.ts';
 
 const DATABASE_FILE = 'homedex.db';
-const PLATFORM_SCOPE = 'platform';
+export const PLATFORM_SCOPE = 'platform';
 const PLATFORM_MIGRATIONS_DIR = path.join(import.meta.dirname, 'migrations');
 
 export const migratePlatform = (db: Database.Database): void => {

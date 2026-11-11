@@ -13,6 +13,7 @@ import { requireAuth } from './http/auth/requireAuth.ts';
 import { sessionCookies } from './http/auth/sessionCookie.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
+import type { LoadedModule } from './modules/types.ts';
 import type { Storage } from './storage/index.ts';
 import { NOT_FOUND } from '../../shared/http/status.ts';
 
@@ -22,6 +23,7 @@ const API_NOT_FOUND_RESPONSE = { error: 'Not found' };
 export interface AppOptions {
   config: Config;
   storage: Storage;
+  modules: LoadedModule[];
   webDir: string;
   assetsDir: string;
   // Overrides for tests: a cheap password hash, a controllable clock and a small login limit.
@@ -33,6 +35,7 @@ export interface AppOptions {
 export const createApp = ({
   config,
   storage,
+  modules,
   webDir,
   assetsDir,
   argon2Params,
@@ -75,6 +78,8 @@ export const createApp = ({
       accounts,
       sessions,
       tiles,
+      modules,
+      storage,
       cookies,
       requireAuth: requireAuth(sessions, cookies),
       loginRateLimit: loginRateLimit(loginLimit),
