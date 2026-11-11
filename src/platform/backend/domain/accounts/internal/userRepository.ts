@@ -29,6 +29,7 @@ const failIfTaken = <T>(username: string, write: () => T): T => {
     if (isUniqueViolation(error)) {
       throw new AccountError('taken', `Username "${username}" is already taken`);
     }
+
     throw error;
   }
 };
@@ -37,10 +38,13 @@ export const userRepository = (db: Storage): UserRepository => {
   const insertUser = db.prepare(
     'INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?) RETURNING *',
   );
+
   const selectByUsername = db.prepare('SELECT * FROM users WHERE username = ?');
+
   const selectActive = db.prepare(
     'SELECT * FROM users WHERE archived_at IS NULL ORDER BY username',
   );
+
   const selectAll = db.prepare('SELECT * FROM users ORDER BY username');
   const renameUser = db.prepare('UPDATE users SET username = ? WHERE id = ?');
   const replacePasswordHash = db.prepare('UPDATE users SET password_hash = ? WHERE id = ?');

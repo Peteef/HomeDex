@@ -3,6 +3,7 @@ import { sortTiles } from '../sortTiles.ts';
 
 const titles = (tiles: { title: string }[]) => tiles.map((tile) => tile.title);
 const tile = (title: string) => ({ title });
+
 const pinnedTitles =
   (...pinned: string[]) =>
   (candidate: { title: string }) =>

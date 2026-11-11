@@ -25,22 +25,28 @@ const listMigrations = (directory: string): Migration[] => {
     .sort()
     .map((name) => {
       const match = MIGRATION_FILE.exec(name);
+
       if (!match?.[1]) {
         throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
       }
+
       return {
         version: Number(match[1]),
         name,
         file: path.join(directory, name),
       };
     });
+
   const seen = new Set<number>();
+
   for (const { version, name } of migrations) {
     if (seen.has(version)) {
       throw new Error(`Duplicate migration number ${String(version)}: ${name}`);
     }
+
     seen.add(version);
   }
+
   return migrations;
 };
 
@@ -49,26 +55,34 @@ const listMigrations = (directory: string): Migration[] => {
 // data folder is reset, so applied files are not checked for changes.
 export const runMigrations = (db: Storage, scope: string, directory: string): string[] => {
   db.exec(CREATE_TABLE);
+
   const applied = new Set(
     db
       .prepare('SELECT version FROM schema_migrations WHERE scope = ?')
       .pluck()
       .all(scope) as number[],
   );
+
   const record = db.prepare(
     'INSERT INTO schema_migrations (scope, version, name, applied_at) VALUES (?, ?, ?, ?)',
   );
+
   const appliedNow: string[] = [];
+
   for (const migration of listMigrations(directory)) {
     if (applied.has(migration.version)) {
       continue;
     }
+
     const sql = fs.readFileSync(migration.file, 'utf8');
+
     db.transaction(() => {
       db.exec(sql);
       record.run(scope, migration.version, migration.name, Date.now());
     })();
+
     appliedNow.push(migration.name);
   }
+
   return appliedNow;
 };

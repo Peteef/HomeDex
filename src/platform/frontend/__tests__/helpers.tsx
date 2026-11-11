@@ -52,12 +52,14 @@ const toCall = (url: string, init: RequestInit = {}): ApiCall => ({
 // so a test fails loudly when the app calls something it did not expect.
 export const fakeApi = (routes: Record<string, Handler>) => {
   const calls: ApiCall[] = [];
+
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const call = toCall(url, init);
     calls.push(call);
     const handler = routes[`${call.method} ${call.url}`] ?? status(404);
     return toResponse(typeof handler === 'function' ? await handler(call) : handler);
   });
+
   vi.stubGlobal('fetch', fetchMock);
   return {
     calls,

@@ -35,6 +35,7 @@ describe('Scene', () => {
     expect(container.querySelector('img[src="/media/sprite.svg"]')).toHaveClass(
       'motion-safe:animate-float',
     );
+
     expect(container.querySelector('img[src="/media/back.svg"]')).not.toHaveClass(
       'motion-safe:animate-float',
     );

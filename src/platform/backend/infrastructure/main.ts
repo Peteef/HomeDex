@@ -11,6 +11,7 @@ loadEnvFile();
 
 const config = loadConfig();
 const storage = openStorage(path.resolve(config.DATA_DIR));
+
 const app = createApp({
   config,
   storage,

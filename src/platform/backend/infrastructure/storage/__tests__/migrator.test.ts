@@ -13,6 +13,7 @@ describe('migrator', () => {
   const write = (name: string, sql: string): void => {
     fs.writeFileSync(path.join(dir, name), sql);
   };
+
   const tables = (): string[] =>
     (
       db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all() as {
@@ -102,6 +103,7 @@ describe('migrator', () => {
         name: string;
       }[]
     ).map((row) => row.name);
+
     expect(names).toEqual(expect.arrayContaining(['users', 'sessions', 'schema_migrations']));
   });
 });

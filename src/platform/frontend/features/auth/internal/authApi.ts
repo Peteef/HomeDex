@@ -16,6 +16,7 @@ export const fetchCurrentUser = async (): Promise<CurrentUser | null> => {
     if (isUnauthorized(error)) {
       return null;
     }
+
     throw error;
   }
 };

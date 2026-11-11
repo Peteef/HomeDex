@@ -74,6 +74,7 @@ describe('password', () => {
       // When / Then
       expect(await verifyPassword('anything', 'plaintext')).toBe(false);
       expect(await verifyPassword('anything', 'scrypt$16$1$1$a$b')).toBe(false);
+
       expect(await verifyPassword('anything', '$argon2i$v=19$m=8,t=1,p=1$c2FsdA$aGFzaA')).toBe(
         false,
       );

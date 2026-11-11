@@ -67,6 +67,7 @@ describe('LoginPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: /Hello Misty!/ }),
     ).toBeInTheDocument();
+
     expect(api.callsTo(LOGIN)[0]?.body).toEqual({ username: 'Misty', password: 'fake-password' });
   });
 
@@ -132,6 +133,7 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Password')).toHaveFocus();
     });
+
     expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.getByLabelText('Username')).toHaveValue('Misty');
   });
@@ -163,6 +165,7 @@ describe('LoginPage', () => {
   it('should disable the button while the login is on its way', async () => {
     // Given
     let answer: (response: FakeResponse) => void = () => undefined;
+
     openLogin(
       () =>
         new Promise<FakeResponse>((resolve) => {

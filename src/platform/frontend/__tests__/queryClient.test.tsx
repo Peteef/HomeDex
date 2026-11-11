@@ -11,10 +11,12 @@ const queryThings = (queryClient = testQueryClient()) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+
   const { result } = renderHook(
     () => useQuery({ queryKey: ['things'], queryFn: () => getJson('/things') }),
     { wrapper },
   );
+
   return result;
 };
 
@@ -30,6 +32,7 @@ describe('app query client', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
+
     expect(api.calls).toHaveLength(1);
   });
 
@@ -44,6 +47,7 @@ describe('app query client', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
+
     expect(api.calls).toHaveLength(4);
   });
 
@@ -60,6 +64,7 @@ describe('app query client', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
+
     expect(queryClient.getQueryData(SESSION_KEY)).toBeNull();
   });
 });

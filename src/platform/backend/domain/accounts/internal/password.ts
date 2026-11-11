@@ -53,15 +53,19 @@ export const hashPassword = async (
 
 export const verifyPassword = async (password: string, stored: string): Promise<boolean> => {
   const match = PHC_FORMAT.exec(stored);
+
   if (!match) {
     return false;
   }
+
   const [, memory, passes, parallelism, salt, key] = match;
   const expected = Buffer.from(key ?? '', ENCODING);
+
   const actual = await derive(password, Buffer.from(salt ?? '', ENCODING), {
     memory: Number(memory),
     passes: Number(passes),
     parallelism: Number(parallelism),
   });
+
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 };

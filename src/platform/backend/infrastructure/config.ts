@@ -27,12 +27,15 @@ export type Config = z.infer<typeof schema>;
 
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
   const result = schema.safeParse(env);
+
   if (!result.success) {
     const problems = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join('; ');
+
     throw new Error(`Invalid configuration: ${problems}`);
   }
+
   rejectDevConfigInProduction(result.data, env);
   return result.data;
 };

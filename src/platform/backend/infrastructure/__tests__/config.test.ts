@@ -73,6 +73,7 @@ describe('config', () => {
       expect(() => {
         loadEnvFile(path.join(dir, 'missing.env'));
       }).not.toThrow();
+
       expect(process.env.HOMEDEX_TEST_ENV_FILE_VALUE).toBeUndefined();
     });
   });

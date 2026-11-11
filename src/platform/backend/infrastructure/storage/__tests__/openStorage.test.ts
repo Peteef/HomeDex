@@ -26,6 +26,7 @@ describe('openStorage', () => {
     const tables = (
       db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[]
     ).map((row) => row.name);
+
     db.close();
     expect(fs.existsSync(dataDir)).toBe(true);
     expect(tables).toEqual(expect.arrayContaining(['users', 'sessions']));
@@ -34,9 +35,11 @@ describe('openStorage', () => {
   it('should keep the data and apply no migration twice when the storage is opened again', () => {
     // Given
     const first = openStorage(root);
+
     first
       .prepare("INSERT INTO users (username, password_hash, created_at) VALUES ('ash', 'x', 1)")
       .run();
+
     first.close();
 
     // When
@@ -44,9 +47,11 @@ describe('openStorage', () => {
 
     // Then
     const users = second.prepare('SELECT COUNT(*) AS n FROM users').get() as { n: number };
+
     const applied = second.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get() as {
       n: number;
     };
+
     second.close();
     expect(users.n).toBe(1);
     expect(applied.n).toBe(2);

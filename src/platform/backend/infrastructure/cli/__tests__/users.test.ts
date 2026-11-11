@@ -18,6 +18,7 @@ describe('users CLI', () => {
       input,
       encoding: 'utf8',
     });
+
     return {
       code: result.status,
       out: result.stdout,

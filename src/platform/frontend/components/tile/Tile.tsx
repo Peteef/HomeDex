@@ -44,6 +44,7 @@ export const Tile = ({
       ) : null}
     </>
   );
+
   return (
     <article className="border-dex-line bg-dex-card relative rounded-2xl border">
       {external ? (

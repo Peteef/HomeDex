@@ -13,9 +13,11 @@ describe('apiErrorHandler', () => {
     // Given
     const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const app = express();
+
     app.get('/boom', () => {
       throw new Error('database exploded');
     });
+
     app.use(apiErrorHandler);
 
     // When
@@ -32,9 +34,11 @@ describe('apiErrorHandler', () => {
     // Given
     const app = express();
     app.use(express.json());
+
     app.post('/echo', (_req, res) => {
       res.end();
     });
+
     app.use(apiErrorHandler);
 
     // When

@@ -15,11 +15,13 @@ const renderTile = (props: Partial<TileProps> = {}) => {
     onTogglePin: vi.fn(),
     ...props,
   };
+
   render(
     <MemoryRouter>
       <Tile {...all} />
     </MemoryRouter>,
   );
+
   return all;
 };
 

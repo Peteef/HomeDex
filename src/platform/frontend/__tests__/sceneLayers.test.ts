@@ -18,6 +18,7 @@ describe('scene layers', () => {
 
     // When / Then
     expect(animated.length).toBeGreaterThan(0);
+
     for (const layer of animated) {
       expect(layer.className).toContain('motion-safe:animate-float');
     }

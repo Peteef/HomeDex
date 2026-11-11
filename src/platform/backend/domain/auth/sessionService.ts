@@ -40,6 +40,7 @@ export const sessionService = (
     sessions.deleteExpired(current);
     const token = randomBytes(TOKEN_BYTES).toString(TOKEN_ENCODING);
     const expiresAt = current + ttlMs;
+
     sessions.insert({
       tokenHash: hashToken(token),
       userId,
@@ -47,6 +48,7 @@ export const sessionService = (
       expiresAt,
       userAgent: userAgent?.slice(0, MAX_USER_AGENT_LENGTH) ?? null,
     });
+
     return {
       token,
       expiresAt,
@@ -57,13 +59,17 @@ export const sessionService = (
     const tokenHash = hashToken(token);
     const current = now();
     const row = sessions.findActive(tokenHash, current);
+
     if (!row) {
       return null;
     }
+
     const renewedUntil = shouldSlide(row.last_seen_at, current) ? current + ttlMs : null;
+
     if (renewedUntil !== null) {
       sessions.touch(tokenHash, current, renewedUntil);
     }
+
     return {
       user: { id: row.user_id, username: row.username },
       renewedUntil,

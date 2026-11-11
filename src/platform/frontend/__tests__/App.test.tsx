@@ -82,6 +82,7 @@ describe('App', () => {
 
       // Then
       expect(pin).toHaveAttribute('aria-pressed', 'true');
+
       expect(screen.getByRole('button', { name: 'Pin Weight log' })).toHaveAttribute(
         'aria-pressed',
         'false',
@@ -175,6 +176,7 @@ describe('App', () => {
         'GET /api/auth/me': signedIn(),
         'POST /api/auth/logout': { status: 204 },
       });
+
       renderApp('/');
       const signOut = await screen.findByRole('button', { name: 'Sign out' });
 
