@@ -2,7 +2,6 @@ import type { Language } from '../../lib/i18n/index.ts';
 import { displayText } from './displayText.ts';
 import type { Tile } from './types.ts';
 
-// Pinned first, then by the title shown in the language, ignoring case and accents.
 export const sortTiles = (tiles: readonly Tile[], language: Language): Tile[] => {
   const collator = new Intl.Collator(language, { sensitivity: 'base' });
   const titleOf = (tile: Tile): string => displayText(tile, language).title;

@@ -77,8 +77,6 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
     return toTile(row, isEditable(row, userId));
   };
 
-  // Pinned first, then by Dex number. The UI sorts by title, since the title depends on the
-  // language it shows.
   const list = (userId: number): Tile[] =>
     tiles.listForUser(userId).map((row) => toTile(row, isEditable(row, userId)));
 

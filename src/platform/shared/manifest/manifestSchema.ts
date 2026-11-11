@@ -10,8 +10,6 @@ const quickActionSchema = z.strictObject({
   keyword: z.string().regex(KEYWORD, 'must be one lowercase word'),
 });
 
-// The manifest holds no text: a module's name and description, like all its text, live in its
-// locale files (`manifest.name`, `manifest.description`), so they follow the user's language.
 export const manifestSchema = z
   .strictObject({
     id: z.string().regex(KEBAB_CASE, 'must be kebab-case'),

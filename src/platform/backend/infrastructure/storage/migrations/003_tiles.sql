@@ -19,8 +19,6 @@ CREATE TABLE tiles (
 
 CREATE INDEX tiles_owner_id ON tiles (owner_id);
 
--- The title and description of a link tile, one row per language the user wrote them in. Module
--- tiles have none: their text comes from the module's locale files.
 CREATE TABLE tile_texts (
   tile_id INTEGER NOT NULL REFERENCES tiles (id) ON DELETE CASCADE,
   language TEXT NOT NULL,

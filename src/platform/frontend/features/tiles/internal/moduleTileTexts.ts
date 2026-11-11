@@ -11,7 +11,6 @@ interface ManifestMessages {
   };
 }
 
-// A module's tile shows `manifest.name` and `manifest.description` of its locale files.
 const tileTextOf = (messages: ResourceKey): TileText | undefined => {
   const { manifest } = messages as ManifestMessages;
 

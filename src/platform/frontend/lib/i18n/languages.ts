@@ -4,7 +4,6 @@ import type { Language } from '../../../shared/i18n/languages.ts';
 export { isLanguage, SOURCE_LANGUAGE } from '../../../shared/i18n/languages.ts';
 export type { Language } from '../../../shared/i18n/languages.ts';
 
-// The switcher shows a flag and the code ("🇵🇱 PL"), the same in every language.
 const FLAGS: Record<Language, string> = {
   en: '🇬🇧',
   pl: '🇵🇱',

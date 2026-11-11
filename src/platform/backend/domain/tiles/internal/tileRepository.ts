@@ -1,4 +1,5 @@
 import type { Storage } from '../../../infrastructure/storage/index.ts';
+import type { Language } from '../../../../shared/i18n/languages.ts';
 import type { TileKind, TileScope, TileText, TileTexts } from '../types.ts';
 
 interface TileRow {
@@ -14,16 +15,19 @@ interface TileRow {
   updated_at: number;
 }
 
-// A tile as one user sees it, with its texts as a JSON object keyed by language, that user's pin
-// and whether its creator is archived.
-interface UserTileQueryRow extends TileRow {
-  texts: string;
+export interface UserTileRow extends TileRow {
+  texts: TileTexts;
   pinned: 0 | 1;
   owner_archived: 0 | 1;
 }
 
-export interface UserTileRow extends Omit<UserTileQueryRow, 'texts'> {
-  texts: TileTexts;
+type UserTileQueryRow = Omit<UserTileRow, 'texts'>;
+
+interface TileTextRow {
+  tile_id: number;
+  language: Language;
+  title: string;
+  description: string | null;
 }
 
 export interface LinkTileRecord {
@@ -42,8 +46,6 @@ export interface TileRepository {
 }
 
 const USER_TILE_COLUMNS = `tiles.*,
-  (SELECT json_group_object(language, json_object('title', title, 'description', description))
-     FROM tile_texts WHERE tile_texts.tile_id = tiles.id) AS texts,
   pins.user_id IS NOT NULL AS pinned,
   COALESCE(owners.archived_at IS NOT NULL, 0) AS owner_archived`;
 
@@ -52,9 +54,19 @@ const USER_TILE_JOINS = `LEFT JOIN pins ON pins.tile_id = tiles.id AND pins.user
 
 const VISIBLE_TO_USER = "(tiles.scope = 'shared' OR tiles.owner_id = @userId)";
 
-const parseTexts = (row: UserTileQueryRow): UserTileRow => ({
+const textsByTile = (rows: TileTextRow[]): Map<number, TileTexts> => {
+  const texts = new Map<number, TileTexts>();
+
+  for (const { tile_id, language, title, description } of rows) {
+    texts.set(tile_id, { ...texts.get(tile_id), [language]: { title, description } });
+  }
+
+  return texts;
+};
+
+const withTexts = (row: UserTileQueryRow, texts: Map<number, TileTexts>): UserTileRow => ({
   ...row,
-  texts: JSON.parse(row.texts) as TileTexts,
+  texts: texts.get(row.id) ?? {},
 });
 
 export const tileRepository = (db: Storage): TileRepository => {
@@ -71,6 +83,13 @@ export const tileRepository = (db: Storage): TileRepository => {
   );
 
   const deleteTexts = db.prepare('DELETE FROM tile_texts WHERE tile_id = ?');
+
+  const selectTextsOf = db.prepare('SELECT * FROM tile_texts WHERE tile_id = ?');
+
+  const selectTextsForUser = db.prepare(
+    `SELECT tile_texts.* FROM tile_texts JOIN tiles ON tiles.id = tile_texts.tile_id
+     WHERE ${VISIBLE_TO_USER}`,
+  );
 
   const selectForUser = db.prepare(
     `SELECT ${USER_TILE_COLUMNS} FROM tiles ${USER_TILE_JOINS}
@@ -95,27 +114,35 @@ export const tileRepository = (db: Storage): TileRepository => {
     }
   };
 
+  const insertLinkWithTexts = (tile: LinkTileRecord, ownerId: number, now: number): number => {
+    const { id } = insertLinkTile.get({ ...tile, ownerId, now }) as { id: number };
+    insertTexts(id, tile.texts);
+    return id;
+  };
+
+  const updateLinkWithTexts = (id: number, tile: LinkTileRecord, now: number): void => {
+    updateLinkTile.run({ ...tile, id, now });
+    deleteTexts.run(id);
+    insertTexts(id, tile.texts);
+  };
+
   const insertLink = (tile: LinkTileRecord, ownerId: number, now: number): number =>
-    db.transaction(() => {
-      const { id } = insertLinkTile.get({ ...tile, ownerId, now }) as { id: number };
-      insertTexts(id, tile.texts);
-      return id;
-    })();
+    db.transaction(insertLinkWithTexts)(tile, ownerId, now);
 
   const findForUser = (id: number, userId: number): UserTileRow | undefined => {
     const row = selectForUser.get({ id, userId }) as UserTileQueryRow | undefined;
-    return row && parseTexts(row);
+    return row && withTexts(row, textsByTile(selectTextsOf.all(id) as TileTextRow[]));
   };
 
-  const listForUser = (userId: number): UserTileRow[] =>
-    (selectAllForUser.all({ userId }) as UserTileQueryRow[]).map(parseTexts);
+  const listForUser = (userId: number): UserTileRow[] => {
+    const texts = textsByTile(selectTextsForUser.all({ userId }) as TileTextRow[]);
+    return (selectAllForUser.all({ userId }) as UserTileQueryRow[]).map((row) =>
+      withTexts(row, texts),
+    );
+  };
 
   const updateLink = (id: number, tile: LinkTileRecord, now: number): void => {
-    db.transaction(() => {
-      updateLinkTile.run({ ...tile, id, now });
-      deleteTexts.run(id);
-      insertTexts(id, tile.texts);
-    })();
+    db.transaction(updateLinkWithTexts)(id, tile, now);
   };
 
   const remove = (id: number): void => {

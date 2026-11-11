@@ -15,7 +15,6 @@ const MIGRATIONS_DIR = 'backend/migrations';
 const CREATE_TABLE = /create\s+table\s+(?:if\s+not\s+exists\s+)?["`[]?(\w+)/gi;
 const LOCALES_DIR = 'frontend/locales';
 
-// The module's name and description, shown on its tile, in every language.
 const manifestTextSchema = z.object({
   manifest: z.object({
     name: z.string().trim().min(1, 'is required').max(60, 'must be at most 60 characters'),

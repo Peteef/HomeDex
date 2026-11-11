@@ -50,6 +50,11 @@ describe('displayText', () => {
       expect(displayText(tile, 'en')).toEqual(BUDZET);
     });
 
+    it('should show UNNAMED when the tile has no text in any language', () => {
+      // When / Then
+      expect(displayText(linkTile({}), 'en')).toEqual({ title: 'UNNAMED', description: null });
+    });
+
     it('should never mix the description of another language in', () => {
       // Given
       const tile = linkTile({ en: BUDGET, pl: BUDZET });
