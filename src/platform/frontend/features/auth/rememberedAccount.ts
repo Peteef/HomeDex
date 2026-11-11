@@ -1,28 +1,25 @@
-// The device remembers who signed in last, so the login page can skip the account picker. Only
-// the username is stored: it is not a secret, and the session itself stays in the HttpOnly cookie.
 const STORAGE_KEY = 'homedex.rememberedAccount';
 
 // Storage can be blocked (for example in a private window). The login page then shows the picker.
-export const rememberedAccount = (): string | null => {
+const withStorage = <T>(access: (storage: Storage) => T, fallback: T): T => {
   try {
-    return localStorage.getItem(STORAGE_KEY);
+    return access(localStorage);
   } catch {
-    return null;
+    return fallback;
   }
 };
 
+export const rememberedAccount = (): string | null =>
+  withStorage((storage) => storage.getItem(STORAGE_KEY), null);
+
 export const rememberAccount = (username: string): void => {
-  try {
-    localStorage.setItem(STORAGE_KEY, username);
-  } catch {
-    // Nothing to do: the picker is shown next time.
-  }
+  withStorage((storage) => {
+    storage.setItem(STORAGE_KEY, username);
+  }, undefined);
 };
 
 export const forgetAccount = (): void => {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Nothing to do: nothing could have been stored.
-  }
+  withStorage((storage) => {
+    storage.removeItem(STORAGE_KEY);
+  }, undefined);
 };

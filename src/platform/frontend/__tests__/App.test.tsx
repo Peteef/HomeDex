@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { fakeApi, renderApp, signedIn, signedOut, status } from './helpers.tsx';
+import { accountsList, fakeApi, renderApp, signedIn, signedOut, status } from './helpers.tsx';
 
 const GREETING = 'Hello Misty! What do you need today?';
 
@@ -24,7 +24,7 @@ describe('App', () => {
 
     it('should show the login page at /login when nobody is signed in', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/login');
@@ -122,7 +122,7 @@ describe('App', () => {
   describe('route guard', () => {
     it('should send a visitor to the login page when nobody is signed in', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/');
@@ -135,7 +135,7 @@ describe('App', () => {
 
     it('should guard module screens and unknown paths too', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/nowhere');
@@ -181,6 +181,7 @@ describe('App', () => {
       const api = fakeApi({
         'GET /api/auth/me': signedIn(),
         'POST /api/auth/logout': { status: 204 },
+        'GET /api/auth/accounts': accountsList('Misty'),
       });
 
       renderApp('/');

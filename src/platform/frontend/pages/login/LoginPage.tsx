@@ -5,19 +5,20 @@ import {
   redirectTarget,
   rememberedAccount,
   useAccounts,
+  useLogin,
   useSession,
 } from '../../features/auth/index.ts';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
-import { AccountPicker } from './AccountPicker.tsx';
-import { PasswordStep } from './PasswordStep.tsx';
+import { AccountPicker } from './components/AccountPicker.tsx';
+import { PasswordStep } from './components/PasswordStep.tsx';
+import { loginFailureMessage } from './loginMessages.ts';
 
-// Two steps: pick your account, then prove it with the password. A device that remembers who
-// signed in last opens the password step for that account directly.
 export const LoginPage = () => {
   const location = useLocation();
   const session = useSession();
   const accounts = useAccounts();
+  const login = useLogin();
   const [remembered, setRemembered] = useState(rememberedAccount);
   const [picked, setPicked] = useState<string | null>(null);
 
@@ -26,12 +27,18 @@ export const LoginPage = () => {
   }
 
   const usernames = accounts.data?.map(({ username }) => username);
-  // A remembered account that is gone (archived, renamed) falls back to the picker.
-  const welcomeBack = picked === null && remembered !== null && usernames?.includes(remembered);
-  const chosen = welcomeBack ? remembered : picked;
+  const rememberedStillExists = remembered !== null && (usernames?.includes(remembered) ?? false);
+  const welcomeBack = picked === null && rememberedStillExists;
+  const chosen = picked ?? (rememberedStillExists ? remembered : null);
+
+  const pick = (username: string) => {
+    login.reset();
+    setPicked(username);
+  };
 
   const switchAccount = () => {
     forgetAccount();
+    login.reset();
     setRemembered(null);
     setPicked(null);
   };
@@ -43,7 +50,10 @@ export const LoginPage = () => {
         <PasswordStep
           key={chosen}
           username={chosen}
-          welcomeBack={welcomeBack === true}
+          welcomeBack={welcomeBack}
+          pending={login.isPending}
+          failure={login.isError ? loginFailureMessage(login.error) : null}
+          onSubmit={(password) => login.mutateAsync({ username: chosen, password })}
           onSwitch={switchAccount}
         />
       ) : (
@@ -53,7 +63,7 @@ export const LoginPage = () => {
           onRetry={() => {
             void accounts.refetch();
           }}
-          onPick={setPicked}
+          onPick={pick}
         />
       )}
     </Panel>

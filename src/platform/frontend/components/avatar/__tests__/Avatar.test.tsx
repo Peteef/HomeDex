@@ -1,43 +1,53 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Avatar, avatarColour, avatarInitial } from '../Avatar.tsx';
+import { Avatar } from '../Avatar.tsx';
+
+const renderAvatar = (name: string): Element => {
+  const { container } = render(<Avatar name={name} />);
+  const avatar = container.firstElementChild;
+
+  if (!avatar) {
+    throw new Error('The avatar did not render');
+  }
+
+  return avatar;
+};
+
+const colourOf = (avatar: Element): string | undefined =>
+  [...avatar.classList].find((name) => name.startsWith('bg-avatar-'));
 
 describe('Avatar', () => {
-  describe('avatarInitial', () => {
-    it.each([
-      ['misty', 'M'],
-      ['  brock', 'B'],
-      ['élise', 'É'],
-      ['', '?'],
-    ])('should turn %o into %o', (name, initial) => {
-      // When / Then
-      expect(avatarInitial(name)).toBe(initial);
-    });
+  it.each([
+    ['misty', 'M'],
+    ['  brock', 'B'],
+    ['élise', 'É'],
+    ['', '?'],
+  ])('should show the initial of %o as %o', (name, initial) => {
+    // When / Then
+    expect(renderAvatar(name)).toHaveTextContent(initial);
   });
 
-  describe('avatarColour', () => {
-    it('should give a name the same colour every time, whatever its case', () => {
-      // When / Then
-      expect(avatarColour('Misty')).toBe(avatarColour('misty'));
-    });
-
-    it('should spread different names over several colours', () => {
-      // When
-      const colours = new Set(['Ash', 'Misty', 'Brock', 'Gary', 'Dawn', 'May'].map(avatarColour));
-
-      // Then
-      expect(colours.size).toBeGreaterThan(1);
-    });
+  it('should hide the avatar from screen readers', () => {
+    // When / Then
+    expect(renderAvatar('Misty')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('should show the initial on a colour and hide it from screen readers', () => {
+  it('should give a name the same colour every time, whatever its case', () => {
     // When
-    const { container } = render(<Avatar name="Misty" />);
+    const colour = colourOf(renderAvatar('Misty'));
 
     // Then
-    const avatar = container.firstElementChild;
-    expect(avatar).toHaveTextContent('M');
-    expect(avatar).toHaveAttribute('aria-hidden', 'true');
-    expect(avatar).toHaveClass(avatarColour('Misty'));
+    expect(colour).toBeDefined();
+    expect(colourOf(renderAvatar('misty'))).toBe(colour);
+  });
+
+  it('should spread different names over several colours', () => {
+    // When
+    const colours = new Set(
+      ['Ash', 'Misty', 'Brock', 'Gary', 'Dawn', 'May'].map((name) => colourOf(renderAvatar(name))),
+    );
+
+    // Then
+    expect(colours.size).toBeGreaterThan(1);
   });
 });

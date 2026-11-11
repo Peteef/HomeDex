@@ -1,11 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
-import { E2E_GREETING, signIn } from './session.ts';
+import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
 
 const MIN_TOUCH_TARGET = 44;
-
-const REMEMBERED_KEY = 'homedex.rememberedAccount';
 
 interface Screen {
   name: string;
@@ -48,7 +46,7 @@ test.describe('shell', () => {
             ({ key, username }) => {
               localStorage.setItem(key, username);
             },
-            { key: REMEMBERED_KEY, username: screen.remembered },
+            { key: REMEMBERED_ACCOUNT_KEY, username: screen.remembered },
           );
         }
 

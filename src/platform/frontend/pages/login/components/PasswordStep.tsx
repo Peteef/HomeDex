@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
-import { useLogin } from '../../features/auth/index.ts';
-import { Avatar } from '../../components/avatar/Avatar.tsx';
-import { Button } from '../../components/button/Button.tsx';
-import { TextInput } from '../../components/text-input/TextInput.tsx';
-import { loginFailureMessage, passwordError } from './loginMessages.ts';
+import { Avatar } from '../../../components/avatar/Avatar.tsx';
+import { Button } from '../../../components/button/Button.tsx';
+import { TextInput } from '../../../components/text-input/TextInput.tsx';
+import { passwordError } from '../loginMessages.ts';
 
 export interface PasswordStepProps {
   username: string;
   welcomeBack: boolean;
+  pending: boolean;
+  failure: string | null;
+  onSubmit: (password: string) => Promise<unknown>;
   onSwitch: () => void;
 }
 
-export const PasswordStep = ({ username, welcomeBack, onSwitch }: PasswordStepProps) => {
-  const login = useLogin();
+export const PasswordStep = ({
+  username,
+  welcomeBack,
+  pending,
+  failure,
+  onSubmit,
+  onSwitch,
+}: PasswordStepProps) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>();
   const passwordInput = useRef<HTMLInputElement>(null);
@@ -37,13 +45,13 @@ export const PasswordStep = ({ username, welcomeBack, onSwitch }: PasswordStepPr
       return;
     }
 
-    login.mutate({ username, password }, { onError: retryPassword });
+    onSubmit(password).catch(retryPassword);
   };
 
   return (
     <>
       <div className="flex items-center gap-4">
-        <Avatar name={username} size="lg" />
+        <Avatar name={username} />
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-3xl font-extrabold break-words">
             {welcomeBack ? `Welcome back, ${username}!` : `Hi, ${username}!`}
@@ -73,13 +81,13 @@ export const PasswordStep = ({ username, welcomeBack, onSwitch }: PasswordStepPr
           }}
           {...(error && { error })}
         />
-        {login.isError ? (
+        {failure ? (
           <p role="alert" className="text-dex-red-deep text-base font-bold">
-            {loginFailureMessage(login.error)}
+            {failure}
           </p>
         ) : null}
-        <Button type="submit" disabled={login.isPending}>
-          {login.isPending ? 'Signing in…' : 'I choose you!'}
+        <Button type="submit" disabled={pending}>
+          {pending ? 'Signing in…' : 'I choose you!'}
         </Button>
       </form>
       <Button variant="secondary" onClick={onSwitch}>

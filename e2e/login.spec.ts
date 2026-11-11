@@ -1,13 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { E2E_ARCHIVED_USER, E2E_USER } from './fixtures.ts';
-import { E2E_GREETING } from './session.ts';
+import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY } from './session.ts';
 
 // The server allows 10 failed logins per 15 minutes from one address, shared by every project
 // and by auth.spec.ts. Tests that fail a login on purpose run in one project only.
 const FAILED_LOGIN_PROJECT = 'iphone-13-mini';
-
-const REMEMBERED_KEY = 'homedex.rememberedAccount';
 
 const enterPassword = async (page: Page, password = E2E_USER.password) => {
   await page.getByLabel('Password').fill(password);
@@ -143,9 +141,9 @@ test.describe('login', () => {
       session: sessionStorage.length,
     }));
 
-    expect(stored).toEqual({ local: [REMEMBERED_KEY], session: 0 });
+    expect(stored).toEqual({ local: [REMEMBERED_ACCOUNT_KEY], session: 0 });
 
-    expect(await page.evaluate((key) => localStorage.getItem(key), REMEMBERED_KEY)).toBe(
+    expect(await page.evaluate((key) => localStorage.getItem(key), REMEMBERED_ACCOUNT_KEY)).toBe(
       E2E_USER.username,
     );
   });

@@ -43,9 +43,7 @@ describe('session', () => {
 
       expect(queryClient.getQueryData(['tiles'])).toBeUndefined();
     });
-  });
 
-  describe('useLogin remembering', () => {
     it('should remember who signed in, as the server spells the name', async () => {
       // Given
       fakeApi({ 'POST /api/auth/login': signedIn(OTHER_USER) });

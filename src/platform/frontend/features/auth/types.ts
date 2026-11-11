@@ -3,7 +3,6 @@ export interface CurrentUser {
   username: string;
 }
 
-// An account the login page offers to pick.
 export interface SignInAccount {
   username: string;
 }

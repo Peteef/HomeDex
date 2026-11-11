@@ -63,8 +63,6 @@ export const authRoutes = ({
     res.status(NO_CONTENT).end();
   });
 
-  // The login page lets a person pick their account and asks only for the password, so the
-  // usernames of active accounts are public to anyone who can reach the app (AD-020).
   router.get('/accounts', (_req, res) => {
     res.json({ accounts: accounts.list().map(({ username }) => ({ username })) });
   });

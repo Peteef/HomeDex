@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 
+export const REMEMBERED_ACCOUNT_KEY = 'homedex.rememberedAccount';
+
 export const E2E_GREETING = `Hello ${E2E_USER.username}! What do you need today?`;
 
 // Signs in through the API; page.request shares its cookies with the page.
