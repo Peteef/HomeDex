@@ -53,7 +53,8 @@ pass "database is created in the /data volume"
 for forbidden in /app/.env /app/data /app/e2e /app/tests; do
   docker exec "$NAME" test ! -e "$forbidden" || fail "$forbidden is in the image"
 done
-[[ -z "$(docker exec "$NAME" find /app/src -name __tests__)" ]] || fail "unit tests are in the image"
+test_dirs="$(docker exec "$NAME" find /app/src -name __tests__)"
+[[ -z "$test_dirs" ]] || fail "unit tests are in the image: $test_dirs"
 pass "no .env, data or tests in the image"
 
 printf '%s' "$PASSWORD" | docker exec --interactive "$NAME" node "$CLI" create "$USERNAME" >/dev/null ||

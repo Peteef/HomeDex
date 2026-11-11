@@ -66,9 +66,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # `context: .` builds the checked-out folder like a local build. Without it the action
+      # builds from a Git URL, where .dockerignore is not applied the same way.
       - name: Build amd64 and arm64
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: false
           cache-from: type=gha
@@ -78,6 +81,7 @@ jobs:
       - name: Load amd64 image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
+          context: .
           platforms: linux/amd64
           load: true
           tags: homedex:ci
