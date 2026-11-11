@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from './App.tsx';
 import { appQueryClient } from './queryClient.ts';
+import './i18n.ts';
 import './index.css';
 
 const root = document.getElementById('root');

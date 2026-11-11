@@ -10,5 +10,6 @@ export { Icon } from '../components/icon/Icon.tsx';
 export type { IconProps } from '../components/icon/Icon.tsx';
 export { ICON_NAMES } from '../../shared/icons/iconNames.ts';
 export type { IconName } from '../../shared/icons/iconNames.ts';
+export { textHook } from '../lib/i18n/index.ts';
 export { useCurrentUser } from '../features/auth/index.ts';
 export type { CurrentUser } from '../features/auth/index.ts';

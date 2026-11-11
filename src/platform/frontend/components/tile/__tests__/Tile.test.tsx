@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import { formatDexNo, Tile } from '../Tile.tsx';
+import { Tile } from '../Tile.tsx';
 import type { TileProps } from '../Tile.tsx';
 
 const renderTile = (props: Partial<TileProps> = {}) => {
@@ -26,17 +26,20 @@ const renderTile = (props: Partial<TileProps> = {}) => {
 };
 
 describe('Tile', () => {
-  describe('formatDexNo', () => {
-    it('should pad the number to three digits', () => {
-      // When / Then
-      expect(formatDexNo(7)).toBe('No. 007');
-      expect(formatDexNo(42)).toBe('No. 042');
-    });
+  it('should pad the Dex number to three digits', () => {
+    // When
+    renderTile({ dexNo: 42 });
 
-    it('should not cut a number longer than three digits', () => {
-      // When / Then
-      expect(formatDexNo(1234)).toBe('No. 1234');
-    });
+    // Then
+    expect(screen.getByText('No. 042')).toBeInTheDocument();
+  });
+
+  it('should not cut a Dex number longer than three digits', () => {
+    // When
+    renderTile({ dexNo: 1234 });
+
+    // Then
+    expect(screen.getByText('No. 1234')).toBeInTheDocument();
   });
 
   it('should show the Dex number, title and description', () => {

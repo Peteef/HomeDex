@@ -1,18 +1,16 @@
 import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../shared/http/status.ts';
 import { ApiError } from '../../lib/http/index.ts';
+import type en from '../../locales/en.ts';
 
-const PASSWORD_REQUIRED = 'Enter your password.';
-const WRONG_PASSWORD = "That's not the right password. Try again.";
-const TOO_MANY_ATTEMPTS = 'Too many failed attempts. Try again in a few minutes.';
-const UNEXPECTED_FAILURE = 'Something went wrong. Try again.';
+export type LoginError = keyof (typeof en)['login']['errors'];
 
-const FAILURE_MESSAGES: Record<number, string> = {
-  [UNAUTHORIZED]: WRONG_PASSWORD,
-  [TOO_MANY_REQUESTS]: TOO_MANY_ATTEMPTS,
+const FAILURES: Record<number, LoginError> = {
+  [UNAUTHORIZED]: 'wrongPassword',
+  [TOO_MANY_REQUESTS]: 'tooManyAttempts',
 };
 
-export const passwordError = (password: string): string | undefined =>
-  password === '' ? PASSWORD_REQUIRED : undefined;
+export const passwordError = (password: string): LoginError | undefined =>
+  password === '' ? 'passwordRequired' : undefined;
 
-export const loginFailureMessage = (error: unknown): string =>
-  (error instanceof ApiError ? FAILURE_MESSAGES[error.status] : undefined) ?? UNEXPECTED_FAILURE;
+export const loginFailure = (error: unknown): LoginError =>
+  (error instanceof ApiError ? FAILURES[error.status] : undefined) ?? 'unexpected';

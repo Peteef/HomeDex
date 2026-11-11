@@ -5,6 +5,7 @@ import prettier from 'eslint-config-prettier';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import i18next from 'eslint-plugin-i18next';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -23,6 +24,7 @@ const MODULE_ELEMENTS = [
     capture: ['id', 'name'],
   },
   { type: 'module-feature', pattern: 'src/modules/*/frontend/features/*', capture: ['id', 'name'] },
+  { type: 'module-locales', pattern: 'src/modules/*/frontend/locales', capture: ['id'] },
   { type: 'module-frontend', pattern: 'src/modules/*/frontend', capture: ['id'] },
   { type: 'module-domain', pattern: 'src/modules/*/backend/domain/*', capture: ['id', 'name'] },
   { type: 'module-routes', pattern: 'src/modules/*/backend/routes', capture: ['id'] },
@@ -48,6 +50,13 @@ const entrypointOf = (type, folder) => ({
 
 const component = inModule('module-component');
 const featureEntrypoint = entrypointOf('module-feature', 'frontend/features');
+
+// The module's useText hook, which every part of its frontend may use, like lib/i18n in the platform.
+const text = {
+  ...inModule('module-locales'),
+  file: { path: 'src/modules/*/frontend/locales/index.ts' },
+};
+
 const domainEntrypoint = entrypointOf('module-domain', 'backend/domain');
 const manifest = { ...inModule('module'), file: { path: 'src/modules/*/manifest.ts' } };
 const frontendApis = [platformApi('frontend'), platformApi('shared')];
@@ -55,12 +64,20 @@ const backendApis = [platformApi('backend'), platformApi('shared')];
 
 // For each element type of a module, what it may import.
 const MODULE_POLICIES = {
-  'module-component': [component, ...frontendApis],
-  'module-feature': [sameElement('module-feature'), featureEntrypoint, component, ...frontendApis],
+  'module-component': [component, text, ...frontendApis],
+  'module-locales': [inModule('module-locales'), ...frontendApis],
+  'module-feature': [
+    sameElement('module-feature'),
+    featureEntrypoint,
+    component,
+    text,
+    ...frontendApis,
+  ],
   'module-page': [
     sameElement('module-page'),
     component,
     featureEntrypoint,
+    text,
     manifest,
     ...frontendApis,
   ],
@@ -69,6 +86,7 @@ const MODULE_POLICIES = {
     inModule('module-page'),
     component,
     featureEntrypoint,
+    text,
     manifest,
     ...frontendApis,
   ],
@@ -187,7 +205,7 @@ export const domainRules = [
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth', 'modules'];
-const FRONTEND_LIBS = ['http'];
+const FRONTEND_LIBS = ['http', 'i18n'];
 
 const SKELETON = [
   '**/App.tsx',
@@ -196,6 +214,7 @@ const SKELETON = [
   '**/queryClient.ts',
   '**/routes.ts',
   '**/sceneLayers.ts',
+  '**/i18n.ts',
 ];
 
 // Each group of files gets one complete list: a later no-restricted-imports setting for the same
@@ -246,13 +265,36 @@ export const frontendRules = [
     files: inFrontend('components'),
     rules: restrictImports([
       {
-        group: ['**/pages/**', '**/features/**', '**/lib/**', ...SKELETON],
+        // lib/i18n is the exception: the language is ambient, like the theme.
+        group: [
+          '**/pages/**',
+          '**/features/**',
+          '**/lib/**',
+          '!**/lib/i18n',
+          '!**/lib/i18n/index.ts',
+          ...SKELETON,
+        ],
         message:
-          'Components are generic and pure: they must not import pages, features, libs or the app skeleton.',
+          'Components are generic and pure: they must not import pages, features, libs (except lib/i18n) or the app skeleton.',
       },
     ]),
   },
 ];
+
+// Text the user sees comes from the locale files through i18next, never from a literal in JSX.
+// Attributes are checked only where they carry text the user sees or hears.
+const USER_FACING_ATTRIBUTES = ['label', 'title', 'message', 'placeholder', 'alt', 'aria-label'];
+
+/** @type {import('eslint').Linter.Config} */
+export const uiTextRules = {
+  plugins: { i18next },
+  rules: {
+    'i18next/no-literal-string': [
+      'error',
+      { mode: 'jsx-only', 'jsx-attributes': { include: USER_FACING_ATTRIBUTES } },
+    ],
+  },
+};
 
 // src/platform/shared/ holds what frontend and backend both need (today the HTTP status codes).
 // It stands on its own, so both sides can import it without depending on each other.
@@ -381,6 +423,11 @@ export default defineConfig(
   },
   ...domainRules,
   ...frontendRules,
+  {
+    files: ['src/platform/frontend/**/*.tsx', 'src/modules/*/frontend/**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    ...uiTextRules,
+  },
   sharedRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },

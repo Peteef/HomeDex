@@ -6,10 +6,12 @@ import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';
 import { Tile } from '../../components/tile/Tile.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
+import { useText } from '../../lib/i18n/index.ts';
 import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
 import { sortTiles } from './sortTiles.ts';
 
 export const HomePage = () => {
+  const text = useText('home');
   const { username } = useCurrentUser();
   const logout = useLogout();
   const [pinned, setPinned] = useState<ReadonlySet<number>>(new Set());
@@ -34,17 +36,22 @@ export const HomePage = () => {
         <Wordmark />
         <IconButton
           icon={<LogOut size={20} />}
-          label="Sign out"
+          label={text.signOut}
           disabled={logout.isPending}
           onClick={() => {
             logout.mutate();
           }}
         />
       </div>
-      <h1 className="text-3xl font-extrabold">Hello {username}! What do you need today?</h1>
-      <TextInput label="Find a tile" hideLabel placeholder="Search the Dex..." type="search" />
+      <h1 className="text-3xl font-extrabold">{text.greeting({ username })}</h1>
+      <TextInput
+        label={text.search.label}
+        hideLabel
+        placeholder={text.search.placeholder}
+        type="search"
+      />
       <h2 className="text-dex-ink-muted text-xs font-extrabold tracking-[0.2em] uppercase">
-        All entries
+        {text.allEntries}
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile) => (
