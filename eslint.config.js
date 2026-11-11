@@ -54,7 +54,7 @@ export const boundaryRules = {
 // Domains use infrastructure only through the storage entrypoint.
 const BACKEND_DIR = 'src/platform/backend';
 const DOMAIN_DIR = `${BACKEND_DIR}/domain`;
-const DOMAINS = ['accounts', 'auth'];
+const DOMAINS = ['accounts', 'auth', 'tiles'];
 
 const entrypointOnly = (folder) => ({
   group: [`**/${folder}/**`, `!**/${folder}/index.ts`],

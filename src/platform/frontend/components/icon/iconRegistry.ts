@@ -22,6 +22,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { isIconName } from '../../../shared/icons/iconNames.ts';
+import type { IconName } from '../../../shared/icons/iconNames.ts';
 
 const ICONS = {
   link: Link,
@@ -44,15 +46,9 @@ const ICONS = {
   food: Utensils,
   work: Briefcase,
   star: Star,
-} as const satisfies Record<string, LucideIcon>;
-
-export type IconName = keyof typeof ICONS;
-
-export const ICON_NAMES = Object.keys(ICONS) as IconName[];
+} as const satisfies Record<IconName, LucideIcon>;
 
 export const FALLBACK_ICON: LucideIcon = CircleHelp;
-
-const isIconName = (name: string): name is IconName => Object.hasOwn(ICONS, name);
 
 export const resolveIcon = (name: string): LucideIcon =>
   isIconName(name) ? ICONS[name] : FALLBACK_ICON;

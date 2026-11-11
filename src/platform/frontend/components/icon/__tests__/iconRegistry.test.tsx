@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Icon } from '../Icon.tsx';
-import { FALLBACK_ICON, ICON_NAMES, resolveIcon } from '../iconRegistry.ts';
+import { ICON_NAMES } from '../../../../shared/icons/iconNames.ts';
+import { FALLBACK_ICON, resolveIcon } from '../iconRegistry.ts';
 
 describe('icon registry', () => {
   describe('resolveIcon', () => {

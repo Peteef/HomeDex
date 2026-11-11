@@ -2,11 +2,14 @@ import { accountsService } from './accounts/index.ts';
 import type { AccountsService, Argon2Params } from './accounts/index.ts';
 import { sessionService } from './auth/index.ts';
 import type { SessionService } from './auth/index.ts';
+import { tilesService } from './tiles/index.ts';
+import type { TilesService } from './tiles/index.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
 
 export interface DomainServices {
   accounts: AccountsService;
   sessions: SessionService;
+  tiles: TilesService;
 }
 
 export interface DomainServicesOptions {
@@ -35,8 +38,11 @@ export const domainServices = (
     ...(now && { now }),
   });
 
+  const tiles = tilesService(storage, { ...(now && { now }) });
+
   return {
     accounts,
     sessions,
+    tiles,
   };
 };

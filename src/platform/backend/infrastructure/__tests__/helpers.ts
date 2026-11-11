@@ -65,3 +65,14 @@ export const postJson = (app: Express, url: string, body?: unknown): request.Tes
     .post(url)
     .set('Content-Type', 'application/json')
     .send(JSON.stringify(body ?? {}));
+
+export const sessionCookieFor = async (app: Express, username: string): Promise<string> => {
+  const response = await postJson(app, '/api/auth/login', { username, password: TEST_PASSWORD });
+  const [cookie] = (response.headers['set-cookie'] as string[] | undefined) ?? [];
+
+  if (!cookie) {
+    throw new Error(`Could not sign in as "${username}"`);
+  }
+
+  return cookie.split(';')[0] ?? '';
+};
