@@ -7,6 +7,7 @@ import {
   testQueryClient,
   withProviders,
 } from '../../../__tests__/helpers.tsx';
+import { rememberAccount, rememberedAccount } from '../rememberedAccount.ts';
 import { useLogin, useLogout } from '../session.ts';
 
 const SESSION_KEY = ['session'];
@@ -42,9 +43,40 @@ describe('session', () => {
 
       expect(queryClient.getQueryData(['tiles'])).toBeUndefined();
     });
+
+    it('should remember who signed in, as the server spells the name', async () => {
+      // Given
+      fakeApi({ 'POST /api/auth/login': signedIn(OTHER_USER) });
+      const { result } = renderWith(useLogin);
+
+      // When
+      result.current.mutate({ username: 'brock', password: 'fake-password' });
+
+      // Then
+      await waitFor(() => {
+        expect(rememberedAccount()).toBe('Brock');
+      });
+    });
   });
 
   describe('useLogout', () => {
+    it('should keep the remembered account for the next sign-in', async () => {
+      // Given
+      fakeApi({ 'POST /api/auth/logout': { status: 204 } });
+      rememberAccount('Misty');
+      const { result } = renderWith(useLogout);
+
+      // When
+      result.current.mutate();
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(rememberedAccount()).toBe('Misty');
+    });
+
     it('should clear the session and every cached query', async () => {
       // Given
       fakeApi({ 'POST /api/auth/logout': { status: 204 } });

@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { fakeApi, renderApp, signedIn, signedOut, status } from './helpers.tsx';
+import { accountsList, fakeApi, renderApp, signedIn, signedOut, status } from './helpers.tsx';
 
 const GREETING = 'Hello Misty! What do you need today?';
 
@@ -24,13 +24,15 @@ describe('App', () => {
 
     it('should show the login page at /login when nobody is signed in', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/login');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should show the module placeholder at /m/<anything>', async () => {
@@ -120,24 +122,28 @@ describe('App', () => {
   describe('route guard', () => {
     it('should send a visitor to the login page when nobody is signed in', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should guard module screens and unknown paths too', async () => {
       // Given
-      fakeApi({ 'GET /api/auth/me': signedOut() });
+      fakeApi({ 'GET /api/auth/me': signedOut(), 'GET /api/auth/accounts': accountsList('Misty') });
 
       // When
       renderApp('/nowhere');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should show only a loading status while the session is checked', () => {
@@ -175,6 +181,7 @@ describe('App', () => {
       const api = fakeApi({
         'GET /api/auth/me': signedIn(),
         'POST /api/auth/logout': { status: 204 },
+        'GET /api/auth/accounts': accountsList('Misty'),
       });
 
       renderApp('/');
@@ -184,7 +191,10 @@ describe('App', () => {
       fireEvent.click(signOut);
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
+
       expect(api.callsTo('POST /api/auth/logout')).toHaveLength(1);
     });
   });

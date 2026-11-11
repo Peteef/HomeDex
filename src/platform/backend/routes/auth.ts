@@ -63,6 +63,10 @@ export const authRoutes = ({
     res.status(NO_CONTENT).end();
   });
 
+  router.get('/accounts', (_req, res) => {
+    res.json({ accounts: accounts.list().map(({ username }) => ({ username })) });
+  });
+
   router.get('/me', authenticated, (req, res) => {
     res.json({ user: currentUser(req) });
   });

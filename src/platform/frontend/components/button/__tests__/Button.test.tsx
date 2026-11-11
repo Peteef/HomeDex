@@ -46,11 +46,13 @@ describe('Button', () => {
       <>
         <Button>Primary</Button>
         <Button variant="secondary">Secondary</Button>
+        <Button variant="quiet">Quiet</Button>
       </>,
     );
 
     // Then
     expect(screen.getByRole('button', { name: 'Primary' })).toHaveClass('min-h-11');
     expect(screen.getByRole('button', { name: 'Secondary' })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: 'Quiet' })).toHaveClass('min-h-11');
   });
 });

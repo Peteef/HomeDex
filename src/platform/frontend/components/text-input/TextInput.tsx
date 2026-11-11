@@ -16,7 +16,7 @@ export const TextInput = ({ label, hideLabel, error, id, className, ...rest }: T
     <div className="flex flex-col gap-1">
       <label
         htmlFor={inputId}
-        className={classNames('text-dex-ink-muted text-sm font-bold', hideLabel && 'sr-only')}
+        className={classNames('text-dex-ink-muted px-5 text-sm font-bold', hideLabel && 'sr-only')}
       >
         {label}
       </label>
@@ -31,7 +31,7 @@ export const TextInput = ({ label, hideLabel, error, id, className, ...rest }: T
         {...rest}
       />
       {error ? (
-        <p id={errorId} role="alert" className="text-dex-red-deep text-sm font-bold">
+        <p id={errorId} role="alert" className="text-dex-red-deep px-5 text-sm font-bold">
           {error}
         </p>
       ) : null}

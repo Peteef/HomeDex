@@ -3,6 +3,10 @@ export interface CurrentUser {
   username: string;
 }
 
+export interface SignInAccount {
+  username: string;
+}
+
 export interface Credentials {
   username: string;
   password: string;

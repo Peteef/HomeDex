@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { fetchCurrentUser, login, logout } from './internal/authApi.ts';
+import { rememberAccount } from './rememberedAccount.ts';
 import type { CurrentUser } from './types.ts';
 
 const SESSION_QUERY_KEY = ['session'] as const;
@@ -33,6 +34,7 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: (user) => {
+      rememberAccount(user.username);
       switchSession(queryClient, user);
     },
   });

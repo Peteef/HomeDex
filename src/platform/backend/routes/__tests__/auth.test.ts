@@ -145,6 +145,22 @@ describe('auth API', () => {
     });
   });
 
+  describe('accounts', () => {
+    it('should list only the usernames of active accounts in order without a session', async () => {
+      // Given
+      await createTestUser(ctx.db, 'Brock');
+      await createTestUser(ctx.db, 'Gary');
+      testServices(ctx.db).accounts.archive('gary');
+
+      // When
+      const response = await request(ctx.app).get('/api/auth/accounts');
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ accounts: [{ username: 'Ash' }, { username: 'Brock' }] });
+    });
+  });
+
   describe('me', () => {
     it('should return the current user when the session cookie is valid', async () => {
       // Given
