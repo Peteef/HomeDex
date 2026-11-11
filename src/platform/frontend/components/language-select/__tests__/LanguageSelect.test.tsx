@@ -3,20 +3,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { LanguageSelect } from '../LanguageSelect.tsx';
 
 const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'pl', name: 'Polski' },
-  { code: 'de', name: 'Deutsch' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'pl', flag: '🇵🇱' },
+  { code: 'de', flag: '🇩🇪' },
 ] as const;
 
 describe('LanguageSelect', () => {
-  it('should offer every language by its own name', () => {
+  it('should offer every language by its flag and code', () => {
     // When
     render(<LanguageSelect languages={LANGUAGES} value="en" onChange={vi.fn()} />);
 
     // Then
     const options = screen.getAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual(['English', 'Polski', 'Deutsch']);
-    expect(screen.getByRole('option', { name: 'Polski' })).toHaveAttribute('lang', 'pl');
+    expect(options.map((option) => option.textContent)).toEqual(['🇬🇧 EN', '🇵🇱 PL', '🇩🇪 DE']);
+    expect(screen.getByRole('option', { name: '🇵🇱 PL' })).toHaveAttribute('lang', 'pl');
   });
 
   it('should show the current language', () => {

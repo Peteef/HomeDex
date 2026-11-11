@@ -3,7 +3,7 @@ import { useText } from '../../lib/i18n/index.ts';
 
 export interface LanguageOption<Code extends string> {
   code: Code;
-  name: string;
+  flag: string;
 }
 
 export interface LanguageSelectProps<Code extends string> {
@@ -37,9 +37,9 @@ export const LanguageSelect = <Code extends string>({
         }}
         className="absolute -inset-px cursor-pointer rounded-full opacity-0"
       >
-        {languages.map(({ code, name }) => (
+        {languages.map(({ code, flag }) => (
           <option key={code} value={code} lang={code}>
-            {name}
+            {`${flag} ${code.toUpperCase()}`}
           </option>
         ))}
       </select>

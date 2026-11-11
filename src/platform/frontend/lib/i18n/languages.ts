@@ -1,7 +1,7 @@
-// Each language is named in itself, so anyone can find their own.
+// The switcher shows a flag and the code ("🇵🇱 PL"), the same in every language.
 export const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'pl', name: 'Polski' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'pl', flag: '🇵🇱' },
 ] as const;
 
 export type Language = (typeof LANGUAGES)[number]['code'];
