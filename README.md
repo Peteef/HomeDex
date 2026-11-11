@@ -53,7 +53,7 @@ Then open http://localhost:3000.
 
 | Command            | What it does                                                                                        |
 | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`      | Development: creates the test user if missing, then Vite on port 5173 and the backend on port 3000  |
+| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload (see the test user below)  |
 | `npm run build`    | Builds the UI into `dist/web`                                                                       |
 | `npm start`        | Production server (API plus built UI)                                                               |
 | `npm test`         | Unit tests                                                                                          |
@@ -78,7 +78,14 @@ Settings come from environment variables. Copy `.env.example` to `.env` to chang
 
 ## Accounts
 
-In development, `npm run dev` creates a test user if it is missing: username `Tester`, password `test12345`. It exists only in your local `data/` folder. The script that creates it is never part of the production server or the Docker image, and it refuses to run when `NODE_ENV=production`.
+**Development test user.** To get an account automatically after you wipe `data/`, create a `.env.development` file (git-ignored) with fake credentials:
+
+```bash
+DEV_USERNAME=Tester
+DEV_PASSWORD=test12345
+```
+
+`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Without the file, no user is created. Only `npm run dev` reads `.env.development`; it is never part of the Docker image, and the server refuses to start in production when `DEV_USERNAME` or `DEV_PASSWORD` is set.
 
 There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
 

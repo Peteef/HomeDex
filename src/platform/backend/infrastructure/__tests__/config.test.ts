@@ -37,6 +37,26 @@ describe('config', () => {
     });
   });
 
+  describe('development test user variables', () => {
+    it.each(['DEV_USERNAME', 'DEV_PASSWORD'])(
+      'should refuse to start production when %s is set',
+      (name) => {
+        // When / Then
+        expect(() => loadConfig({ NODE_ENV: 'production', [name]: 'Tester' })).toThrow(
+          `${name} are for development only`,
+        );
+      },
+    );
+
+    it('should accept them in development', () => {
+      // When
+      const config = loadConfig({ DEV_USERNAME: 'Tester', DEV_PASSWORD: 'test12345' });
+
+      // Then
+      expect(config.NODE_ENV).toBe('development');
+    });
+  });
+
   describe('loadEnvFile', () => {
     let dir: string;
 

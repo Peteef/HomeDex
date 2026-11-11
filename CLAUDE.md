@@ -18,7 +18,7 @@ It is a platform first. New tiles and modules are added over time, mostly by pro
 
 If a script below does not exist yet, creating it is part of project setup.
 
-- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart. It first creates the development test user (`scripts/dev-user.ts`) if it is missing.
+- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart. It first runs `scripts/dev-user.ts`, which creates a test user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when they are set and the database has no accounts.
 - `npm run build`: builds the UI to `dist/web`. `npm start`: production server (API plus built UI).
 - `npm test`: unit tests (Vitest).
 - `npm run test:e2e`: Playwright end-to-end tests, including phone viewports.
@@ -84,7 +84,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
 - Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
 - Tests, fixtures and examples use fake data only.
-- Accounts are created by the CLI, never from committed files. The one exception is the development test user in `scripts/dev-user.ts`: fake, publicly known credentials, created only by `npm run dev`, refused when `NODE_ENV=production`, and kept out of the Docker image (`scripts/` is not copied; the smoke test checks it).
+- Accounts are created by the CLI, never from committed files. The development test user is the only automatic account: its credentials live in the git-ignored `.env.development`, only `npm run dev` creates it, `scripts/` is kept out of the Docker image (the smoke test checks it), and the server refuses to start in production when `DEV_USERNAME` or `DEV_PASSWORD` is set.
 - No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
 - Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
 
