@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { LANGUAGE_STORAGE_KEY, LANGUAGES, SOURCE_LANGUAGE } from './languages.ts';
 import type { Language } from './languages.ts';
 
-const remember = (language: Language) => {
+const rememberChoice = (language: Language) => {
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
@@ -15,7 +15,7 @@ export const useLanguage = () => {
   const current = LANGUAGES.find(({ code }) => code === i18n.resolvedLanguage);
 
   const change = (language: Language) => {
-    remember(language);
+    rememberChoice(language);
     void i18n.changeLanguage(language);
   };
 

@@ -1,4 +1,5 @@
 import { Globe } from 'lucide-react';
+import type { ChangeEvent } from 'react';
 import { useText } from '../../lib/i18n/index.ts';
 
 export interface LanguageOption<Code extends string> {
@@ -21,6 +22,14 @@ export const LanguageSelect = <Code extends string>({
 }: LanguageSelectProps<Code>) => {
   const text = useText('components.languageSelect');
 
+  const pick = (event: ChangeEvent<HTMLSelectElement>) => {
+    const picked = languages.find(({ code }) => code === event.target.value);
+
+    if (picked) {
+      onChange(picked.code);
+    }
+  };
+
   return (
     <div className="border-dex-line text-dex-ink has-focus-visible:outline-dex-ink relative inline-flex h-11 items-center gap-1.5 rounded-full border bg-white/90 px-3 text-sm font-extrabold uppercase transition-colors hover:bg-white has-focus-visible:outline-3 has-focus-visible:outline-offset-2">
       <Globe size={20} aria-hidden />
@@ -28,13 +37,7 @@ export const LanguageSelect = <Code extends string>({
       <select
         aria-label={text.label}
         value={value}
-        onChange={(event) => {
-          const picked = languages.find(({ code }) => code === event.target.value);
-
-          if (picked) {
-            onChange(picked.code);
-          }
-        }}
+        onChange={pick}
         className="absolute -inset-px cursor-pointer rounded-full opacity-0"
       >
         {languages.map(({ code, flag }) => (
