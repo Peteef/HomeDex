@@ -1,0 +1,19 @@
+services:
+  homedex:
+    build: .
+    image: homedex:local
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    env_file:
+      - path: .env
+        required: false
+    # These win over .env, so a copy of .env.example (DATA_DIR=./data) cannot move the database
+    # out of the volume or the server off the mapped port.
+    environment:
+      DATA_DIR: /data
+      HOST: 0.0.0.0
+      PORT: 3000
+    volumes:
+      # The container runs as uid 1000. On a Linux host, ./data must be writable by that uid.
+      - ./data:/data
