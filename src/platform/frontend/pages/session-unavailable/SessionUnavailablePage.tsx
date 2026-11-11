@@ -8,14 +8,14 @@ export interface SessionUnavailablePageProps {
 }
 
 export const SessionUnavailablePage = ({ onRetry }: SessionUnavailablePageProps) => {
-  const { t } = useTranslation(['errors', 'common']);
+  const { t } = useTranslation();
   return (
     <Panel className="flex flex-col gap-3">
       <Wordmark />
       <h1 className="text-3xl font-extrabold">{t('sessionUnavailable.title')}</h1>
       <p className="text-dex-ink-muted text-base">{t('sessionUnavailable.message')}</p>
       <Button className="self-start" onClick={onRetry}>
-        {t('common:actions.tryAgain')}
+        {t('common.actions.tryAgain')}
       </Button>
     </Panel>
   );

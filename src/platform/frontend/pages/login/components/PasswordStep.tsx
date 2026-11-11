@@ -24,7 +24,7 @@ export const PasswordStep = ({
   onSubmit,
   onSwitch,
 }: PasswordStepProps) => {
-  const { t } = useTranslation('login');
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<LoginMessage>();
   const passwordInput = useRef<HTMLInputElement>(null);
@@ -57,9 +57,11 @@ export const PasswordStep = ({
         <Avatar name={username} />
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-3xl font-extrabold break-words">
-            {t(welcomeBack ? 'password.welcomeBack' : 'password.greeting', { username })}
+            {t(welcomeBack ? 'login.password.welcomeBack' : 'login.password.greeting', {
+              username,
+            })}
           </h1>
-          <p className="text-dex-ink-muted text-base">{t('password.prompt')}</p>
+          <p className="text-dex-ink-muted text-base">{t('login.password.prompt')}</p>
         </div>
       </div>
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
@@ -74,7 +76,7 @@ export const PasswordStep = ({
         />
         <TextInput
           ref={passwordInput}
-          label={t('password.label')}
+          label={t('login.password.label')}
           name="password"
           type="password"
           autoComplete="current-password"
@@ -90,11 +92,11 @@ export const PasswordStep = ({
           </p>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {t(pending ? 'password.submitting' : 'password.submit')}
+          {t(pending ? 'login.password.submitting' : 'login.password.submit')}
         </Button>
       </form>
       <Button variant="quiet" className="-mt-3 -mb-2 self-center" onClick={onSwitch}>
-        {t('password.switchTrainer', { username })}
+        {t('login.password.switchTrainer', { username })}
       </Button>
     </>
   );

@@ -1,22 +1,11 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { MODULE_TRANSLATIONS } from './features/modules/index.ts';
-import common from './locales/en/common.json';
-import errors from './locales/en/errors.json';
-import home from './locales/en/home.json';
-import login from './locales/en/login.json';
+import en from './locales/en.json';
 
-export const DEFAULT_NAMESPACE = 'common';
+// Module ids may not be 'platform', so the platform's text never clashes with a module's.
+export const PLATFORM_NAMESPACE = 'platform';
 const DEFAULT_LANGUAGE = 'en';
-
-const PLATFORM_RESOURCES = {
-  en: {
-    common,
-    errors,
-    home,
-    login,
-  },
-};
 
 i18next.on('languageChanged', (language) => {
   document.documentElement.lang = language;
@@ -25,8 +14,8 @@ i18next.on('languageChanged', (language) => {
 void i18next.use(initReactI18next).init({
   lng: DEFAULT_LANGUAGE,
   fallbackLng: DEFAULT_LANGUAGE,
-  defaultNS: DEFAULT_NAMESPACE,
-  resources: PLATFORM_RESOURCES,
+  defaultNS: PLATFORM_NAMESPACE,
+  resources: { en: { [PLATFORM_NAMESPACE]: en } },
   // Every resource is bundled, so init finishes before the first render.
   initAsync: false,
   // React escapes rendered text already.

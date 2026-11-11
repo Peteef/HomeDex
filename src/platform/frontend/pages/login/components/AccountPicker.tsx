@@ -11,17 +11,17 @@ export interface AccountPickerProps {
 }
 
 export const AccountPicker = ({ usernames, failed, onRetry, onPick }: AccountPickerProps) => {
-  const { t } = useTranslation(['login', 'common']);
+  const { t } = useTranslation();
   return (
     <>
-      <h1 className="text-3xl font-extrabold">{t('picker.title')}</h1>
+      <h1 className="text-3xl font-extrabold">{t('login.picker.title')}</h1>
       {failed ? (
         <div className="flex flex-col items-start gap-3">
           <p role="alert" className="text-dex-red-deep text-base font-bold">
-            {t('picker.loadFailed')}
+            {t('login.picker.loadFailed')}
           </p>
           <Button variant="secondary" onClick={onRetry}>
-            {t('common:actions.tryAgain')}
+            {t('common.actions.tryAgain')}
           </Button>
         </div>
       ) : usernames === undefined ? (

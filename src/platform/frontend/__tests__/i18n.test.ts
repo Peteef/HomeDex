@@ -24,6 +24,6 @@ describe('i18n', () => {
     await i18next.changeLanguage('pl');
 
     // Then
-    expect(i18next.t('actions.tryAgain')).toBe('Try again');
+    expect(i18next.t('common.actions.tryAgain')).toBe('Try again');
   });
 });

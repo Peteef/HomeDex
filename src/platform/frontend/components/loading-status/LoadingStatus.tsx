@@ -4,7 +4,7 @@ export const LoadingStatus = () => {
   const { t } = useTranslation();
   return (
     <p role="status" className="sr-only">
-      {t('status.loading')}
+      {t('components.loadingStatus.loading')}
     </p>
   );
 };

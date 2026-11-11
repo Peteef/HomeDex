@@ -40,7 +40,7 @@ export const Tile = ({
         <Icon name={icon} size={22} />
       </span>
       <span className="text-dex-ink-muted text-xs font-bold">
-        {t('tile.dexNumber', { number: padDexNo(dexNo) })}
+        {t('components.tile.dexNumber', { number: padDexNo(dexNo) })}
       </span>
       <span className="text-dex-ink text-base leading-tight font-extrabold">{title}</span>
       {description ? (
@@ -54,7 +54,7 @@ export const Tile = ({
       {external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLASSES}>
           {content}
-          <span className="sr-only"> {t('tile.opensInNewTab')}</span>
+          <span className="sr-only"> {t('components.tile.opensInNewTab')}</span>
         </a>
       ) : (
         <Link to={href} className={LINK_CLASSES}>
@@ -64,7 +64,7 @@ export const Tile = ({
       <IconButton
         className="absolute top-1 right-1"
         icon={<Pin size={20} />}
-        label={t('tile.pin', { title })}
+        label={t('components.tile.pin', { title })}
         pressed={pinned}
         onClick={onTogglePin}
       />

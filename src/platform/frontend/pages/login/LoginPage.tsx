@@ -16,7 +16,7 @@ import { PasswordStep } from './components/PasswordStep.tsx';
 import { loginFailureMessage } from './loginMessages.ts';
 
 export const LoginPage = () => {
-  const { t } = useTranslation('login');
+  const { t } = useTranslation();
   const location = useLocation();
   const session = useSession();
   const accounts = useAccounts();

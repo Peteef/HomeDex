@@ -75,12 +75,19 @@ export default ShoppingList;
 
 ## Text
 
-The UI text of a module lives in `frontend/locales/<language>.json`, today only `en.json`. The platform finds these files on its own and loads each one into a namespace named after the module's id. Keys are nested by meaning:
+The UI text of a module lives in one file per language, `frontend/locales/<language>.json`, today only `en.json`. The platform finds these files on its own and loads each one into a namespace named after the module's id. The keys follow the module's folders, like the platform's:
+
+- one top-level key per page folder, camelCased (`pages/list/` is `list`), with the page's own components nested inside it;
+- `components.<name>` for each of the module's components in `components/<name>/`;
+- `common` only for text two or more places share, grouped by kind (`common.actions`, `common.errors`). Move a string there when the second use appears, and only when the meaning is the same, not just the English words.
 
 ```json
 {
-  "title": "Shopping list",
-  "items": {
+  "common": {
+    "actions": { "tryAgain": "Try again" }
+  },
+  "list": {
+    "title": "Shopping list",
     "empty": "Nothing to buy. Nice!",
     "count_one": "{{count}} item",
     "count_other": "{{count}} items"
@@ -94,12 +101,12 @@ Read them with `react-i18next`, naming the namespace:
 import { useTranslation } from 'react-i18next';
 
 const { t } = useTranslation('shopping-list');
-t('items.count', { count: 3 }); // "3 items"
+t('list.count', { count: 3 }); // "3 items"
 ```
 
 - Use `<Trans>` from `react-i18next` for text that contains markup, such as a link or `<code>`.
 - Plurals use the `_one` / `_other` suffixes with a `count` value, as above.
-- The platform's own namespaces (`common`, for example `actions.tryAgain`) are available too: `useTranslation(['shopping-list', 'common'])`, then `t('common:actions.tryAgain')`.
+- A module owns all its text, even words the platform has too: the platform's keys are not part of its public API.
 - Add `frontend/locales/i18next.d.ts` so the keys are typed and a wrong key fails the typecheck:
 
 ```ts

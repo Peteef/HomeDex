@@ -15,8 +15,7 @@ export const AccountTiles = ({ usernames, onPick }: AccountTilesProps) =>
   usernames.length === 0 ? (
     <p className="text-dex-ink-muted text-base">
       <Trans
-        ns="login"
-        i18nKey="picker.empty"
+        i18nKey="login.picker.empty"
         values={{ command: CREATE_ACCOUNT_COMMAND }}
         components={{ code: <code /> }}
       />

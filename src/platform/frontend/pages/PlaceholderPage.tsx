@@ -22,7 +22,7 @@ export const PlaceholderPage = ({ title, message, homeLink = false }: Placeholde
           to={HOME_PATH}
           className="text-dex-red-deep focus-visible:outline-dex-ink inline-flex min-h-11 items-center self-start font-bold underline focus-visible:outline-3 focus-visible:outline-offset-2"
         >
-          {t('navigation.backToDex')}
+          {t('common.actions.backToDex')}
         </Link>
       ) : null}
     </Panel>
