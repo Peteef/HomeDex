@@ -85,7 +85,7 @@ DEV_USERNAME=Tester
 DEV_PASSWORD=test12345
 ```
 
-`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Without the file, no user is created. Only `npm run dev` reads `.env.development`; it is never part of the Docker image, and the server refuses to start in production when `DEV_USERNAME` or `DEV_PASSWORD` is set.
+`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Without the file, no user is created. Only `npm run dev` reads `.env.development`; it is never part of the Docker image, and the server refuses to start in production when any variable starting with `DEV_` is set: that prefix is reserved for development settings.
 
 There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
 

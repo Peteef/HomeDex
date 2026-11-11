@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { rejectDevUserInProduction } from './devConfig.ts';
+import { rejectDevConfigInProduction } from './devConfig.ts';
 
 export const DEFAULT_PORT = 3000;
 const MAX_PORT = 65535;
@@ -33,7 +33,7 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
       .join('; ');
     throw new Error(`Invalid configuration: ${problems}`);
   }
-  rejectDevUserInProduction(result.data, env);
+  rejectDevConfigInProduction(result.data, env);
   return result.data;
 };
 

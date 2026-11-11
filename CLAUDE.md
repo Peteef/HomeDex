@@ -86,7 +86,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
 - Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
 - Tests, fixtures and examples use fake data only.
-- Accounts are created by the CLI, never from committed files. The development test user is the only automatic account: its credentials live in the git-ignored `.env.development`, only `npm run dev` creates it, `scripts/` is kept out of the Docker image (the smoke test checks it), and the server refuses to start in production when `DEV_USERNAME` or `DEV_PASSWORD` is set.
+- Accounts are created by the CLI, never from committed files. The development test user is the only automatic account: its credentials live in the git-ignored `.env.development`, only `npm run dev` creates it, `scripts/` is kept out of the Docker image (the smoke test checks it), and the server refuses to start in production when any `DEV_*` variable is set (the prefix is reserved for development; `infrastructure/devConfig.ts`).
 - No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
 - Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
 

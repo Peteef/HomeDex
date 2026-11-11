@@ -2,7 +2,6 @@ import path from 'node:path';
 import type { AccountsService } from '../src/platform/backend/domain/accounts/index.ts';
 import { domainServices } from '../src/platform/backend/domain/services.ts';
 import { loadConfig, loadEnvFile } from '../src/platform/backend/infrastructure/config.ts';
-import { DEV_USER_VARIABLES } from '../src/platform/backend/infrastructure/devConfig.ts';
 import { openStorage } from '../src/platform/backend/infrastructure/storage/index.ts';
 
 // A test account for local development, run by `npm run dev` only. Its credentials come from
@@ -12,6 +11,7 @@ import { openStorage } from '../src/platform/backend/infrastructure/storage/inde
 const DEV_ENV_FILE = '.env.development';
 const PRODUCTION = 'production';
 const EXIT_FAILURE = 1;
+const DEV_USER_VARIABLES = ['DEV_USERNAME', 'DEV_PASSWORD'];
 
 export interface DevUserCredentials {
   username: string;
