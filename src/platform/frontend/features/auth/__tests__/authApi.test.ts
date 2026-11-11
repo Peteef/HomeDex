@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { fakeApi, signedIn, signedOut, status, TEST_USER } from '../../../__tests__/helpers.tsx';
-import { fetchCurrentUser, login, logout } from '../internal/authApi.ts';
+import {
+  accountsList,
+  fakeApi,
+  signedIn,
+  signedOut,
+  status,
+  TEST_USER,
+} from '../../../__tests__/helpers.tsx';
+import { fetchAccounts, fetchCurrentUser, login, logout } from '../internal/authApi.ts';
 
 describe('auth API', () => {
   describe('fetchCurrentUser', () => {
@@ -26,6 +33,16 @@ describe('auth API', () => {
 
       // When / Then
       await expect(fetchCurrentUser()).rejects.toMatchObject({ status: 500 });
+    });
+  });
+
+  describe('fetchAccounts', () => {
+    it('should return the accounts the login page offers', async () => {
+      // Given
+      fakeApi({ 'GET /api/auth/accounts': accountsList('Brock', 'Misty') });
+
+      // When / Then
+      expect(await fetchAccounts()).toEqual([{ username: 'Brock' }, { username: 'Misty' }]);
     });
   });
 

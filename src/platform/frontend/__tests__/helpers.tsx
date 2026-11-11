@@ -33,6 +33,8 @@ export const status = (code: number): FakeResponse => ({
 });
 export const signedIn = (user = TEST_USER): FakeResponse => ok({ user });
 export const signedOut = (): FakeResponse => status(401);
+export const accountsList = (...usernames: string[]): FakeResponse =>
+  ok({ accounts: usernames.map((username) => ({ username })) });
 
 const NO_BODY_STATUSES = new Set([204]);
 

@@ -12,6 +12,14 @@
   --color-dex-glass: rgb(255 248 238 / 0.88);
   --color-dex-card: rgb(255 255 255 / 0.9);
 
+  /* Avatar backgrounds, each at least 5:1 against white text. */
+  --color-avatar-red: #c8202f;
+  --color-avatar-blue: #1f5fa8;
+  --color-avatar-green: #2e7d32;
+  --color-avatar-purple: #6a3fa0;
+  --color-avatar-orange: #a14f00;
+  --color-avatar-teal: #00737a;
+
   --font-sans:
     ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 

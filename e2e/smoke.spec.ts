@@ -11,7 +11,7 @@ test.describe('smoke', () => {
       await page.goto('/');
 
       // Then
-      await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: "Who's there, Trainer?" })).toBeVisible();
       await expect(page.locator('img[src="/media/scene/background.svg"]')).toHaveCount(1);
     });
 
@@ -32,7 +32,7 @@ test.describe('smoke', () => {
     }) => {
       // Given
       await page.goto('/');
-      await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: "Who's there, Trainer?" })).toBeVisible();
 
       // When
       const results = await new AxeBuilder({ page }).analyze();

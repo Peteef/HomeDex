@@ -30,7 +30,9 @@ describe('App', () => {
       renderApp('/login');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should show the module placeholder at /m/<anything>', async () => {
@@ -126,7 +128,9 @@ describe('App', () => {
       renderApp('/');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should guard module screens and unknown paths too', async () => {
@@ -137,7 +141,9 @@ describe('App', () => {
       renderApp('/nowhere');
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
     });
 
     it('should show only a loading status while the session is checked', () => {
@@ -184,7 +190,10 @@ describe('App', () => {
       fireEvent.click(signOut);
 
       // Then
-      expect(await screen.findByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+      ).toBeInTheDocument();
+
       expect(api.callsTo('POST /api/auth/logout')).toHaveLength(1);
     });
   });

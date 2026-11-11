@@ -1,11 +1,29 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, signIn } from './session.ts';
 
 const MIN_TOUCH_TARGET = 44;
 
-const SCREENS = [
-  { name: 'login', path: '/login', heading: 'Sign in', signedIn: false },
+const REMEMBERED_KEY = 'homedex.rememberedAccount';
+
+interface Screen {
+  name: string;
+  path: string;
+  heading: string;
+  signedIn: boolean;
+  remembered?: string;
+}
+
+const SCREENS: Screen[] = [
+  { name: 'login', path: '/login', heading: "Who's there, Trainer?", signedIn: false },
+  {
+    name: 'password',
+    path: '/login',
+    heading: `Welcome back, ${E2E_USER.username}!`,
+    signedIn: false,
+    remembered: E2E_USER.username,
+  },
   { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
   { name: 'module', path: '/m/shopping-list', heading: 'Module not available', signedIn: true },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
@@ -23,6 +41,15 @@ test.describe('shell', () => {
       test.beforeEach(async ({ page }) => {
         if (screen.signedIn) {
           await signIn(page);
+        }
+
+        if (screen.remembered) {
+          await page.addInitScript(
+            ({ key, username }) => {
+              localStorage.setItem(key, username);
+            },
+            { key: REMEMBERED_KEY, username: screen.remembered },
+          );
         }
 
         await page.goto(screen.path);
@@ -82,7 +109,7 @@ test.describe('shell', () => {
     }) => {
       // Given
       await page.goto('/login');
-      const heading = page.getByRole('heading', { level: 1, name: 'Sign in' });
+      const heading = page.getByRole('heading', { level: 1, name: "Who's there, Trainer?" });
       await expect(heading).toBeVisible();
 
       // When
