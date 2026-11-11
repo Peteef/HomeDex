@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Panel } from '../components/panel/Panel.tsx';
 import { Wordmark } from '../components/wordmark/Wordmark.tsx';
@@ -9,18 +10,21 @@ export interface PlaceholderPageProps {
   homeLink?: boolean;
 }
 
-export const PlaceholderPage = ({ title, message, homeLink = false }: PlaceholderPageProps) => (
-  <Panel className="flex flex-col gap-3">
-    <Wordmark />
-    <h1 className="text-3xl font-extrabold">{title}</h1>
-    <p className="text-dex-ink-muted text-base">{message}</p>
-    {homeLink ? (
-      <Link
-        to={HOME_PATH}
-        className="text-dex-red-deep focus-visible:outline-dex-ink inline-flex min-h-11 items-center self-start font-bold underline focus-visible:outline-3 focus-visible:outline-offset-2"
-      >
-        Back to the Dex
-      </Link>
-    ) : null}
-  </Panel>
-);
+export const PlaceholderPage = ({ title, message, homeLink = false }: PlaceholderPageProps) => {
+  const { t } = useTranslation();
+  return (
+    <Panel className="flex flex-col gap-3">
+      <Wordmark />
+      <h1 className="text-3xl font-extrabold">{title}</h1>
+      <p className="text-dex-ink-muted text-base">{message}</p>
+      {homeLink ? (
+        <Link
+          to={HOME_PATH}
+          className="text-dex-red-deep focus-visible:outline-dex-ink inline-flex min-h-11 items-center self-start font-bold underline focus-visible:outline-3 focus-visible:outline-offset-2"
+        >
+          {t('navigation.backToDex')}
+        </Link>
+      ) : null}
+    </Panel>
+  );
+};

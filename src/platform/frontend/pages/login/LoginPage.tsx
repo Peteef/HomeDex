@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router';
 import {
   forgetAccount,
@@ -15,6 +16,7 @@ import { PasswordStep } from './components/PasswordStep.tsx';
 import { loginFailureMessage } from './loginMessages.ts';
 
 export const LoginPage = () => {
+  const { t } = useTranslation('login');
   const location = useLocation();
   const session = useSession();
   const accounts = useAccounts();
@@ -52,7 +54,7 @@ export const LoginPage = () => {
           username={chosen}
           welcomeBack={welcomeBack}
           pending={login.isPending}
-          failure={login.isError ? loginFailureMessage(login.error) : null}
+          failure={login.isError ? t(loginFailureMessage(login.error)) : null}
           onSubmit={(password) => login.mutateAsync({ username: chosen, password })}
           onSwitch={switchAccount}
         />

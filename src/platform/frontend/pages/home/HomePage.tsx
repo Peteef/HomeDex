@@ -1,5 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCurrentUser, useLogout } from '../../features/auth/index.ts';
 import { IconButton } from '../../components/icon-button/IconButton.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
@@ -10,6 +11,7 @@ import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
 import { sortTiles } from './sortTiles.ts';
 
 export const HomePage = () => {
+  const { t } = useTranslation('home');
   const { username } = useCurrentUser();
   const logout = useLogout();
   const [pinned, setPinned] = useState<ReadonlySet<number>>(new Set());
@@ -34,17 +36,22 @@ export const HomePage = () => {
         <Wordmark />
         <IconButton
           icon={<LogOut size={20} />}
-          label="Sign out"
+          label={t('signOut')}
           disabled={logout.isPending}
           onClick={() => {
             logout.mutate();
           }}
         />
       </div>
-      <h1 className="text-3xl font-extrabold">Hello {username}! What do you need today?</h1>
-      <TextInput label="Find a tile" hideLabel placeholder="Search the Dex..." type="search" />
+      <h1 className="text-3xl font-extrabold">{t('greeting', { username })}</h1>
+      <TextInput
+        label={t('search.label')}
+        hideLabel
+        placeholder={t('search.placeholder')}
+        type="search"
+      />
       <h2 className="text-dex-ink-muted text-xs font-extrabold tracking-[0.2em] uppercase">
-        All entries
+        {t('allEntries')}
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile) => (

@@ -1,0 +1,16 @@
+{
+  "actions": {
+    "tryAgain": "Try again"
+  },
+  "navigation": {
+    "backToDex": "Back to the Dex"
+  },
+  "status": {
+    "loading": "Loading…"
+  },
+  "tile": {
+    "dexNumber": "No. {{number}}",
+    "opensInNewTab": "(opens in a new tab)",
+    "pin": "Pin {{title}}"
+  }
+}

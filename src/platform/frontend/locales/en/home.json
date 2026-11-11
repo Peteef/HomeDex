@@ -1,0 +1,9 @@
+{
+  "greeting": "Hello {{username}}! What do you need today?",
+  "signOut": "Sign out",
+  "search": {
+    "label": "Find a tile",
+    "placeholder": "Search the Dex..."
+  },
+  "allEntries": "All entries"
+}

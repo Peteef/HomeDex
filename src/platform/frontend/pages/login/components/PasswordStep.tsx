@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../../components/avatar/Avatar.tsx';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
 import { passwordError } from '../loginMessages.ts';
+import type { LoginMessage } from '../loginMessages.ts';
 
 export interface PasswordStepProps {
   username: string;
@@ -22,8 +24,9 @@ export const PasswordStep = ({
   onSubmit,
   onSwitch,
 }: PasswordStepProps) => {
+  const { t } = useTranslation('login');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<LoginMessage>();
   const passwordInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,9 +57,9 @@ export const PasswordStep = ({
         <Avatar name={username} />
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-3xl font-extrabold break-words">
-            {welcomeBack ? `Welcome back, ${username}!` : `Hi, ${username}!`}
+            {t(welcomeBack ? 'password.welcomeBack' : 'password.greeting', { username })}
           </h1>
-          <p className="text-dex-ink-muted text-base">Prove it&apos;s you.</p>
+          <p className="text-dex-ink-muted text-base">{t('password.prompt')}</p>
         </div>
       </div>
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
@@ -71,7 +74,7 @@ export const PasswordStep = ({
         />
         <TextInput
           ref={passwordInput}
-          label="Password"
+          label={t('password.label')}
           name="password"
           type="password"
           autoComplete="current-password"
@@ -79,7 +82,7 @@ export const PasswordStep = ({
           onChange={(event) => {
             setPassword(event.target.value);
           }}
-          {...(error && { error })}
+          {...(error && { error: t(error) })}
         />
         {failure ? (
           <p role="alert" className="text-dex-red-deep text-base font-bold">
@@ -87,11 +90,11 @@ export const PasswordStep = ({
           </p>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {pending ? 'Signing in…' : 'I choose you!'}
+          {t(pending ? 'password.submitting' : 'password.submit')}
         </Button>
       </form>
       <Button variant="quiet" className="-mt-3 -mb-2 self-center" onClick={onSwitch}>
-        Not {username}? Switch Trainer
+        {t('password.switchTrainer', { username })}
       </Button>
     </>
   );

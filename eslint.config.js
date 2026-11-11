@@ -5,6 +5,7 @@ import prettier from 'eslint-config-prettier';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import i18next from 'eslint-plugin-i18next';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -196,6 +197,7 @@ const SKELETON = [
   '**/queryClient.ts',
   '**/routes.ts',
   '**/sceneLayers.ts',
+  '**/i18n.ts',
 ];
 
 // Each group of files gets one complete list: a later no-restricted-imports setting for the same
@@ -253,6 +255,21 @@ export const frontendRules = [
     ]),
   },
 ];
+
+// Text the user sees comes from the locale files through i18next, never from a literal in JSX.
+// Attributes are checked only where they carry text the user sees or hears.
+const USER_FACING_ATTRIBUTES = ['label', 'title', 'message', 'placeholder', 'alt', 'aria-label'];
+
+/** @type {import('eslint').Linter.Config} */
+export const uiTextRules = {
+  plugins: { i18next },
+  rules: {
+    'i18next/no-literal-string': [
+      'error',
+      { mode: 'jsx-only', 'jsx-attributes': { include: USER_FACING_ATTRIBUTES } },
+    ],
+  },
+};
 
 // src/platform/shared/ holds what frontend and backend both need (today the HTTP status codes).
 // It stands on its own, so both sides can import it without depending on each other.
@@ -381,6 +398,11 @@ export default defineConfig(
   },
   ...domainRules,
   ...frontendRules,
+  {
+    files: ['src/platform/frontend/**/*.tsx', 'src/modules/*/frontend/**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    ...uiTextRules,
+  },
   sharedRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },

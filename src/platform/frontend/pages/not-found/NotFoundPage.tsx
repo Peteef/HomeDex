@@ -1,5 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { PlaceholderPage } from '../PlaceholderPage.tsx';
 
-export const NotFoundPage = () => (
-  <PlaceholderPage title="Page not found" message="There is nothing at this address." homeLink />
-);
+export const NotFoundPage = () => {
+  const { t } = useTranslation('errors');
+  return <PlaceholderPage title={t('notFound.title')} message={t('notFound.message')} homeLink />;
+};

@@ -79,6 +79,7 @@ describe('LoginPage', () => {
 
       // Then
       expect(await screen.findByText(/No Trainers yet/)).toBeInTheDocument();
+      expect(screen.getByText('npm run users -- create').tagName).toBe('CODE');
     });
 
     it('should offer a retry when the accounts cannot be loaded', async () => {

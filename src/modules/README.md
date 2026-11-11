@@ -16,6 +16,7 @@ src/modules/<id>/
     pages/<name>/        screens, with pages/<name>/components/ for parts only that screen uses
     components/<name>/   pure components the module reuses
     features/<name>/     logic (hooks, data access, state) behind an index.ts, private files in internal/
+    locales/             the module's text: en.json, plus i18next.d.ts for typed keys
   backend/
     index.ts             exports register(ctx)
     domain/<name>/       logic of one area behind an index.ts, repositories in internal/
@@ -68,8 +69,50 @@ export default ShoppingList;
 ```
 
 - `useCurrentUser()` always has a user on a module's page.
+- Text the user sees comes from the module's locale files (see Text below), never from literals in the code.
 - Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. Colours, radii and fonts come from the theme tokens, never raw values.
 - Any request that answers 401 ends the session, and the user lands on the login page. A module needs no handling for it.
+
+## Text
+
+The UI text of a module lives in `frontend/locales/<language>.json`, today only `en.json`. The platform finds these files on its own and loads each one into a namespace named after the module's id. Keys are nested by meaning:
+
+```json
+{
+  "title": "Shopping list",
+  "items": {
+    "empty": "Nothing to buy. Nice!",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items"
+  }
+}
+```
+
+Read them with `react-i18next`, naming the namespace:
+
+```tsx
+import { useTranslation } from 'react-i18next';
+
+const { t } = useTranslation('shopping-list');
+t('items.count', { count: 3 }); // "3 items"
+```
+
+- Use `<Trans>` from `react-i18next` for text that contains markup, such as a link or `<code>`.
+- Plurals use the `_one` / `_other` suffixes with a `count` value, as above.
+- The platform's own namespaces (`common`, for example `actions.tryAgain`) are available too: `useTranslation(['shopping-list', 'common'])`, then `t('common:actions.tryAgain')`.
+- Add `frontend/locales/i18next.d.ts` so the keys are typed and a wrong key fails the typecheck:
+
+```ts
+import type en from './en.json';
+
+declare module 'i18next' {
+  interface ResourceNamespaceMap {
+    'shopping-list': typeof en;
+  }
+}
+```
+
+Lint rejects literal text in JSX and in attributes the user sees or hears (`label`, `title`, `placeholder`, `aria-label`, ...). User data, such as an item's name, is never translated.
 
 ## Backend
 
@@ -118,6 +161,7 @@ Unit tests live in `__tests__/` folders next to the code, as in the platform (`f
 
 1. `src/modules/<id>/manifest.ts` and `frontend/index.tsx`, plus `backend/` if the module has endpoints or data.
 2. Tables prefixed with `<id_snake>_`, created by the module's own migrations.
-3. Unit tests next to the code, and an e2e test for the page at both phone widths (375 and 402 pt).
-4. `npm run fix`, then `npm run verify` and `npm run test:e2e`.
-5. No change in `src/platform/`. If one is needed, it comes first, in its own PR.
+3. Text in `frontend/locales/en.json`, with `frontend/locales/i18next.d.ts` for typed keys.
+4. Unit tests next to the code, and an e2e test for the page at both phone widths (375 and 402 pt).
+5. `npm run fix`, then `npm run verify` and `npm run test:e2e`.
+6. No change in `src/platform/`. If one is needed, it comes first, in its own PR.
