@@ -45,7 +45,7 @@ src/                    all application code
     frontend/           components/ (generic, pure), pages/ (route screens), features/ (logic per area),
                         lib/ (generic utilities), app skeleton, api/ (public API)
     backend/            domain/ (logic per area), routes/ (HTTP endpoints), infrastructure/, api/ (public API)
-    shared/             what frontend and backend both use (HTTP status codes); imports neither
+    shared/             what frontend and backend both use (HTTP status codes, icon names); imports neither
   modules/
     <name>/             one folder per module
       manifest          id, name, icon, route, enabled

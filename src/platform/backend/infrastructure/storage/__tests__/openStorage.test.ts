@@ -54,6 +54,6 @@ describe('openStorage', () => {
 
     second.close();
     expect(users.n).toBe(1);
-    expect(applied.n).toBe(2);
+    expect(applied.n).toBe(4);
   });
 });

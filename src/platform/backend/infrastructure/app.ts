@@ -58,7 +58,7 @@ export const createApp = ({
     }),
   );
 
-  const { accounts, sessions } = domainServices(storage, {
+  const { accounts, sessions, tiles } = domainServices(storage, {
     sessionTtlDays: config.SESSION_TTL_DAYS,
     now,
     ...(argon2Params && { argon2Params }),
@@ -74,6 +74,7 @@ export const createApp = ({
     apiRoutes({
       accounts,
       sessions,
+      tiles,
       cookies,
       requireAuth: requireAuth(sessions, cookies),
       loginRateLimit: loginRateLimit(loginLimit),
