@@ -84,13 +84,15 @@ describe('lint rules', () => {
       expect(await violationsOf(`${components}/panel/ok-sibling-component.ts`)).toEqual([]);
     });
 
-    it.each([`${components}/panel/bad-page.ts`, `${components}/panel/bad-routes.ts`])(
-      'should reject %s',
-      async (file) => {
-        // When / Then
-        expect(await violationsOf(file)).toContain('no-restricted-imports');
-      },
-    );
+    it.each([
+      `${components}/panel/bad-page.ts`,
+      `${components}/panel/bad-routes.ts`,
+      `${components}/panel/bad-auth.ts`,
+      `${components}/panel/bad-http.ts`,
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('no-restricted-imports');
+    });
   });
 
   describe('style', () => {

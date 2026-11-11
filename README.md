@@ -4,7 +4,7 @@ A private, Pokémon-themed launch pad for home and personal life. Think of a bro
 
 It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage and accounts (with the `users` CLI and the login API) are in; tiles, modules and the login screen are coming next, so for now the app shows a placeholder page.
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI) and the login screen are in; tiles and modules are coming next, so for now the home screen shows placeholder tiles.
 
 ## Goals
 
@@ -19,13 +19,12 @@ TypeScript everywhere, running on Node.js 26.
 
 | Part     | Technology                                                                    |
 | -------- | ----------------------------------------------------------------------------- |
-| Frontend | React, Vite, React Router, Tailwind CSS, lucide-react icons                   |
+| Frontend | React, Vite, React Router, TanStack Query, Tailwind CSS, lucide-react icons   |
 | Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
 | Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
 | Package  | One Docker image (API and built UI) for amd64 and arm64                       |
-| Planned  | TanStack Query                                                                |
 
 ## Getting started
 

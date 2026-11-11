@@ -10,3 +10,5 @@ export { Icon } from '../components/icon/Icon.tsx';
 export type { IconProps } from '../components/icon/Icon.tsx';
 export { ICON_NAMES } from '../components/icon/iconRegistry.ts';
 export type { IconName } from '../components/icon/iconRegistry.ts';
+export { useCurrentUser } from '../auth/currentUser.ts';
+export type { CurrentUser } from '../auth/authApi.ts';

@@ -1,16 +1,17 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { signIn } from './session.ts';
 
 test.describe('smoke', () => {
   test.describe('home page', () => {
-    test('should render the placeholder over the scene when the home page opens', async ({
+    test('should render the login page over the scene when a visitor opens the app', async ({
       page,
     }) => {
       // When
       await page.goto('/');
 
       // Then
-      await expect(page.getByRole('heading', { name: 'HomeDex' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
       await expect(page.locator('img[src="/media/scene/background.svg"]')).toHaveCount(1);
     });
 
@@ -30,7 +31,7 @@ test.describe('smoke', () => {
     }) => {
       // Given
       await page.goto('/');
-      await expect(page.getByRole('heading', { name: 'HomeDex' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
 
       // When
       const results = await new AxeBuilder({ page }).analyze();
@@ -40,6 +41,9 @@ test.describe('smoke', () => {
     });
 
     test('should serve the app when the route is unknown', async ({ page }) => {
+      // Given
+      await signIn(page);
+
       // When
       await page.goto('/some/deep/link');
 
