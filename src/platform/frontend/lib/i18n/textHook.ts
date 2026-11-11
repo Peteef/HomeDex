@@ -6,11 +6,11 @@ import type { At, Messages, Namespace, Section, Text } from './types.ts';
 
 export const SOURCE_LANGUAGE = 'en';
 
-// A thin layer over i18next, chosen over plain t('login.picker.title') calls (owner, PR #15 review):
-// useText('login.picker') returns that section as an object, so code reads text.title, Cmd+click
-// opens the message in locales/en.ts, and a missing {{value}} fails the typecheck. i18next still
-// does the translating (language, fallback, plurals). If the types ever cost more than they give,
-// replace useText with plain useTranslation() calls.
+// Why not plain i18next? Calls like t('login.picker.title') repeat long key strings everywhere,
+// and the IDE can't take you from one to its text. So useText hands you a section of the
+// messages as an object: you write text.title, Cmd+click lands on the text, and forgetting a
+// {{value}} breaks the build. i18next still does the real work underneath. The price is the clever
+// types in types.ts; if they ever hurt more than they help, go back to useTranslation().
 export const textHook = <NS extends Namespace>(namespace: NS) => {
   const useText = <Prefix extends Section<Messages<NS>> & string>(
     prefix: Prefix,
