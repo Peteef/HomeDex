@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 import { App } from '../App.tsx';
-import { appQueryClient } from '../auth/queryClient.ts';
+import { appQueryClient } from '../queryClient.ts';
 
 export const TEST_USER = { id: 1, username: 'Misty' };
 

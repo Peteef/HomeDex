@@ -1,7 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
-import { useCurrentUser } from '../../auth/currentUser.ts';
-import { useLogout } from '../../auth/session.ts';
+import { useCurrentUser, useLogout } from '../../features/auth/index.ts';
 import { IconButton } from '../../components/icon-button/IconButton.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';

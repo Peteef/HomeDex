@@ -1,10 +1,6 @@
-import { ApiError } from '../../http/client.ts';
-import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../http/status.ts';
-
-export interface FieldErrors {
-  username?: string;
-  password?: string;
-}
+import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../shared/http/status.ts';
+import { ApiError } from '../../lib/http/index.ts';
+import type { FieldErrors } from './types.ts';
 
 const USERNAME_REQUIRED = 'Enter your username.';
 const PASSWORD_REQUIRED = 'Enter your password.';

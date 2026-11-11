@@ -14,7 +14,7 @@ import { sessionCookies } from './http/auth/sessionCookie.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
 import type { Storage } from './storage/index.ts';
-import { NOT_FOUND } from './http/status.ts';
+import { NOT_FOUND } from '../../shared/http/status.ts';
 
 const INDEX_FILE = 'index.html';
 const API_NOT_FOUND_RESPONSE = { error: 'Not found' };

@@ -1,14 +1,13 @@
 import { useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { redirectTarget } from '../../auth/redirect.ts';
-import { useLogin, useSession } from '../../auth/session.ts';
+import { redirectTarget, useLogin, useSession } from '../../features/auth/index.ts';
 import { Button } from '../../components/button/Button.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
 import { fieldErrors, loginFailureMessage } from './loginMessages.ts';
-import type { FieldErrors } from './loginMessages.ts';
+import type { FieldErrors } from './types.ts';
 
 export const LoginPage = () => {
   const location = useLocation();

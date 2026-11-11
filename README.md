@@ -102,7 +102,7 @@ Archiving blocks an account from logging in and signs it out everywhere, but kee
 
 ```
 src/
-  platform/    the core: server, app shell, shared UI (frontend/ and backend/)
+  platform/    the core: server, app shell, shared UI (frontend/, backend/ and shared/)
   modules/     one folder per module, each with its own UI, routes and data
 e2e/           end-to-end tests
 tests/         tests of the repository itself (the module boundary rules)

@@ -5,7 +5,7 @@ import type { AccountsService } from '../domain/accounts/index.ts';
 import type { SessionService } from '../domain/auth/index.ts';
 import { currentUser } from '../infrastructure/http/auth/currentUser.ts';
 import type { SessionCookies } from '../infrastructure/http/auth/sessionCookie.ts';
-import { BAD_REQUEST, NO_CONTENT, UNAUTHORIZED } from '../infrastructure/http/status.ts';
+import { BAD_REQUEST, NO_CONTENT, UNAUTHORIZED } from '../../shared/http/status.ts';
 
 const INVALID_REQUEST_RESPONSE = { error: 'Username and password are required' };
 const INVALID_CREDENTIALS_RESPONSE = { error: 'Invalid username or password' };
