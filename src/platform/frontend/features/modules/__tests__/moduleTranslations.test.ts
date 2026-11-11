@@ -16,8 +16,8 @@ describe('moduleTranslations', () => {
     const manifests = { '/src/modules/notes/manifest.ts': manifestOf('notes') };
 
     const files = {
-      '/src/modules/notes/frontend/locales/en.json': { title: 'Notes' },
-      '/src/modules/notes/frontend/locales/pl.json': { title: 'Notatki' },
+      '/src/modules/notes/frontend/locales/en.ts': { title: 'Notes' },
+      '/src/modules/notes/frontend/locales/pl.ts': { title: 'Notatki' },
     };
 
     // When
@@ -33,7 +33,7 @@ describe('moduleTranslations', () => {
   it('should leave out a disabled module', () => {
     // Given
     const manifests = { '/src/modules/notes/manifest.ts': manifestOf('notes', false) };
-    const files = { '/src/modules/notes/frontend/locales/en.json': { title: 'Notes' } };
+    const files = { '/src/modules/notes/frontend/locales/en.ts': { title: 'Notes' } };
 
     // When / Then
     expect(moduleTranslations(manifests, files)).toEqual([]);
@@ -42,7 +42,7 @@ describe('moduleTranslations', () => {
   it('should not give a module the files of a module whose id starts the same', () => {
     // Given
     const manifests = { '/src/modules/notes/manifest.ts': manifestOf('notes') };
-    const files = { '/src/modules/notes-archive/frontend/locales/en.json': { title: 'Archive' } };
+    const files = { '/src/modules/notes-archive/frontend/locales/en.ts': { title: 'Archive' } };
 
     // When / Then
     expect(moduleTranslations(manifests, files)).toEqual([]);
@@ -51,7 +51,7 @@ describe('moduleTranslations', () => {
   it('should leave out a file in a folder below the locales folder', () => {
     // Given
     const manifests = { '/src/modules/notes/manifest.ts': manifestOf('notes') };
-    const files = { '/src/modules/notes/frontend/locales/old/en.json': { title: 'Notes' } };
+    const files = { '/src/modules/notes/frontend/locales/old/en.ts': { title: 'Notes' } };
 
     // When / Then
     expect(moduleTranslations(manifests, files)).toEqual([]);

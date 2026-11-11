@@ -1,10 +1,10 @@
-import { useTranslation } from 'react-i18next';
+import { useText } from '../../lib/i18n/index.ts';
 
 export const LoadingStatus = () => {
-  const { t } = useTranslation();
+  const text = useText('components.loadingStatus');
   return (
     <p role="status" className="sr-only">
-      {t('components.loadingStatus.loading')}
+      {text.loading}
     </p>
   );
 };

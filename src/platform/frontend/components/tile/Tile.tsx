@@ -1,6 +1,6 @@
 import { Pin } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { useText } from '../../lib/i18n/index.ts';
 import { IconButton } from '../icon-button/IconButton.tsx';
 import { Icon } from '../icon/Icon.tsx';
 
@@ -32,7 +32,7 @@ export const Tile = ({
   pinned,
   onTogglePin,
 }: TileProps) => {
-  const { t } = useTranslation();
+  const text = useText('components.tile');
 
   const content = (
     <>
@@ -40,7 +40,7 @@ export const Tile = ({
         <Icon name={icon} size={22} />
       </span>
       <span className="text-dex-ink-muted text-xs font-bold">
-        {t('components.tile.dexNumber', { number: padDexNo(dexNo) })}
+        {text.dexNumber({ number: padDexNo(dexNo) })}
       </span>
       <span className="text-dex-ink text-base leading-tight font-extrabold">{title}</span>
       {description ? (
@@ -54,7 +54,7 @@ export const Tile = ({
       {external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLASSES}>
           {content}
-          <span className="sr-only"> {t('components.tile.opensInNewTab')}</span>
+          <span className="sr-only"> {text.opensInNewTab}</span>
         </a>
       ) : (
         <Link to={href} className={LINK_CLASSES}>
@@ -64,7 +64,7 @@ export const Tile = ({
       <IconButton
         className="absolute top-1 right-1"
         icon={<Pin size={20} />}
-        label={t('components.tile.pin', { title })}
+        label={text.pin({ title })}
         pressed={pinned}
         onClick={onTogglePin}
       />

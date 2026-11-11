@@ -1,17 +1,16 @@
-import type { ParseKeys } from 'i18next';
 import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../shared/http/status.ts';
 import { ApiError } from '../../lib/http/index.ts';
+import type en from '../../locales/en.ts';
 
-export type LoginMessage = ParseKeys;
+export type LoginError = keyof (typeof en)['login']['errors'];
 
-const FAILURE_MESSAGES: Record<number, LoginMessage> = {
-  [UNAUTHORIZED]: 'login.errors.wrongPassword',
-  [TOO_MANY_REQUESTS]: 'login.errors.tooManyAttempts',
+const FAILURES: Record<number, LoginError> = {
+  [UNAUTHORIZED]: 'wrongPassword',
+  [TOO_MANY_REQUESTS]: 'tooManyAttempts',
 };
 
-export const passwordError = (password: string): LoginMessage | undefined =>
-  password === '' ? 'login.errors.passwordRequired' : undefined;
+export const passwordError = (password: string): LoginError | undefined =>
+  password === '' ? 'passwordRequired' : undefined;
 
-export const loginFailureMessage = (error: unknown): LoginMessage =>
-  (error instanceof ApiError ? FAILURE_MESSAGES[error.status] : undefined) ??
-  'login.errors.unexpected';
+export const loginFailure = (error: unknown): LoginError =>
+  (error instanceof ApiError ? FAILURES[error.status] : undefined) ?? 'unexpected';

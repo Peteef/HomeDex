@@ -4,7 +4,7 @@ import type { ModuleTranslation } from '../types.ts';
 
 const MODULES_ROOT = '/src/modules';
 const LOCALES_DIR = 'frontend/locales';
-const LOCALE_FILE = /^(?<language>[\w-]+)\.json$/;
+const LOCALE_FILE = /^(?<language>[\w-]+)\.ts$/;
 
 const localesDirOf = (id: string): string => `${MODULES_ROOT}/${id}/${LOCALES_DIR}/`;
 
@@ -23,7 +23,6 @@ const translationsOf = (
 };
 
 // Matches the manifests to their locale files, keyed by file path as import.meta.glob returns them.
-// Each module's strings live in its own namespace, named after its id.
 export const moduleTranslations = (
   manifests: Record<string, ModuleManifest>,
   files: Record<string, ResourceKey>,

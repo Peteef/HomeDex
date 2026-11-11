@@ -20,7 +20,7 @@ TypeScript everywhere, running on Node.js 26.
 | Part     | Technology                                                                    |
 | -------- | ----------------------------------------------------------------------------- |
 | Frontend | React, Vite, React Router, TanStack Query, Tailwind CSS, lucide-react icons   |
-| UI text  | i18next and react-i18next, English for now (`src/platform/frontend/locales/`) |
+| UI text  | i18next and react-i18next behind a small `useText` hook, English for now      |
 | Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../../components/avatar/Avatar.tsx';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
+import { useText } from '../../../lib/i18n/index.ts';
 import { passwordError } from '../loginMessages.ts';
-import type { LoginMessage } from '../loginMessages.ts';
+import type { LoginError } from '../loginMessages.ts';
 
 export interface PasswordStepProps {
   username: string;
@@ -24,9 +24,10 @@ export const PasswordStep = ({
   onSubmit,
   onSwitch,
 }: PasswordStepProps) => {
-  const { t } = useTranslation();
+  const text = useText('login.password');
+  const errors = useText('login.errors');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<LoginMessage>();
+  const [error, setError] = useState<LoginError>();
   const passwordInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,11 +58,9 @@ export const PasswordStep = ({
         <Avatar name={username} />
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-3xl font-extrabold break-words">
-            {t(welcomeBack ? 'login.password.welcomeBack' : 'login.password.greeting', {
-              username,
-            })}
+            {(welcomeBack ? text.welcomeBack : text.greeting)({ username })}
           </h1>
-          <p className="text-dex-ink-muted text-base">{t('login.password.prompt')}</p>
+          <p className="text-dex-ink-muted text-base">{text.prompt}</p>
         </div>
       </div>
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
@@ -76,7 +75,7 @@ export const PasswordStep = ({
         />
         <TextInput
           ref={passwordInput}
-          label={t('login.password.label')}
+          label={text.label}
           name="password"
           type="password"
           autoComplete="current-password"
@@ -84,7 +83,7 @@ export const PasswordStep = ({
           onChange={(event) => {
             setPassword(event.target.value);
           }}
-          {...(error && { error: t(error) })}
+          {...(error && { error: errors[error] })}
         />
         {failure ? (
           <p role="alert" className="text-dex-red-deep text-base font-bold">
@@ -92,11 +91,11 @@ export const PasswordStep = ({
           </p>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {t(pending ? 'login.password.submitting' : 'login.password.submit')}
+          {pending ? text.submitting : text.submit}
         </Button>
       </form>
       <Button variant="quiet" className="-mt-3 -mb-2 self-center" onClick={onSwitch}>
-        {t('login.password.switchTrainer', { username })}
+        {text.switchTrainer({ username })}
       </Button>
     </>
   );

@@ -202,6 +202,7 @@ describe('App', () => {
         'IconButton',
         'Panel',
         'TextInput',
+        'textHook',
         'useCurrentUser',
       ]);
     });

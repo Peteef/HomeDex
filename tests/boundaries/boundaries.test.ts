@@ -66,6 +66,9 @@ describe('lint rules', () => {
       `${frontend}/pages/list/ok-page.ts`,
       `${frontend}/components/row/ok-sibling-component.ts`,
       `${frontend}/features/items/ok-feature.ts`,
+      `${frontend}/pages/list/ok-text.ts`,
+      `${frontend}/components/row/ok-text.ts`,
+      `${frontend}/features/items/ok-text.ts`,
       `${backend}/ok-register.ts`,
       `${backend}/domain/notes/ok-domain.ts`,
       `${backend}/routes/ok-routes.ts`,
@@ -82,6 +85,8 @@ describe('lint rules', () => {
       `${frontend}/components/row/bad-page.ts`,
       `${frontend}/components/row/bad-feature.ts`,
       `${frontend}/features/items/bad-page.ts`,
+      `${frontend}/components/row/bad-locale-file.ts`,
+      `${frontend}/locales/bad-component.ts`,
       `${backend}/bad-frontend-api.ts`,
       `${backend}/bad-domain-internal.ts`,
       `${backend}/domain/notes/bad-other-domain-internal.ts`,
@@ -127,6 +132,7 @@ describe('lint rules', () => {
 
     it.each([
       `${frontend}/components/panel/ok-sibling-component.ts`,
+      `${frontend}/components/panel/ok-text.ts`,
       `${frontend}/pages/home/ok-feature.ts`,
       `${frontend}/pages/home/ok-lib.ts`,
       `${frontend}/pages/home/ok-shared.ts`,

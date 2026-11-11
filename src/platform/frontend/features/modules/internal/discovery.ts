@@ -15,10 +15,13 @@ const entries = import.meta.glob<Awaited<ReturnType<PageLoader>>>(
   '/src/modules/*/frontend/index.tsx',
 );
 
-const locales = import.meta.glob<ResourceKey>('/src/modules/*/frontend/locales/*.json', {
-  eager: true,
-  import: 'default',
-});
+const locales = import.meta.glob<ResourceKey>(
+  ['/src/modules/*/frontend/locales/*.ts', '!/src/modules/*/frontend/locales/index.ts'],
+  {
+    eager: true,
+    import: 'default',
+  },
+);
 
 export const MODULE_PAGES = modulePages(manifests, entries);
 

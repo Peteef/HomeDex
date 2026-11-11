@@ -1,17 +1,17 @@
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useCurrentUser, useLogout } from '../../features/auth/index.ts';
 import { IconButton } from '../../components/icon-button/IconButton.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';
 import { Tile } from '../../components/tile/Tile.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
+import { useText } from '../../lib/i18n/index.ts';
 import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
 import { sortTiles } from './sortTiles.ts';
 
 export const HomePage = () => {
-  const { t } = useTranslation();
+  const text = useText('home');
   const { username } = useCurrentUser();
   const logout = useLogout();
   const [pinned, setPinned] = useState<ReadonlySet<number>>(new Set());
@@ -36,22 +36,22 @@ export const HomePage = () => {
         <Wordmark />
         <IconButton
           icon={<LogOut size={20} />}
-          label={t('home.signOut')}
+          label={text.signOut}
           disabled={logout.isPending}
           onClick={() => {
             logout.mutate();
           }}
         />
       </div>
-      <h1 className="text-3xl font-extrabold">{t('home.greeting', { username })}</h1>
+      <h1 className="text-3xl font-extrabold">{text.greeting({ username })}</h1>
       <TextInput
-        label={t('home.search.label')}
+        label={text.search.label}
         hideLabel
-        placeholder={t('home.search.placeholder')}
+        placeholder={text.search.placeholder}
         type="search"
       />
       <h2 className="text-dex-ink-muted text-xs font-extrabold tracking-[0.2em] uppercase">
-        {t('home.allEntries')}
+        {text.allEntries}
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile) => (

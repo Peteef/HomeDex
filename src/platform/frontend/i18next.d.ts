@@ -1,8 +1,8 @@
-import type { PLATFORM_NAMESPACE } from './i18n.ts';
-import type en from './locales/en.json';
+import type { PLATFORM_NAMESPACE } from './lib/i18n/index.ts';
+import type en from './locales/en.ts';
 
-// English is the source language: a key missing from it fails the typecheck. A module adds its own
-// namespace the same way (see src/modules/README.md).
+// Gives i18next the English messages as types, which useText and <Trans> are typed from. A module
+// registers its namespace the same way (see src/modules/README.md).
 declare module 'i18next' {
   interface CustomTypeOptions {
     defaultNS: typeof PLATFORM_NAMESPACE;

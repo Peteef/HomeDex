@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router';
 import {
   forgetAccount,
@@ -11,12 +10,13 @@ import {
 } from '../../features/auth/index.ts';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
+import { useText } from '../../lib/i18n/index.ts';
 import { AccountPicker } from './components/AccountPicker.tsx';
 import { PasswordStep } from './components/PasswordStep.tsx';
-import { loginFailureMessage } from './loginMessages.ts';
+import { loginFailure } from './loginMessages.ts';
 
 export const LoginPage = () => {
-  const { t } = useTranslation();
+  const errors = useText('login.errors');
   const location = useLocation();
   const session = useSession();
   const accounts = useAccounts();
@@ -54,7 +54,7 @@ export const LoginPage = () => {
           username={chosen}
           welcomeBack={welcomeBack}
           pending={login.isPending}
-          failure={login.isError ? t(loginFailureMessage(login.error)) : null}
+          failure={login.isError ? errors[loginFailure(login.error)] : null}
           onSubmit={(password) => login.mutateAsync({ username: chosen, password })}
           onSwitch={switchAccount}
         />

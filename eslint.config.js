@@ -24,6 +24,7 @@ const MODULE_ELEMENTS = [
     capture: ['id', 'name'],
   },
   { type: 'module-feature', pattern: 'src/modules/*/frontend/features/*', capture: ['id', 'name'] },
+  { type: 'module-locales', pattern: 'src/modules/*/frontend/locales', capture: ['id'] },
   { type: 'module-frontend', pattern: 'src/modules/*/frontend', capture: ['id'] },
   { type: 'module-domain', pattern: 'src/modules/*/backend/domain/*', capture: ['id', 'name'] },
   { type: 'module-routes', pattern: 'src/modules/*/backend/routes', capture: ['id'] },
@@ -49,6 +50,13 @@ const entrypointOf = (type, folder) => ({
 
 const component = inModule('module-component');
 const featureEntrypoint = entrypointOf('module-feature', 'frontend/features');
+
+// The module's useText hook, which every part of its frontend may use, like lib/i18n in the platform.
+const text = {
+  ...inModule('module-locales'),
+  file: { path: 'src/modules/*/frontend/locales/index.ts' },
+};
+
 const domainEntrypoint = entrypointOf('module-domain', 'backend/domain');
 const manifest = { ...inModule('module'), file: { path: 'src/modules/*/manifest.ts' } };
 const frontendApis = [platformApi('frontend'), platformApi('shared')];
@@ -56,12 +64,20 @@ const backendApis = [platformApi('backend'), platformApi('shared')];
 
 // For each element type of a module, what it may import.
 const MODULE_POLICIES = {
-  'module-component': [component, ...frontendApis],
-  'module-feature': [sameElement('module-feature'), featureEntrypoint, component, ...frontendApis],
+  'module-component': [component, text, ...frontendApis],
+  'module-locales': [inModule('module-locales'), ...frontendApis],
+  'module-feature': [
+    sameElement('module-feature'),
+    featureEntrypoint,
+    component,
+    text,
+    ...frontendApis,
+  ],
   'module-page': [
     sameElement('module-page'),
     component,
     featureEntrypoint,
+    text,
     manifest,
     ...frontendApis,
   ],
@@ -70,6 +86,7 @@ const MODULE_POLICIES = {
     inModule('module-page'),
     component,
     featureEntrypoint,
+    text,
     manifest,
     ...frontendApis,
   ],
@@ -188,7 +205,7 @@ export const domainRules = [
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth', 'modules'];
-const FRONTEND_LIBS = ['http'];
+const FRONTEND_LIBS = ['http', 'i18n'];
 
 const SKELETON = [
   '**/App.tsx',
@@ -248,9 +265,17 @@ export const frontendRules = [
     files: inFrontend('components'),
     rules: restrictImports([
       {
-        group: ['**/pages/**', '**/features/**', '**/lib/**', ...SKELETON],
+        // lib/i18n is the exception: the language is ambient, like the theme.
+        group: [
+          '**/pages/**',
+          '**/features/**',
+          '**/lib/**',
+          '!**/lib/i18n',
+          '!**/lib/i18n/index.ts',
+          ...SKELETON,
+        ],
         message:
-          'Components are generic and pure: they must not import pages, features, libs or the app skeleton.',
+          'Components are generic and pure: they must not import pages, features, libs (except lib/i18n) or the app skeleton.',
       },
     ]),
   },
