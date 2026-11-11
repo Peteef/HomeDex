@@ -2,9 +2,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { sectionOf, textOf } from './internal/textOf.ts';
 import type { Translate } from './internal/textOf.ts';
+import { SOURCE_LANGUAGE } from './languages.ts';
 import type { At, Messages, Namespace, Section, Text } from './types.ts';
-
-export const SOURCE_LANGUAGE = 'en';
 
 // Why not plain i18next? Calls like t('login.picker.title') repeat long key strings everywhere,
 // and the IDE can't take you from one to its text. So useText hands you a section of the

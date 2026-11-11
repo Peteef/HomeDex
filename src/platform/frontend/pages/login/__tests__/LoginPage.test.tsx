@@ -303,4 +303,25 @@ describe('LoginPage', () => {
       await screen.findByRole('heading', { level: 1, name: /Hello Misty!/ }),
     ).toBeInTheDocument();
   });
+
+  describe('language', () => {
+    it('should switch the page to the language the user picks and remember it', async () => {
+      // Given
+      openLogin();
+      await pickerHeading();
+
+      // When
+      fireEvent.change(screen.getByRole('combobox', { name: 'Language' }), {
+        target: { value: 'pl' },
+      });
+
+      // Then
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Który Trener tym razem?' }),
+      ).toBeInTheDocument();
+
+      expect(document.documentElement.lang).toBe('pl');
+      expect(localStorage.getItem('homedex.language')).toBe('pl');
+    });
+  });
 });

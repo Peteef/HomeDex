@@ -9,7 +9,12 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  use: { baseURL: `http://127.0.0.1:${String(port)}`, trace: 'retain-on-failure' },
+  use: {
+    baseURL: `http://127.0.0.1:${String(port)}`,
+    // The app follows the browser's language, so the tests pin it.
+    locale: 'en-US',
+    trace: 'retain-on-failure',
+  },
   projects: [
     {
       name: 'iphone-13-mini',

@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 
 export const REMEMBERED_ACCOUNT_KEY = 'homedex.rememberedAccount';
+export const LANGUAGE_KEY = 'homedex.language';
 
 export const E2E_GREETING = `Hello ${E2E_USER.username}! What do you need today?`;
 

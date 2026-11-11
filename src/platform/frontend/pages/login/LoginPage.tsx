@@ -8,15 +8,17 @@ import {
   useLogin,
   useSession,
 } from '../../features/auth/index.ts';
+import { LanguageSelect } from '../../components/language-select/LanguageSelect.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
-import { useText } from '../../lib/i18n/index.ts';
+import { useLanguage, useText } from '../../lib/i18n/index.ts';
 import { AccountPicker } from './components/AccountPicker.tsx';
 import { PasswordStep } from './components/PasswordStep.tsx';
 import { loginFailure } from './loginMessages.ts';
 
 export const LoginPage = () => {
   const errors = useText('login.errors');
+  const { language, languages, change } = useLanguage();
   const location = useLocation();
   const session = useSession();
   const accounts = useAccounts();
@@ -47,7 +49,10 @@ export const LoginPage = () => {
 
   return (
     <Panel className="flex flex-col gap-4">
-      <Wordmark />
+      <div className="flex items-center justify-between gap-3">
+        <Wordmark />
+        <LanguageSelect languages={languages} value={language} onChange={change} />
+      </div>
       {chosen ? (
         <PasswordStep
           key={chosen}

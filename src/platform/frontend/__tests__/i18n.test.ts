@@ -1,11 +1,7 @@
 import i18next from 'i18next';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('i18n', () => {
-  afterEach(async () => {
-    await i18next.changeLanguage('en');
-  });
-
   it('should mark the page as English by default', () => {
     // When / Then
     expect(document.documentElement.lang).toBe('en');
@@ -19,11 +15,12 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('pl');
   });
 
-  it('should fall back to English for a language without translations', async () => {
+  it('should use English for a language it does not support', async () => {
     // When
-    await i18next.changeLanguage('pl');
+    await i18next.changeLanguage('de');
 
     // Then
+    expect(i18next.resolvedLanguage).toBe('en');
     expect(i18next.t('common.actions.tryAgain')).toBe('Try again');
   });
 });
