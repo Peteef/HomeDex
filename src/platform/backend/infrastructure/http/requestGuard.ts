@@ -1,5 +1,5 @@
 import type { Request, RequestHandler } from 'express';
-import { FORBIDDEN, UNSUPPORTED_MEDIA_TYPE } from './status.ts';
+import { FORBIDDEN, UNSUPPORTED_MEDIA_TYPE } from '../../../shared/http/status.ts';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const JSON_TYPE = 'application/json';

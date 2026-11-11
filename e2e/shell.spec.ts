@@ -1,11 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { E2E_GREETING, signIn } from './session.ts';
 
 const MIN_TOUCH_TARGET = 44;
 const SCREENS = [
-  { name: 'login', path: '/login', heading: 'Sign in' },
-  { name: 'home', path: '/', heading: 'HomeDex' },
-  { name: 'module', path: '/m/shopping-list', heading: 'Module not available' },
+  { name: 'login', path: '/login', heading: 'Sign in', signedIn: false },
+  { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
+  { name: 'module', path: '/m/shopping-list', heading: 'Module not available', signedIn: true },
+  { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
 ];
 interface Manifest {
   icons: { src: string; type: string }[];
@@ -17,6 +19,9 @@ test.describe('shell', () => {
   for (const screen of SCREENS) {
     test.describe(`${screen.name} screen`, () => {
       test.beforeEach(async ({ page }) => {
+        if (screen.signedIn) {
+          await signIn(page);
+        }
         await page.goto(screen.path);
         await expect(page.getByRole('heading', { level: 1, name: screen.heading })).toBeVisible();
       });
@@ -92,6 +97,10 @@ test.describe('shell', () => {
   });
 
   test.describe('home screen', () => {
+    test.beforeEach(async ({ page }) => {
+      await signIn(page);
+    });
+
     test('should pin and unpin a tile when its pin control is tapped', async ({ page }) => {
       // Given
       await page.goto('/');
@@ -230,8 +239,9 @@ test.describe('shell', () => {
       });
 
       // When
+      await signIn(page);
       await page.goto('/');
-      await expect(page.getByRole('heading', { level: 1, name: 'HomeDex' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: E2E_GREETING })).toBeVisible();
 
       // Then
       expect(foreign).toEqual([]);

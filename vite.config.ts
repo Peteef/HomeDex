@@ -16,7 +16,9 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true, // reachable from phones on the local network
       port: DEV_SERVER_PORT,
-      proxy: { [API_PATH]: backend, [MEDIA_PATH]: backend },
+      // The object form keeps the browser's Host header (the string form rewrites it to the
+      // backend's), so the backend's Origin check accepts writes made through this proxy.
+      proxy: { [API_PATH]: { target: backend }, [MEDIA_PATH]: { target: backend } },
     },
   };
 });

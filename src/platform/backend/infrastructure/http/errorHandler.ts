@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler } from 'express';
 import { logger } from '../logger.ts';
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from './status.ts';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from '../../../shared/http/status.ts';
 
 const INVALID_JSON_RESPONSE = { error: 'Invalid request body' };
 const INTERNAL_ERROR_RESPONSE = { error: 'Internal error' };

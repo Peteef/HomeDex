@@ -2,7 +2,13 @@ import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { boundaryRules, domainRules, frontendRules, styleRules } from '../../eslint.config.js';
+import {
+  boundaryRules,
+  domainRules,
+  frontendRules,
+  sharedRules,
+  styleRules,
+} from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -18,7 +24,8 @@ const violationsOf = async (file: string): Promise<string[]> => {
         settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
       },
       ...domainRules,
-      frontendRules,
+      ...frontendRules,
+      sharedRules,
       styleRules,
     ],
   });
@@ -76,15 +83,38 @@ describe('lint rules', () => {
     });
   });
 
-  describe('frontend components', () => {
-    const components = 'src/platform/frontend/components';
+  describe('frontend layers', () => {
+    const frontend = 'src/platform/frontend';
 
-    it('should allow a component to use another component', async () => {
+    it.each([
+      `${frontend}/components/panel/ok-sibling-component.ts`,
+      `${frontend}/pages/home/ok-feature.ts`,
+      `${frontend}/pages/home/ok-lib.ts`,
+      `${frontend}/pages/home/ok-shared.ts`,
+      `${frontend}/features/auth/ok-lib.ts`,
+    ])('should allow %s', async (file) => {
       // When / Then
-      expect(await violationsOf(`${components}/panel/ok-sibling-component.ts`)).toEqual([]);
+      expect(await violationsOf(file)).toEqual([]);
     });
 
-    it.each([`${components}/panel/bad-page.ts`, `${components}/panel/bad-routes.ts`])(
+    it.each([
+      `${frontend}/components/panel/bad-page.ts`,
+      `${frontend}/components/panel/bad-routes.ts`,
+      `${frontend}/components/panel/bad-feature.ts`,
+      `${frontend}/components/panel/bad-lib.ts`,
+      `${frontend}/pages/home/bad-feature-internal.ts`,
+      `${frontend}/pages/home/bad-lib-internal.ts`,
+      `${frontend}/features/auth/bad-lib-internal.ts`,
+      `${frontend}/features/auth/bad-page.ts`,
+      `${frontend}/lib/http/bad-feature.ts`,
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('no-restricted-imports');
+    });
+  });
+
+  describe('shared', () => {
+    it.each(['src/platform/shared/bad-frontend.ts', 'src/platform/shared/bad-backend.ts'])(
       'should reject %s',
       async (file) => {
         // When / Then

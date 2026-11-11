@@ -4,7 +4,7 @@ A private, Pokémon-themed launch pad for home and personal life. Think of a bro
 
 It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage and accounts (with the `users` CLI and the login API) are in; tiles, modules and the login screen are coming next, so for now the app shows a placeholder page.
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI) and the login screen are in; tiles and modules are coming next, so for now the home screen shows placeholder tiles.
 
 ## Goals
 
@@ -19,13 +19,12 @@ TypeScript everywhere, running on Node.js 26.
 
 | Part     | Technology                                                                    |
 | -------- | ----------------------------------------------------------------------------- |
-| Frontend | React, Vite, React Router, Tailwind CSS, lucide-react icons                   |
+| Frontend | React, Vite, React Router, TanStack Query, Tailwind CSS, lucide-react icons   |
 | Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
 | Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
 | Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
 | Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
 | Package  | One Docker image (API and built UI) for amd64 and arm64                       |
-| Planned  | TanStack Query                                                                |
 
 ## Getting started
 
@@ -54,7 +53,7 @@ Then open http://localhost:3000.
 
 | Command            | What it does                                                                                        |
 | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload                            |
+| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload (see the test user below)  |
 | `npm run build`    | Builds the UI into `dist/web`                                                                       |
 | `npm start`        | Production server (API plus built UI)                                                               |
 | `npm test`         | Unit tests                                                                                          |
@@ -79,6 +78,15 @@ Settings come from environment variables. Copy `.env.example` to `.env` to chang
 
 ## Accounts
 
+**Development test user.** To get an account automatically after you wipe `data/`, create a `.env.development` file (git-ignored) with fake credentials:
+
+```bash
+DEV_USERNAME=Tester
+DEV_PASSWORD=test12345
+```
+
+`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Without the file, no user is created. Only `npm run dev` reads `.env.development`; it is never part of the Docker image, and the server refuses to start in production when any variable starting with `DEV_` is set: that prefix is reserved for development settings.
+
 There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
 
 ```bash
@@ -94,7 +102,7 @@ Archiving blocks an account from logging in and signs it out everywhere, but kee
 
 ```
 src/
-  platform/    the core: server, app shell, shared UI (frontend/ and backend/)
+  platform/    the core: server, app shell, shared UI (frontend/, backend/ and shared/)
   modules/     one folder per module, each with its own UI, routes and data
 e2e/           end-to-end tests
 tests/         tests of the repository itself (the module boundary rules)

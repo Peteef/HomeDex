@@ -18,7 +18,7 @@ It is a platform first. New tiles and modules are added over time, mostly by pro
 
 If a script below does not exist yet, creating it is part of project setup.
 
-- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart.
+- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart. It first runs `scripts/dev-user.ts`, which creates a test user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when they are set and the database has no accounts.
 - `npm run build`: builds the UI to `dist/web`. `npm start`: production server (API plus built UI).
 - `npm test`: unit tests (Vitest).
 - `npm run test:e2e`: Playwright end-to-end tests, including phone viewports.
@@ -42,8 +42,10 @@ If a script below does not exist yet, creating it is part of project setup.
 ```
 src/                    all application code
   platform/             the core: everything generic
-    frontend/           components/ (generic, pure), pages/ (route screens), app skeleton
+    frontend/           components/ (generic, pure), pages/ (route screens), features/ (logic per area),
+                        lib/ (generic utilities), app skeleton, api/ (public API)
     backend/            domain/ (logic per area), routes/ (HTTP endpoints), infrastructure/, api/ (public API)
+    shared/             what frontend and backend both use (HTTP status codes); imports neither
   modules/
     <name>/             one folder per module
       manifest          id, name, icon, route, enabled
@@ -65,13 +67,13 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - Functions are arrow functions assigned to `const`, never `function` declarations or expressions; lint enforces it. Class and object methods are fine. An arrow function whose body is a single expression uses the concise form, with no braces and no `return` (`=> expr`); lint enforces it. `if`, `else` and loops always keep their braces.
 - A factory defines small single-purpose functions and ends with `return { create, list, ... }` of function references, never inline functions. A returned object with several properties is written one property per line; lint enforces it. Prefer several small functions over one long one.
 - Expected domain failures are thrown as `Error` subclasses (for example `AccountError`) and caught at the edge (route, CLI). Optional input is `field?: T`; a stored value that can be empty is `T | null`, mapped directly from the database.
-- Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a domain folder move to `types.ts` in that folder (error classes to `errors.ts`). Internal shapes, such as a database row, stay with their code. No global `types.ts`.
-- Frontend layout (`platform/frontend/`): `components/<name>/` holds generic, reusable components, one folder each with only its own files (component, tests, helpers). `pages/<name>/` holds one route screen with its dedicated components, hooks and data. `App.tsx`, `AppLayout.tsx`, `routes.ts` and `sceneLayers.ts` are the app skeleton at the base. Components never import pages or the skeleton (lint enforces it). UI that belongs to one module stays in that module.
+- Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a folder (a domain, a feature, a page) move to `types.ts` in that folder (error classes to `errors.ts`). This applies to the frontend too; component prop types stay with their component. Internal shapes, such as a database row, stay with their code. No global `types.ts`.
+- Frontend layout (`platform/frontend/`): `components/<name>/` holds generic, reusable components, one folder each with only its own files (component, tests, helpers). `pages/<name>/` holds one screen with its dedicated components, hooks and data. `features/<name>/` holds the logic of one area (hooks, data access, state; today `auth`: session, login, logout, `useCurrentUser`) and `lib/<name>/` generic utilities (today `http`: the API client, which always sends `Content-Type: application/json` on writes). Both are used only through their `index.ts`, with private files in `internal/`, like backend domains. `App.tsx`, `AppLayout.tsx`, `RequireAuth.tsx` (route guard), `queryClient.ts`, `routes.ts` and `sceneLayers.ts` are the app skeleton at the base. Dependencies point one way: components import none of pages, features, libs or the skeleton; libs import no features or pages; features import no pages. Lint enforces all of it (to add a feature or lib, extend `FRONTEND_FEATURES` or `FRONTEND_LIBS` in `eslint.config.js`). A 401 from any request ends the session, and the guard sends the user to the login page. UI that belongs to one module stays in that module.
 - Components are pure: everything comes in through props, with no data fetching, business logic or global state (local UI state such as an open menu is fine). Pages own the logic, through hooks for anything reusable, and compose components. There is no separate container layer: the page is the container.
 
 ## Architecture guidelines
 
-- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes are the named constants of `infrastructure/http/status.ts`, imported directly (`BAD_REQUEST`, not `HTTP_STATUS.BAD_REQUEST`).
+- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes are the named constants of `src/platform/shared/http/status.ts`, used by both sides, imported directly (`BAD_REQUEST`, not `HTTP_STATUS.BAD_REQUEST`).
 - Keep route handlers thin and put logic in services, so the web framework can be swapped later.
 - Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
 - All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
@@ -84,7 +86,7 @@ assets/                 placeholder art, loaded at runtime from ASSETS_DIR
 - **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
 - Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
 - Tests, fixtures and examples use fake data only.
-- Accounts are created by the CLI, never from committed files.
+- Accounts are created by the CLI, never from committed files. The development test user is the only automatic account: its credentials live in the git-ignored `.env.development`, only `npm run dev` creates it, `scripts/` is kept out of the Docker image (the smoke test checks it), and the server refuses to start in production when any `DEV_*` variable is set (the prefix is reserved for development; `infrastructure/devConfig.ts`).
 - No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
 - Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
 

@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import { setCurrentUser } from './currentUser.ts';
 import type { SessionCookies } from './sessionCookie.ts';
 import type { SessionService } from '../../../domain/auth/index.ts';
-import { UNAUTHORIZED } from '../status.ts';
+import { UNAUTHORIZED } from '../../../../shared/http/status.ts';
 
 export const NOT_AUTHENTICATED_RESPONSE = { error: 'Not authenticated' };
 

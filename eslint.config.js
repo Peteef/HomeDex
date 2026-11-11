@@ -106,21 +106,88 @@ export const domainRules = [
   },
 ];
 
-// Frontend layout: components/ are generic and pure, pages/ are the route screens that build the
-// platform out of them. Dependencies point one way, so components never import pages or the app
-// skeleton (App, AppLayout, routes, scene layers).
+// Frontend layout: components/ are generic and pure, pages/ are the route screens, features/<name>/
+// holds the logic of one area (hooks, data access, state) and lib/<name>/ generic utilities such
+// as the HTTP client. The skeleton (App, AppLayout, RequireAuth, queryClient, routes, scene layers)
+// wires them. Features and libs are used only through their index.ts. Dependencies point one way:
+// components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
-const notAppCode = [
+const FRONTEND_FEATURES = ['auth'];
+const FRONTEND_LIBS = ['http'];
+const SKELETON = [
+  '**/App.tsx',
+  '**/AppLayout.tsx',
+  '**/RequireAuth.tsx',
+  '**/queryClient.ts',
+  '**/routes.ts',
+  '**/sceneLayers.ts',
+];
+
+// Each group of files gets one complete list: a later no-restricted-imports setting for the same
+// file replaces an earlier one instead of adding to it.
+const publicEntrypointOnly = (kind, name) => ({
+  group: [`**/${kind}/${name}/**`, `!**/${kind}/${name}/index.ts`],
+  message: `Import ${kind}/${name} only through its index.ts.`,
+});
+const siblingEntrypointOnly = (names, name) =>
+  names
+    .filter((other) => other !== name)
+    .map((other) => ({
+      group: [`**/${other}/**`, `!**/${other}/index.ts`],
+      message: `Import ${other} only through its index.ts.`,
+    }));
+const featureEntrypoints = FRONTEND_FEATURES.map((name) => publicEntrypointOnly('features', name));
+const libEntrypoints = FRONTEND_LIBS.map((name) => publicEntrypointOnly('lib', name));
+const inFrontend = (folder) => [`${FRONTEND_DIR}/${folder}/**/*.{ts,tsx}`];
+
+/** @type {import('eslint').Linter.Config[]} */
+export const frontendRules = [
   {
-    group: ['**/pages/**', '**/App.tsx', '**/AppLayout.tsx', '**/routes.ts', '**/sceneLayers.ts'],
-    message: 'Components are generic: they must not import pages or the app skeleton.',
+    files: inFrontend('**'),
+    ignores: [...inFrontend('features'), ...inFrontend('lib'), ...inFrontend('components')],
+    rules: restrictImports([...featureEntrypoints, ...libEntrypoints]),
+  },
+  ...FRONTEND_FEATURES.map((name) => ({
+    files: inFrontend(`features/${name}`),
+    rules: restrictImports([
+      ...siblingEntrypointOnly(FRONTEND_FEATURES, name),
+      ...libEntrypoints,
+      { group: ['**/pages/**'], message: 'Features must not import pages.' },
+    ]),
+  })),
+  ...FRONTEND_LIBS.map((name) => ({
+    files: inFrontend(`lib/${name}`),
+    rules: restrictImports([
+      ...siblingEntrypointOnly(FRONTEND_LIBS, name),
+      {
+        group: ['**/features/**', '**/pages/**', ...SKELETON],
+        message: 'Libs are generic: they must not import features, pages or the app skeleton.',
+      },
+    ]),
+  })),
+  {
+    files: inFrontend('components'),
+    rules: restrictImports([
+      {
+        group: ['**/pages/**', '**/features/**', '**/lib/**', ...SKELETON],
+        message:
+          'Components are generic and pure: they must not import pages, features, libs or the app skeleton.',
+      },
+    ]),
   },
 ];
 
+// src/platform/shared/ holds what frontend and backend both need (today the HTTP status codes).
+// It stands on its own, so both sides can import it without depending on each other.
 /** @type {import('eslint').Linter.Config} */
-export const frontendRules = {
-  files: [`${FRONTEND_DIR}/components/**/*.{ts,tsx}`],
-  rules: restrictImports(notAppCode),
+export const sharedRules = {
+  files: ['src/platform/shared/**/*.ts'],
+  rules: restrictImports([
+    {
+      group: ['**/frontend/**', '**/backend/**', '**/modules/**', '#platform/*'],
+      message: 'shared/ must not import frontend, backend or module code.',
+    },
+  ]),
 };
 
 // A returned object with several properties is written one property per line, as in
@@ -216,7 +283,8 @@ export default defineConfig(
     ...boundaryRules,
   },
   ...domainRules,
-  frontendRules,
+  ...frontendRules,
+  sharedRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,

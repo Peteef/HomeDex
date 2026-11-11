@@ -30,6 +30,13 @@ describe('config', () => {
       expect(config.COOKIE_SECURE).toBe(true);
     });
 
+    it('should refuse production when a development test user variable is set', () => {
+      // When / Then
+      expect(() => loadConfig({ NODE_ENV: 'production', DEV_USERNAME: 'Tester' })).toThrow(
+        /for development only/,
+      );
+    });
+
     it('should throw when a variable is invalid', () => {
       // When / Then
       expect(() => loadConfig({ PORT: 'abc' })).toThrow(/Invalid configuration: PORT/);
