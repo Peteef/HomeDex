@@ -161,6 +161,21 @@ describe('tiles API', () => {
       });
     });
 
+    it('should answer 400 when the own shared tile is made personal', async () => {
+      // Given
+      const id = await createTile(ash);
+
+      // When
+      const response = await write('patch', `/api/tiles/${String(id)}`, ash, {
+        scope: 'personal',
+      });
+
+      // Then
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'A shared tile cannot be made personal' });
+      expect(await titlesFor(misty)).toEqual(['Budget']);
+    });
+
     it('should answer 400 when a field has the wrong type', async () => {
       // Given
       const id = await createTile(ash);
@@ -258,15 +273,6 @@ describe('tiles API', () => {
         expect(await titlesFor(ash)).toEqual(['Budget', 'Diary']);
       },
     );
-
-    it('should answer 403 when another user switches the scope of the shared tile', async () => {
-      // When
-      const response = await write('patch', shared, misty, { scope: 'personal' });
-
-      // Then
-      expect(response.status).toBe(403);
-      expect(await titlesFor(misty)).toEqual(['Budget']);
-    });
 
     it('should show the shared tile of another user as not editable', async () => {
       // When

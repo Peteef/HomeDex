@@ -273,15 +273,29 @@ describe('tiles service', () => {
       expect(edited.description).toBeNull();
     });
 
-    it('should switch the scope of the own tile', () => {
+    it('should share the own personal tile', () => {
+      // Given
+      const tile = tiles.create(ash, linkTile({ scope: 'personal' }));
+
+      // When
+      const edited = tiles.edit(ash, tile.id, { scope: 'shared' });
+
+      // Then
+      expect(edited.scope).toBe('shared');
+      expect(titlesFor(misty)).toEqual(['Budget']);
+    });
+
+    it('should reject making a shared tile personal', () => {
       // Given
       const tile = tiles.create(ash, linkTile());
 
       // When
-      tiles.edit(ash, tile.id, { scope: 'personal' });
+      const error = tileError(() => tiles.edit(ash, tile.id, { scope: 'personal' }));
 
       // Then
-      expect(titlesFor(misty)).toEqual([]);
+      expect(error.code).toBe('invalid');
+      expect(error.message).toBe('A shared tile cannot be made personal');
+      expect(titlesFor(misty)).toEqual(['Budget']);
     });
 
     it('should validate the changes', () => {
@@ -338,21 +352,6 @@ describe('tiles service', () => {
       expect(error.code).toBe('forbidden');
     });
 
-    it('should remove the pins of other users when the tile becomes personal', () => {
-      // Given
-      const tile = tiles.create(ash, linkTile());
-      tiles.pin(ash, tile.id);
-      tiles.pin(misty, tile.id);
-
-      // When
-      tiles.edit(ash, tile.id, { scope: 'personal' });
-      tiles.edit(ash, tile.id, { scope: 'shared' });
-
-      // Then
-      expect(tiles.list(ash)[0]?.pinned).toBe(true);
-      expect(tiles.list(misty)[0]?.pinned).toBe(false);
-    });
-
     describe('when the creator is archived', () => {
       beforeEach(() => {
         tiles.create(ash, linkTile());
@@ -376,14 +375,6 @@ describe('tiles service', () => {
 
         // Then
         expect(titlesFor(misty)).toEqual([]);
-      });
-
-      it('should still forbid switching the scope of the shared tile', () => {
-        // When
-        const error = tileError(() => tiles.edit(misty, sharedTileId(), { scope: 'personal' }));
-
-        // Then
-        expect(error.code).toBe('forbidden');
       });
 
       it('should lock the shared tile again when the creator is restored', () => {

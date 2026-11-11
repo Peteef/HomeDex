@@ -71,9 +71,10 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
     return row;
   };
 
-  const requireScopeChangeAllowed = (row: UserTileRow, userId: number, scope: TileScope): void => {
-    if (scope !== row.scope && !isCreator(row, userId)) {
-      throw new TileError('forbidden', 'Only the creator can change the scope of this tile');
+  // Scope changes go one way, so nobody hides a shared tile from the others by mistake.
+  const requireStillShared = (row: UserTileRow, scope: TileScope): void => {
+    if (row.scope === 'shared' && scope === 'personal') {
+      throw new TileError('invalid', 'A shared tile cannot be made personal');
     }
   };
 
@@ -97,16 +98,8 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
   const edit = (userId: number, id: number, changes: TileEdit): Tile => {
     const row = requireEditable(userId, id);
     const record = validate(linkTileSchema, { ...toLinkTileRecord(row), ...changes });
-    requireScopeChangeAllowed(row, userId, record.scope);
-
-    db.transaction(() => {
-      tiles.updateLink(id, record, now());
-
-      if (record.scope === 'personal') {
-        pins.unpinAllExcept(id, userId);
-      }
-    })();
-
+    requireStillShared(row, record.scope);
+    tiles.updateLink(id, record, now());
     return tileFor(userId, id);
   };
 
