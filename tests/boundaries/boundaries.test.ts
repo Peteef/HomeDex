@@ -38,8 +38,8 @@ describe('lint rules', () => {
   describe('module boundaries', () => {
     it.each([
       'src/platform/backend/ok-platform-internal.ts',
-      'src/modules/alpha/ok-own-file.ts',
       'src/modules/alpha/ok-platform-api.ts',
+      'src/modules/alpha/manifest.ts',
     ])('should allow %s', async (file) => {
       // When / Then
       expect(await violationsOf(file)).toEqual([]);
@@ -49,6 +49,44 @@ describe('lint rules', () => {
       'src/platform/backend/bad-imports-module.ts',
       'src/modules/alpha/bad-other-module.ts',
       'src/modules/alpha/bad-platform-internal.ts',
+      'src/modules/alpha/bad-backend-api.ts',
+      'src/modules/gamma/manifest.ts',
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('boundaries/dependencies');
+    });
+  });
+
+  describe('module layers', () => {
+    const frontend = 'src/modules/alpha/frontend';
+    const backend = 'src/modules/alpha/backend';
+
+    it.each([
+      `${frontend}/ok-entry.ts`,
+      `${frontend}/pages/list/ok-page.ts`,
+      `${frontend}/components/row/ok-sibling-component.ts`,
+      `${frontend}/features/items/ok-feature.ts`,
+      `${backend}/ok-register.ts`,
+      `${backend}/domain/notes/ok-domain.ts`,
+      `${backend}/routes/ok-routes.ts`,
+    ])('should allow %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toEqual([]);
+    });
+
+    it.each([
+      `${frontend}/bad-backend-api.ts`,
+      `${frontend}/bad-backend-file.ts`,
+      `${frontend}/pages/list/bad-feature-internal.ts`,
+      `${frontend}/pages/list/bad-other-page.ts`,
+      `${frontend}/components/row/bad-page.ts`,
+      `${frontend}/components/row/bad-feature.ts`,
+      `${frontend}/features/items/bad-page.ts`,
+      `${backend}/bad-frontend-api.ts`,
+      `${backend}/bad-domain-internal.ts`,
+      `${backend}/domain/notes/bad-other-domain-internal.ts`,
+      `${backend}/domain/notes/bad-routes.ts`,
+      `${backend}/routes/bad-domain-internal.ts`,
     ])('should reject %s', async (file) => {
       // When / Then
       expect(await violationsOf(file)).toContain('boundaries/dependencies');

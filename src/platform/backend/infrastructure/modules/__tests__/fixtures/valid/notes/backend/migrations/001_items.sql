@@ -1,0 +1,4 @@
+CREATE TABLE notes_items (
+  id INTEGER PRIMARY KEY,
+  text TEXT NOT NULL
+);

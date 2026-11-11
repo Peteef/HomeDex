@@ -16,6 +16,7 @@ describe('app', () => {
     const app = createApp({
       config: loadConfig({}),
       storage: createTestDatabase(),
+      modules: [],
       webDir: path.join(root, 'dist/web'),
       assetsDir,
     });
@@ -47,6 +48,7 @@ describe('app', () => {
       const secureApp = createApp({
         config: loadConfig({ COOKIE_SECURE: 'true' }),
         storage: createTestDatabase(),
+        modules: [],
         webDir: path.join(root, 'dist/web'),
         assetsDir,
       });
@@ -94,6 +96,7 @@ describe('app', () => {
       createApp({
         config: loadConfig({ NODE_ENV: 'production' }),
         storage: createTestDatabase(),
+        modules: [],
         webDir,
         assetsDir,
       });

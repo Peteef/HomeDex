@@ -1,2 +1,2 @@
-import { api } from './api/index.ts';
+import { api } from './public-api/index.ts';
 export const ok = api;

@@ -279,14 +279,14 @@ describe('LoginPage', () => {
 
   it('should open the screen that asked for the login when it succeeds', async () => {
     // Given
-    openLogin({ path: '/m/shopping-list' });
+    openLogin({ path: '/nowhere' });
 
     // When
     await pickAndSubmit();
 
     // Then
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Module not available' }),
+      await screen.findByRole('heading', { level: 1, name: 'Page not found' }),
     ).toBeInTheDocument();
   });
 

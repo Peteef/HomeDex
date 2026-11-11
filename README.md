@@ -4,7 +4,7 @@ A private, Pokémon-themed launch pad for home and personal life. Think of a bro
 
 It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI), the login screen (pick your Trainer, then type the password) and the tiles API (shared and personal link tiles, pins) are in. The home screen still shows placeholder tiles until it is connected to the API, and modules are coming next.
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI), the login screen (pick your Trainer, then type the password) and the tiles API (shared and personal link tiles, pins) and the module contract are in. The home screen still shows placeholder tiles until it is connected to the API, and there are no modules yet.
 
 ## Goals
 
@@ -105,13 +105,13 @@ src/
   platform/    the core: server, app shell, shared UI (frontend/, backend/ and shared/)
   modules/     one folder per module, each with its own UI, routes and data
 e2e/           end-to-end tests
-tests/         tests of the repository itself (the module boundary rules)
+tests/         tests of the repository itself (lint boundary rules, the module contract)
 assets/        placeholder art, loaded at runtime from ASSETS_DIR
 ```
 
 Unit tests sit in `__tests__/` folders next to the code they test.
 
-The core and the modules are kept apart on purpose: a module can only use the platform's public API, never the core's internals or another module, and lint enforces this. Removing a module means deleting its folder.
+The core and the modules are kept apart on purpose: a module can only use the platform's public API, never the core's internals or another module, and lint enforces this. Removing a module means deleting its folder. How to add one: [src/modules/README.md](src/modules/README.md).
 
 ## Contributing
 

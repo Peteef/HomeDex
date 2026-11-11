@@ -23,7 +23,6 @@ const SCREENS: Screen[] = [
     remembered: E2E_USER.username,
   },
   { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
-  { name: 'module', path: '/m/shopping-list', heading: 'Module not available', signedIn: true },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
 ];
 
@@ -171,7 +170,9 @@ test.describe('shell', () => {
       await expect(firstTile).toContainText('Finances');
     });
 
-    test('should open a module tile on the module placeholder', async ({ page }) => {
+    test('should open a module tile at its route, a not-found page until the module exists', async ({
+      page,
+    }) => {
       // Given
       await page.goto('/');
 
@@ -180,7 +181,7 @@ test.describe('shell', () => {
 
       // Then
       await expect(page).toHaveURL(/\/m\/shopping-list$/);
-      await expect(page.getByRole('heading', { name: 'Module not available' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
     });
   });
 
