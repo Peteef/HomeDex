@@ -1,7 +1,7 @@
 import type { Storage } from '../../../infrastructure/storage/index.ts';
 import type { TileKind, TileScope } from '../types.ts';
 
-export interface TileRow {
+interface TileRow {
   id: number;
   dex_no: number;
   kind: TileKind;
