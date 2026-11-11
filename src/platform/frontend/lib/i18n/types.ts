@@ -52,3 +52,37 @@ export type At<Tree, Path> = Path extends `${infer Head}.${infer Rest}`
     : never;
 
 export type Messages<NS extends Namespace> = Resources[NS];
+
+type Intersection<Union> = (Union extends unknown ? (value: Union) => void : never) extends (
+  value: infer All,
+) => void
+  ? All
+  : never;
+
+// A translated message keeps every {{value}} of the English one, with or without a format
+// ("{{count, number}}"). Extra values are caught by the locale test, which types can't do simply.
+// Boxed in a tuple, so the intersection joins one box per value and keeps "{{x}}" | "{{x, format}}"
+// a union inside each.
+type Containing<Name> = Name extends string
+  ? [`${string}{{${Name}}}${string}` | `${string}{{${Name},${string}}}${string}`]
+  : never;
+
+type Translated<Message> = [Variables<Message>] extends [never]
+  ? string
+  : Intersection<Containing<Variables<Message>>> extends [infer All]
+    ? All
+    : never;
+
+// Plural keys are optional here: which forms a language needs (Polish: one, few, many, other) comes
+// from Intl.PluralRules, and the locale test checks them.
+export type Translation<Source> = {
+  [
+    Key in keyof Source as Key extends `${string}_${PluralSuffix}` ? never : Key
+  ]: Source[Key] extends string ? Translated<Source[Key]> : Translation<Source[Key]>;
+} & {
+  [
+    Key in keyof Source as Key extends `${infer Base}_${PluralSuffix}`
+      ? `${Base}_${PluralSuffix}`
+      : never
+  ]?: Translated<Source[Key]>;
+};

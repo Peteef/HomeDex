@@ -6,6 +6,9 @@ const en = {
     },
   },
   components: {
+    languageSelect: {
+      label: 'Language',
+    },
     loadingStatus: {
       loading: 'Loading…',
     },

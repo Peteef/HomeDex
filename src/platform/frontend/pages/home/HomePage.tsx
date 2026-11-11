@@ -2,17 +2,19 @@ import { LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useCurrentUser, useLogout } from '../../features/auth/index.ts';
 import { IconButton } from '../../components/icon-button/IconButton.tsx';
+import { LanguageSelect } from '../../components/language-select/LanguageSelect.tsx';
 import { Panel } from '../../components/panel/Panel.tsx';
 import { TextInput } from '../../components/text-input/TextInput.tsx';
 import { Tile } from '../../components/tile/Tile.tsx';
 import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
-import { useText } from '../../lib/i18n/index.ts';
+import { useLanguage, useText } from '../../lib/i18n/index.ts';
 import { PLACEHOLDER_TILES } from './placeholderTiles.ts';
 import { sortTiles } from './sortTiles.ts';
 
 export const HomePage = () => {
   const text = useText('home');
   const { username } = useCurrentUser();
+  const { language, languages, change } = useLanguage();
   const logout = useLogout();
   const [pinned, setPinned] = useState<ReadonlySet<number>>(new Set());
 
@@ -34,14 +36,17 @@ export const HomePage = () => {
     <Panel className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <Wordmark />
-        <IconButton
-          icon={<LogOut size={20} />}
-          label={text.signOut}
-          disabled={logout.isPending}
-          onClick={() => {
-            logout.mutate();
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <LanguageSelect languages={languages} value={language} onChange={change} />
+          <IconButton
+            icon={<LogOut size={20} />}
+            label={text.signOut}
+            disabled={logout.isPending}
+            onClick={() => {
+              logout.mutate();
+            }}
+          />
+        </div>
       </div>
       <h1 className="text-3xl font-extrabold">{text.greeting({ username })}</h1>
       <TextInput

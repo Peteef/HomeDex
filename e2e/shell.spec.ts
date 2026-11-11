@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
-import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
+import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
 
 const MIN_TOUCH_TARGET = 44;
 
@@ -11,6 +11,7 @@ interface Screen {
   heading: string;
   signedIn: boolean;
   remembered?: string;
+  language?: string;
 }
 
 const SCREENS: Screen[] = [
@@ -24,6 +25,20 @@ const SCREENS: Screen[] = [
   },
   { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
+  {
+    name: 'login in Polish',
+    path: '/login',
+    heading: 'Który Trener tym razem?',
+    signedIn: false,
+    language: 'pl',
+  },
+  {
+    name: 'home in Polish',
+    path: '/',
+    heading: `Cześć, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
+    signedIn: true,
+    language: 'pl',
+  },
 ];
 
 interface Manifest {
@@ -46,6 +61,15 @@ test.describe('shell', () => {
               localStorage.setItem(key, username);
             },
             { key: REMEMBERED_ACCOUNT_KEY, username: screen.remembered },
+          );
+        }
+
+        if (screen.language) {
+          await page.addInitScript(
+            ({ key, language }) => {
+              localStorage.setItem(key, language);
+            },
+            { key: LANGUAGE_KEY, language: screen.language },
           );
         }
 

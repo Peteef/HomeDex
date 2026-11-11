@@ -16,7 +16,7 @@ src/modules/<id>/
     pages/<name>/        screens, with pages/<name>/components/ for parts only that screen uses
     components/<name>/   pure components the module reuses
     features/<name>/     logic (hooks, data access, state) behind an index.ts, private files in internal/
-    locales/             the module's text: en.ts, and index.ts with the module's useText hook
+    locales/             the module's text: one file per language (en.ts, pl.ts), and index.ts with the module's useText hook
   backend/
     index.ts             exports register(ctx)
     domain/<name>/       logic of one area behind an index.ts, repositories in internal/
@@ -75,7 +75,7 @@ export default ShoppingList;
 
 ## Text
 
-The UI text of a module lives in one file per language, `frontend/locales/<language>.ts`, today only `en.ts`. The platform finds these files on its own and loads each one into a namespace named after the module's id. The keys follow the module's folders, like the platform's:
+The UI text of a module lives in one file per language, `frontend/locales/<language>.ts`: `en.ts` and one file for every other language the platform supports (today `pl.ts`). The platform finds these files on its own and loads each one into a namespace named after the module's id. The keys follow the module's folders, like the platform's:
 
 - one top-level key per page folder, camelCased (`pages/list/` is `list`), with the page's own components nested inside it;
 - `components.<name>` for each of the module's components in `components/<name>/`;
@@ -126,6 +126,30 @@ text.count({ count: 3 }); // "3 items"
 - Use `<Trans>` from `react-i18next` for text that contains markup, such as a link or `<code>`: `<Trans ns="shopping-list" i18nKey="list.help" components={{ code: <code /> }} />`.
 - A module owns all its text, even words the platform has too: the platform's keys are not part of its public API.
 
+Every other language mirrors `en.ts` and is checked against it, both by the typecheck and by the platform's locale test, which fails when a module misses a language, a key, a `{{value}}`, a markup tag or a plural form the language needs (Polish has `_one`, `_few`, `_many` and `_other`):
+
+```ts
+// frontend/locales/pl.ts
+import type { Translation } from '#platform/frontend';
+import type en from './en.ts';
+
+export default {
+  common: {
+    actions: { tryAgain: 'Spróbuj ponownie' },
+  },
+  list: {
+    title: 'Lista zakupów',
+    greeting: 'Cześć, {{username}}!',
+    count_one: '{{count}} produkt',
+    count_few: '{{count}} produkty',
+    count_many: '{{count}} produktów',
+    count_other: '{{count}} produktu',
+  },
+} as const satisfies Translation<typeof en>;
+```
+
+Write natural text rather than a word-for-word translation, and avoid forms that assume the reader's gender.
+
 Lint rejects literal text in JSX and in attributes the user sees or hears (`label`, `title`, `placeholder`, `aria-label`, ...). User data, such as an item's name, is never translated.
 
 ## Backend
@@ -175,7 +199,7 @@ Unit tests live in `__tests__/` folders next to the code, as in the platform (`f
 
 1. `src/modules/<id>/manifest.ts` and `frontend/index.tsx`, plus `backend/` if the module has endpoints or data.
 2. Tables prefixed with `<id_snake>_`, created by the module's own migrations.
-3. Text in `frontend/locales/en.ts`, with `frontend/locales/index.ts` for the module's `useText`.
+3. Text in `frontend/locales/en.ts` and a file for every other supported language (`pl.ts`), with `frontend/locales/index.ts` for the module's `useText`.
 4. Unit tests next to the code, and an e2e test for the page at both phone widths (375 and 402 pt).
 5. `npm run fix`, then `npm run verify` and `npm run test:e2e`.
 6. No change in `src/platform/`. If one is needed, it comes first, in its own PR.

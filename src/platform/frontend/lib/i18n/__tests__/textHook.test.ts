@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import i18next from 'i18next';
-import { afterEach, beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
+import { beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
 import { textHook } from '../index.ts';
 import type { Text } from '../index.ts';
 
@@ -40,10 +40,6 @@ describe('textHook', () => {
   beforeAll(() => {
     i18next.addResourceBundle('en', NAMESPACE, english);
     i18next.addResourceBundle('pl', NAMESPACE, polish);
-  });
-
-  afterEach(async () => {
-    await i18next.changeLanguage('en');
   });
 
   it('should give text without values as a string', () => {
