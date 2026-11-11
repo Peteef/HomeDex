@@ -90,7 +90,7 @@ export const PasswordStep = ({
           {pending ? 'Signing in…' : 'I choose you!'}
         </Button>
       </form>
-      <Button variant="secondary" onClick={onSwitch}>
+      <Button variant="quiet" className="-mt-3 -mb-2 self-center" onClick={onSwitch}>
         Not {username}? Switch Trainer
       </Button>
     </>
