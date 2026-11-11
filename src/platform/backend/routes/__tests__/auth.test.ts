@@ -15,9 +15,11 @@ const DAY = 24 * 60 * 60 * 1000;
 const cookieHeader = (response: Response): string => {
   const header = response.headers['set-cookie'] as string[] | undefined;
   const cookie = header?.find((value) => value.startsWith('hd_session='));
+
   if (!cookie) {
     throw new Error('No session cookie was set');
   }
+
   return cookie.split(';')[0] ?? '';
 };
 
@@ -36,6 +38,7 @@ describe('auth API', () => {
     ctx = createTestApp();
     await createTestUser(ctx.db, 'Ash');
   });
+
   describe('login', () => {
     it('should return the user and set a hardened session cookie when the credentials are right', async () => {
       // When
@@ -43,9 +46,11 @@ describe('auth API', () => {
 
       // Then
       expect(response.status).toBe(200);
+
       expect(response.body).toEqual({
         user: { id: expect.any(Number) as number, username: 'Ash' },
       });
+
       const cookie = setCookieOf(response);
       expect(cookie).toContain('HttpOnly');
       expect(cookie).toContain('SameSite=Lax');
@@ -122,6 +127,7 @@ describe('auth API', () => {
       const limited = createTestApp({}, { loginLimit: { windowMs: 60_000, maxFailedAttempts: 2 } });
       await createTestUser(limited.db, 'ash');
       ctx = limited;
+
       for (let attempt = 0; attempt < 2; attempt++) {
         expect((await login('ash', 'wrong-password')).status).toBe(401);
       }
@@ -149,6 +155,7 @@ describe('auth API', () => {
 
       // Then
       expect(response.status).toBe(200);
+
       expect(response.body).toEqual({
         user: { id: expect.any(Number) as number, username: 'Ash' },
       });

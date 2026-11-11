@@ -51,17 +51,21 @@ export const accountsService = (
 
   const requireUser = (username: string): UserRow => {
     const user = users.findByUsername(username);
+
     if (!user) {
       throw new AccountError('not_found', `No user named "${username}"`);
     }
+
     return user;
   };
 
   const requireActiveUser = (username: string): UserRow => {
     const user = requireUser(username);
+
     if (user.archived_at !== null) {
       throw new AccountError('archived', `User "${user.username}" is archived`);
     }
+
     return user;
   };
 
@@ -82,6 +86,7 @@ export const accountsService = (
       if (update.username !== undefined) {
         users.updateUsername(user.id, update.username);
       }
+
       if (update.passwordHash !== undefined) {
         users.updatePasswordHash(user.id, update.passwordHash);
         revokeSessions(user.id);
@@ -107,10 +112,12 @@ export const accountsService = (
 
   const archive = (username: string): Account => {
     const user = requireUser(username);
+
     db.transaction(() => {
       users.setArchivedAt(user.id, now());
       revokeSessions(user.id);
     })();
+
     return toAccount(requireUser(user.username));
   };
 
@@ -124,6 +131,7 @@ export const accountsService = (
     if (!isWithinLimits(username, password)) {
       return null;
     }
+
     const user = users.findByUsername(username);
     // An unknown user still costs one hash check, so timing does not reveal which names exist.
     const valid = await verifyPassword(password, user?.password_hash ?? (await dummyHash()));

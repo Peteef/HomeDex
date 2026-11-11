@@ -18,8 +18,10 @@ export const passwordSchema = z
 
 export const validate = <T>(schema: z.ZodType<T>, value: unknown): T => {
   const result = schema.safeParse(value);
+
   if (!result.success) {
     throw new AccountError('invalid', result.error.issues[0]?.message ?? 'Invalid value');
   }
+
   return result.data;
 };

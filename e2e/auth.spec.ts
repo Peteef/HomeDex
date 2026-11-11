@@ -15,9 +15,11 @@ test.describe('auth', () => {
       expect(login.status()).toBe(200);
       expect(login.headers()['set-cookie']).toContain('HttpOnly');
       const me = await request.get('/api/auth/me');
+
       expect(await me.json()).toEqual({
         user: { id: expect.any(Number), username: E2E_USER.username },
       });
+
       const logout = await request.post('/api/auth/logout', { headers: json, data: {} });
       expect(logout.status()).toBe(204);
       expect((await request.get('/api/auth/me')).status()).toBe(401);

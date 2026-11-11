@@ -34,15 +34,19 @@ export const authRoutes = ({
 
   router.post('/login', limitLogins, async (req, res) => {
     const body = loginSchema.safeParse(req.body);
+
     if (!body.success) {
       res.status(BAD_REQUEST).json(INVALID_REQUEST_RESPONSE);
       return;
     }
+
     const account = await accounts.authenticate(body.data.username, body.data.password);
+
     if (!account) {
       res.status(UNAUTHORIZED).json(INVALID_CREDENTIALS_RESPONSE);
       return;
     }
+
     const session = sessions.create(account.id, req.get('user-agent'));
     cookies.set(res, session.token, session.expiresAt);
     res.json({ user: { id: account.id, username: account.username } });
@@ -50,9 +54,11 @@ export const authRoutes = ({
 
   router.post('/logout', (req, res) => {
     const token = cookies.read(req);
+
     if (token !== undefined) {
       sessions.revoke(token);
     }
+
     cookies.clear(res);
     res.status(NO_CONTENT).end();
   });

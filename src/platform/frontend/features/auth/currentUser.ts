@@ -7,8 +7,10 @@ export const CurrentUserContext = createContext<CurrentUser | null>(null);
 
 export const useCurrentUser = (): CurrentUser => {
   const user = use(CurrentUserContext);
+
   if (!user) {
     throw new Error('useCurrentUser works only on screens behind the login');
   }
+
   return user;
 };

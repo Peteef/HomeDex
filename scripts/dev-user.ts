@@ -22,12 +22,15 @@ export type DevUserResult = 'created' | 'skipped';
 
 export const devUserCredentials = (env: NodeJS.ProcessEnv): DevUserCredentials | null => {
   const { DEV_USERNAME: username, DEV_PASSWORD: password } = env;
+
   if (username === undefined && password === undefined) {
     return null;
   }
+
   if (username === undefined || password === undefined) {
     throw new Error(`Set both ${DEV_USER_VARIABLES.join(' and ')} in ${DEV_ENV_FILE}, or neither`);
   }
+
   return {
     username,
     password,
@@ -42,6 +45,7 @@ export const ensureDevUser = async (
   if (accounts.list({ includeArchived: true }).length > 0) {
     return 'skipped';
   }
+
   await accounts.create(username, password);
   return 'created';
 };
@@ -49,6 +53,7 @@ export const ensureDevUser = async (
 const createDevUser = async (credentials: DevUserCredentials): Promise<void> => {
   const config = loadConfig();
   const db = openStorage(path.resolve(config.DATA_DIR));
+
   try {
     const { accounts } = domainServices(db, { sessionTtlDays: config.SESSION_TTL_DAYS });
     const result = await ensureDevUser(accounts, credentials);
@@ -62,14 +67,18 @@ const createDevUser = async (credentials: DevUserCredentials): Promise<void> => 
 const run = async (): Promise<void> => {
   loadEnvFile();
   loadEnvFile(DEV_ENV_FILE);
+
   if (process.env.NODE_ENV === PRODUCTION) {
     throw new Error('The development test user is never created in production');
   }
+
   const credentials = devUserCredentials(process.env);
+
   if (!credentials) {
     console.log(`No development test user: ${DEV_USER_VARIABLES.join(' and ')} are not set.`);
     return;
   }
+
   await createDevUser(credentials);
 };
 
@@ -80,6 +89,7 @@ if (import.meta.main) {
     console.error(
       `Development test user: ${error instanceof Error ? error.message : String(error)}`,
     );
+
     process.exitCode = EXIT_FAILURE;
   }
 }

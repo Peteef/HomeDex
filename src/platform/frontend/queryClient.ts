@@ -16,10 +16,12 @@ export const appQueryClient = (): QueryClient => {
       endSession(queryClient);
     }
   };
+
   const queryClient: QueryClient = new QueryClient({
     queryCache: new QueryCache({ onError: signOutOnUnauthorized }),
     mutationCache: new MutationCache({ onError: signOutOnUnauthorized }),
     defaultOptions: { queries: { retry: shouldRetry } },
   });
+
   return queryClient;
 };

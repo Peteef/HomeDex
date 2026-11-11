@@ -35,6 +35,7 @@ export const createTestApp = (
 ): TestApp => {
   const db = createTestDatabase();
   const clock = { now: Date.now() };
+
   const app = createApp({
     config: loadConfig(env),
     storage: db,
@@ -44,6 +45,7 @@ export const createTestApp = (
     now: () => clock.now,
     ...overrides,
   });
+
   return {
     app,
     db,

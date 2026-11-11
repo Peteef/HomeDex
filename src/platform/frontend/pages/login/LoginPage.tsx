@@ -36,10 +36,12 @@ export const LoginPage = () => {
     event.preventDefault();
     const invalid = fieldErrors(username, password);
     setErrors(invalid);
+
     if (invalid.username ?? invalid.password) {
       focusFirstInvalid(invalid);
       return;
     }
+
     login.mutate({ username, password }, { onError: retryPassword });
   };
 

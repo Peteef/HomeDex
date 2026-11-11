@@ -29,6 +29,7 @@ const violationsOf = async (file: string): Promise<string[]> => {
       styleRules,
     ],
   });
+
   const [result] = await eslint.lintFiles([file]);
   return (result?.messages ?? []).map((message) => message.ruleId ?? message.message);
 };
@@ -124,13 +125,14 @@ describe('lint rules', () => {
   });
 
   describe('style', () => {
-    it.each(['src/style/ok-returned-object.ts', 'src/style/ok-arrows-and-methods.ts'])(
-      'should allow %s',
-      async (file) => {
-        // When / Then
-        expect(await violationsOf(file)).toEqual([]);
-      },
-    );
+    it.each([
+      'src/style/ok-returned-object.ts',
+      'src/style/ok-arrows-and-methods.ts',
+      'src/style/ok-blank-lines.ts',
+    ])('should allow %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toEqual([]);
+    });
 
     it.each([
       ['src/style/bad-returned-object.ts', 'homedex/returned-object-one-per-line'],
@@ -140,6 +142,7 @@ describe('lint rules', () => {
       ['src/style/bad-braceless-if.ts', 'curly'],
       ['src/style/bad-braced-arrow.ts', 'arrow-body-style'],
       ['src/style/bad-concise-object.ts', 'homedex/returned-object-one-per-line'],
+      ['src/style/bad-missing-blank-line.ts', '@stylistic/padding-line-between-statements'],
     ])('should reject %s with %s', async (file, rule) => {
       // When / Then
       expect(await violationsOf(file)).toContain(rule);

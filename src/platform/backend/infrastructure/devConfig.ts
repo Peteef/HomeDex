@@ -9,6 +9,7 @@ export const rejectDevConfigInProduction = (config: Config, env: NodeJS.ProcessE
   const present = Object.keys(env)
     .filter((name) => name.startsWith(DEV_CONFIG_PREFIX))
     .sort();
+
   if (config.NODE_ENV === 'production' && present.length > 0) {
     throw new Error(
       `Invalid configuration: ${present.join(', ')} are for development only, remove them from the production environment`,

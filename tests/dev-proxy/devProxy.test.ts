@@ -14,9 +14,11 @@ const USERNAME = 'Misty';
 
 const portOf = (server: Server | null | undefined): number => {
   const address = server?.address();
+
   if (!address || typeof address === 'string') {
     throw new Error('Server is not listening');
   }
+
   return address.port;
 };
 
@@ -33,12 +35,14 @@ describe('dev proxy', () => {
     backend = app.listen(0, '127.0.0.1');
     await new Promise((resolve) => backend.once('listening', resolve));
     process.env.PORT = String(portOf(backend));
+
     vite = await createServer({
       root: ROOT,
       configFile: path.join(ROOT, 'vite.config.ts'),
       logLevel: 'silent',
       server: { port: 0, host: '127.0.0.1', ws: false },
     });
+
     await vite.listen();
     viteUrl = `http://127.0.0.1:${String(portOf(vite.httpServer as Server))}`;
   });

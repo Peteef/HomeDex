@@ -9,6 +9,7 @@ export const signIn = async (page: Page): Promise<void> => {
     headers: { 'Content-Type': 'application/json' },
     data: E2E_USER,
   });
+
   if (!response.ok()) {
     throw new Error(`Sign-in for the e2e user failed with ${String(response.status())}`);
   }

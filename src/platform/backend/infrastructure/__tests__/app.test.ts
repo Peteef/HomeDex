@@ -38,6 +38,7 @@ describe('app', () => {
       expect(response.headers['content-security-policy']).not.toContain(
         'upgrade-insecure-requests',
       );
+
       expect(response.headers['strict-transport-security']).toBeUndefined();
     });
 
@@ -125,6 +126,7 @@ describe('app', () => {
     it('should run the real entry point with plain node', async () => {
       // Given
       const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'homedex-data-'));
+
       const child = spawn('node', ['src/platform/backend/infrastructure/main.ts'], {
         cwd: root,
         env: {
@@ -136,12 +138,15 @@ describe('app', () => {
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });
+
       try {
         await new Promise<void>((resolve, reject) => {
           child.once('error', reject);
+
           child.once('exit', (code) => {
             reject(new Error(`server exited early with code ${String(code)}`));
           });
+
           child.stdout.on('data', (chunk: Buffer) => {
             if (chunk.toString().includes('listening')) {
               resolve();

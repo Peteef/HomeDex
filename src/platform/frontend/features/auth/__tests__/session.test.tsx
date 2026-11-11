@@ -16,6 +16,7 @@ const renderWith = <T,>(hook: () => T, queryClient = testQueryClient()) => {
   const { result } = renderHook(hook, {
     wrapper: ({ children }) => withProviders(children, { queryClient }),
   });
+
   return {
     result,
     queryClient,
@@ -38,6 +39,7 @@ describe('session', () => {
       await waitFor(() => {
         expect(queryClient.getQueryData(SESSION_KEY)).toEqual(OTHER_USER);
       });
+
       expect(queryClient.getQueryData(['tiles'])).toBeUndefined();
     });
   });
@@ -58,6 +60,7 @@ describe('session', () => {
       await waitFor(() => {
         expect(queryClient.getQueryData(SESSION_KEY)).toBeNull();
       });
+
       expect(queryClient.getQueryData(['tiles'])).toBeUndefined();
     });
   });

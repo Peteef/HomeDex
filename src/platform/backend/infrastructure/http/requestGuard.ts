@@ -24,14 +24,18 @@ export const requestGuard: RequestHandler = (req, res, next) => {
     next();
     return;
   }
+
   const origin = req.get('origin');
+
   if (origin !== undefined && !isSameOrigin(origin, req)) {
     res.status(FORBIDDEN).json(FOREIGN_ORIGIN_RESPONSE);
     return;
   }
+
   if (!isJson(req.get('content-type'))) {
     res.status(UNSUPPORTED_MEDIA_TYPE).json(JSON_REQUIRED_RESPONSE);
     return;
   }
+
   next();
 };

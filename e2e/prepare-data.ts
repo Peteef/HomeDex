@@ -9,13 +9,16 @@ const users = (...args: string[]): void => {
     env: { ...process.env, DATA_DIR: E2E_DATA_DIR },
     stdio: 'inherit',
   });
+
   if (result.status !== 0) {
     throw new Error(`users ${args.join(' ')} failed`);
   }
 };
 
 fs.rmSync(E2E_DATA_DIR, { recursive: true, force: true });
+
 for (const { username, password } of [E2E_USER, E2E_ARCHIVED_USER]) {
   users('create', username, '--password', password);
 }
+
 users('archive', E2E_ARCHIVED_USER.username, '--yes');

@@ -19,10 +19,12 @@ export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => 
     next(error);
     return;
   }
+
   if (isClientError(error)) {
     res.status(BAD_REQUEST).json(INVALID_JSON_RESPONSE);
     return;
   }
+
   logger.error('Unhandled error in an API request', error);
   res.status(INTERNAL_SERVER_ERROR).json(INTERNAL_ERROR_RESPONSE);
 };

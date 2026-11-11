@@ -23,11 +23,13 @@ const runScript = (env: NodeJS.ProcessEnv) => {
   const inherited = { ...process.env };
   delete inherited.DEV_USERNAME;
   delete inherited.DEV_PASSWORD;
+
   const result = spawnSync('node', [SCRIPT], {
     cwd: workDir,
     env: { ...inherited, NODE_ENV: 'development', DATA_DIR: dataDir, ...env },
     encoding: 'utf8',
   });
+
   const dataCreated = fs.existsSync(dataDir);
   fs.rmSync(workDir, { recursive: true, force: true });
   return {

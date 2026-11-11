@@ -17,9 +17,11 @@ const request = async (method: string, path: string, init: RequestInit = {}) => 
     credentials: 'same-origin',
     ...init,
   });
+
   if (!response.ok) {
     throw new ApiError(response.status, `${method} ${path} failed with ${String(response.status)}`);
   }
+
   return response;
 };
 

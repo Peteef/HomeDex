@@ -45,6 +45,7 @@ export const createApp = ({
   // upgrade-insecure-requests and HSTS make Safari load everything over https, which breaks
   // plain-HTTP use on the LAN, so they follow the HTTPS setting.
   const https = config.COOKIE_SECURE;
+
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -62,7 +63,9 @@ export const createApp = ({
     now,
     ...(argon2Params && { argon2Params }),
   });
+
   const cookies = sessionCookies(https, now);
+
   app.use(
     API_PATH,
     cookieParser(),
@@ -76,16 +79,19 @@ export const createApp = ({
       loginRateLimit: loginRateLimit(loginLimit),
     }),
   );
+
   // Without this, an unknown API path would reach the SPA fallback below and return HTML.
   app.use(API_PATH, (_req, res) => {
     res.status(NOT_FOUND).json(API_NOT_FOUND_RESPONSE);
   });
+
   app.use(API_PATH, apiErrorHandler);
 
   app.use(MEDIA_PATH, express.static(assetsDir, { fallthrough: false }));
 
   if (config.NODE_ENV === 'production') {
     app.use(express.static(webDir));
+
     app.use((_req, res) => {
       res.sendFile(path.join(webDir, INDEX_FILE));
     });

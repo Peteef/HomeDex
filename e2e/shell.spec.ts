@@ -3,12 +3,14 @@ import { expect, test } from '@playwright/test';
 import { E2E_GREETING, signIn } from './session.ts';
 
 const MIN_TOUCH_TARGET = 44;
+
 const SCREENS = [
   { name: 'login', path: '/login', heading: 'Sign in', signedIn: false },
   { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
   { name: 'module', path: '/m/shopping-list', heading: 'Module not available', signedIn: true },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
 ];
+
 interface Manifest {
   icons: { src: string; type: string }[];
 }
@@ -22,6 +24,7 @@ test.describe('shell', () => {
         if (screen.signedIn) {
           await signIn(page);
         }
+
         await page.goto(screen.path);
         await expect(page.getByRole('heading', { level: 1, name: screen.heading })).toBeVisible();
       });
@@ -194,6 +197,7 @@ test.describe('shell', () => {
       // Then
       const pngIcons = manifest.icons.filter((icon) => icon.type === 'image/png');
       expect(pngIcons.length).toBeGreaterThanOrEqual(3);
+
       for (const icon of pngIcons) {
         const response = await request.get(icon.src);
         expect(response.status()).toBe(200);
@@ -232,6 +236,7 @@ test.describe('shell', () => {
     test('should load everything from its own origin', async ({ page, baseURL }) => {
       // Given
       const foreign: string[] = [];
+
       page.on('request', (request) => {
         if (!request.url().startsWith(baseURL ?? '') && !request.url().startsWith('data:')) {
           foreign.push(request.url());

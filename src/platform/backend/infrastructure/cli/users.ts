@@ -40,6 +40,7 @@ const printAccounts = (accounts: Account[]): void => {
     console.log('No accounts yet. Create one with: npm run users -- create');
     return;
   }
+
   for (const account of accounts) {
     const status = account.archivedAt === null ? '' : '  (archived)';
     console.log(`${account.username}  created ${formatDate(account.createdAt)}${status}`);
@@ -50,16 +51,21 @@ const readNewPassword = async (flag: string | undefined, label: string): Promise
   if (flag !== undefined) {
     return flag;
   }
+
   if (!hasTerminal()) {
     return readPipedPassword();
   }
+
   const password = await askHidden(`${label}: `);
+
   if (password === '') {
     return password;
   }
+
   if ((await askHidden('Repeat password: ')) !== password) {
     throw new UsageError('The passwords do not match');
   }
+
   return password;
 };
 
@@ -76,6 +82,7 @@ const create = async (
     flags.username ??
     positional[0] ??
     (hasTerminal() ? await ask('Username: ') : requireTerminal('username'));
+
   const password = await readNewPassword(flags.password, 'Password');
   const account = await accounts.create(username, password);
   console.log(`Created account "${account.username}".`);
@@ -87,36 +94,47 @@ const edit = async (
   flags: { username?: string | undefined; password?: string | undefined },
 ): Promise<void> => {
   const [target] = positional;
+
   if (!target) {
     throw new UsageError('edit needs a username');
   }
+
   let { username, password } = flags;
+
   if (username === undefined && password === undefined) {
     if (!hasTerminal()) {
       throw new UsageError('Nothing to change: pass --username and/or --password');
     }
+
     const answer = await ask(`New username (empty keeps "${target}"): `);
+
     if (answer !== '') {
       username = answer;
     }
+
     const newPassword = await readNewPassword(
       undefined,
       'New password (empty keeps the current one)',
     );
+
     if (newPassword !== '') {
       password = newPassword;
     }
   }
+
   if (username === undefined && password === undefined) {
     console.log('Nothing changed.');
     return;
   }
+
   const changes = {
     ...(username !== undefined && { username }),
     ...(password !== undefined && { password }),
   };
+
   const account = await accounts.edit(target, changes);
   console.log(`Updated account "${account.username}".`);
+
   if (password !== undefined) {
     console.log("All of this user's devices were signed out.");
   }
@@ -128,19 +146,24 @@ const archive = async (
   flags: { yes?: boolean | undefined },
 ): Promise<void> => {
   const [target] = positional;
+
   if (!target) {
     throw new UsageError('archive needs a username');
   }
+
   if (!flags.yes) {
     if (!hasTerminal()) {
       throw new UsageError('Pass --yes to archive without a terminal');
     }
+
     const question = `Archive "${target}"? They will be signed out and unable to log in.`;
+
     if (!(await confirm(question))) {
       console.log('Cancelled.');
       return;
     }
   }
+
   const account = accounts.archive(target);
   console.log(`Archived account "${account.username}".`);
 };
@@ -150,6 +173,7 @@ const run = async (argv: string[]): Promise<void> => {
     values,
     positionals: [command, ...positional],
   } = parseArgs({ args: argv, options, allowPositionals: true });
+
   if (!command) {
     throw new UsageError(USAGE);
   }
@@ -157,8 +181,10 @@ const run = async (argv: string[]): Promise<void> => {
   loadEnvFile();
   const config = loadConfig();
   const db = openStorage(path.resolve(config.DATA_DIR));
+
   try {
     const { accounts } = domainServices(db, { sessionTtlDays: config.SESSION_TTL_DAYS });
+
     switch (command) {
       case 'list':
         printAccounts(accounts.list({ includeArchived: values.all ?? false }));
@@ -172,14 +198,18 @@ const run = async (argv: string[]): Promise<void> => {
       case 'archive':
         await archive(accounts, positional, values);
         break;
+
       case 'restore': {
         const [target] = positional;
+
         if (!target) {
           throw new UsageError('restore needs a username');
         }
+
         console.log(`Restored account "${accounts.restore(target).username}".`);
         break;
       }
+
       default:
         throw new UsageError(`Unknown command "${command}"\n\n${USAGE}`);
     }
@@ -199,5 +229,6 @@ try {
   } else {
     console.error(error);
   }
+
   process.exitCode = EXIT_FAILURE;
 }

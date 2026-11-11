@@ -14,6 +14,7 @@ export const RequireAuth = () => {
       </p>
     );
   }
+
   if (session.data) {
     return (
       <CurrentUserContext value={session.data}>
@@ -21,6 +22,7 @@ export const RequireAuth = () => {
       </CurrentUserContext>
     );
   }
+
   if (session.isError) {
     return (
       <SessionUnavailablePage
@@ -30,5 +32,6 @@ export const RequireAuth = () => {
       />
     );
   }
+
   return <Navigate to={LOGIN_PATH} replace state={redirectState(location)} />;
 };

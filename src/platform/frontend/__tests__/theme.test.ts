@@ -22,9 +22,11 @@ const contrast = (a: Rgb, b: Rgb): number => {
 
 const tokenValue = (name: string): string => {
   const match = new RegExp(`--color-${name}:\\s*([^;]+);`).exec(CSS);
+
   if (!match?.[1]) {
     throw new Error(`Missing token ${name}`);
   }
+
   return match[1].trim();
 };
 
@@ -35,9 +37,11 @@ const solid = (name: string): Rgb => parseHex(tokenValue(name));
 
 const over = (name: string, background: Rgb): Rgb => {
   const match = /rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)/.exec(tokenValue(name));
+
   if (!match) {
     throw new Error(`Token ${name} is not an rgb() with alpha`);
   }
+
   const alpha = Number(match[4]);
   const foreground = [match[1], match[2], match[3]].map(Number);
   return background.map((under, i) =>

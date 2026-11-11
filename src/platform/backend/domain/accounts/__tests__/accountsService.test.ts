@@ -17,6 +17,7 @@ const codeOf = async (promise: Promise<unknown> | (() => unknown)): Promise<stri
   } catch (error) {
     return error instanceof AccountError ? error.code : 'other';
   }
+
   return undefined;
 };
 
@@ -28,6 +29,7 @@ describe('accounts service', () => {
   beforeEach(() => {
     db = createTestDatabase();
     sessions = sessionService(db, { ttlDays: 1 });
+
     accounts = accountsService(db, {
       argon2Params: FAST_ARGON2,
       revokeSessions: (userId) => {

@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
 import boundaries from 'eslint-plugin-boundaries';
 import prettier from 'eslint-config-prettier';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
@@ -59,8 +60,10 @@ const entrypointOnly = (folder) => ({
   group: [`**/${folder}/**`, `!**/${folder}/index.ts`],
   message: `Import ${folder} only through its index.ts.`,
 });
+
 const siblingDomains = (domain) =>
   DOMAINS.filter((other) => other !== domain).map((other) => entrypointOnly(other));
+
 const storageEntrypointOnly = {
   // The directory is re-included first, because gitignore-style patterns cannot re-include a file
   // inside an excluded directory.
@@ -71,10 +74,12 @@ const storageEntrypointOnly = {
   ],
   message: 'Domains may use infrastructure only through storage/index.ts.',
 };
+
 const notRoutes = {
   group: ['**/routes/**'],
   message: 'Domains must not depend on routes.',
 };
+
 const restrictImports = (patterns) => ({ 'no-restricted-imports': ['error', { patterns }] });
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -114,6 +119,7 @@ export const domainRules = [
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth'];
 const FRONTEND_LIBS = ['http'];
+
 const SKELETON = [
   '**/App.tsx',
   '**/AppLayout.tsx',
@@ -129,6 +135,7 @@ const publicEntrypointOnly = (kind, name) => ({
   group: [`**/${kind}/${name}/**`, `!**/${kind}/${name}/index.ts`],
   message: `Import ${kind}/${name} only through its index.ts.`,
 });
+
 const siblingEntrypointOnly = (names, name) =>
   names
     .filter((other) => other !== name)
@@ -136,6 +143,7 @@ const siblingEntrypointOnly = (names, name) =>
       group: [`**/${other}/**`, `!**/${other}/index.ts`],
       message: `Import ${other} only through its index.ts.`,
     }));
+
 const featureEntrypoints = FRONTEND_FEATURES.map((name) => publicEntrypointOnly('features', name));
 const libEntrypoints = FRONTEND_LIBS.map((name) => publicEntrypointOnly('lib', name));
 const inFrontend = (folder) => [`${FRONTEND_DIR}/${folder}/**/*.{ts,tsx}`];
@@ -208,11 +216,14 @@ const returnedObjectOnePerLine = {
       if (object?.type !== 'ObjectExpression' || object.properties.length < 2) {
         return;
       }
+
       const lines = object.properties.map((property) => property.loc.start.line);
+
       if (new Set(lines).size !== lines.length) {
         context.report({ node: object, messageId: 'split' });
       }
     };
+
     return {
       ReturnStatement(node) {
         check(node.argument);
@@ -229,11 +240,28 @@ const returnedObjectOnePerLine = {
 const notMethod =
   ":not(MethodDefinition, Property[method=true], Property[kind='get'], Property[kind='set'])";
 
+// A statement spanning several lines (a block, a multi-line declaration or call) gets a blank line
+// before and after it, so each step stands apart. One-line statements may stay grouped.
+const MULTILINE_STATEMENTS = [
+  'multiline-block-like',
+  'multiline-const',
+  'multiline-let',
+  'multiline-expression',
+];
+
 /** @type {import('eslint').Linter.Config} */
 export const styleRules = {
-  plugins: { homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } } },
+  plugins: {
+    homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } },
+    '@stylistic': stylistic,
+  },
   rules: {
     'homedex/returned-object-one-per-line': 'error',
+    '@stylistic/padding-line-between-statements': [
+      'error',
+      { blankLine: 'always', prev: MULTILINE_STATEMENTS, next: '*' },
+      { blankLine: 'always', prev: '*', next: MULTILINE_STATEMENTS },
+    ],
     curly: ['error', 'all'],
     'arrow-body-style': ['error', 'as-needed'],
     'func-style': ['error', 'expression'],

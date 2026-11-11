@@ -17,9 +17,11 @@ export const HomePage = () => {
   const togglePin = (dexNo: number) => {
     setPinned((current) => {
       const next = new Set(current);
+
       if (!next.delete(dexNo)) {
         next.add(dexNo);
       }
+
       return next;
     });
   };

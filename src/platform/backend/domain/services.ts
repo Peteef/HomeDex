@@ -26,6 +26,7 @@ export const domainServices = (
     ttlDays: sessionTtlDays,
     ...(now && { now }),
   });
+
   const accounts = accountsService(storage, {
     revokeSessions: (userId) => {
       sessions.revokeAllFor(userId);
@@ -33,6 +34,7 @@ export const domainServices = (
     ...(argon2Params && { argon2Params }),
     ...(now && { now }),
   });
+
   return {
     accounts,
     sessions,

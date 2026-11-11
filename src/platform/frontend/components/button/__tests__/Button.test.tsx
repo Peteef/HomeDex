@@ -26,6 +26,7 @@ describe('Button', () => {
   it('should not call onClick when it is disabled', () => {
     // Given
     const onClick = vi.fn();
+
     render(
       <Button disabled onClick={onClick}>
         Save
