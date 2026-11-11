@@ -21,8 +21,6 @@ describe('loadModules', () => {
     // Then
     expect(notes?.manifest).toEqual({
       id: 'notes',
-      name: 'Notes',
-      description: 'Short notes',
       icon: 'notes',
       route: '/m/notes',
       enabled: true,

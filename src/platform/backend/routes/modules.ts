@@ -10,8 +10,6 @@ export interface ModulesRoutesOptions {
 
 const toSummary = ({ manifest }: LoadedModule) => ({
   id: manifest.id,
-  name: manifest.name,
-  description: manifest.description ?? null,
   icon: manifest.icon,
   route: manifest.route,
 });

@@ -23,20 +23,26 @@ const TILE_ERROR_STATUS: Record<TileErrorCode, number> = {
 
 const tileIdSchema = z.coerce.number().int().positive();
 
+const textsSchema = z.record(
+  z.string(),
+  z.object({
+    title: z.string(),
+    description: z.string().nullable().exactOptional(),
+  }),
+);
+
 const newTileSchema = z.object({
-  title: z.string(),
+  texts: textsSchema,
   url: z.string(),
   icon: z.string(),
   scope: z.enum(TILE_SCOPES),
-  description: z.string().nullable().exactOptional(),
 });
 
 const tileEditSchema = z.object({
-  title: z.string().exactOptional(),
+  texts: textsSchema.exactOptional(),
   url: z.string().exactOptional(),
   icon: z.string().exactOptional(),
   scope: z.enum(TILE_SCOPES).exactOptional(),
-  description: z.string().nullable().exactOptional(),
 });
 
 export interface TilesRoutesOptions {

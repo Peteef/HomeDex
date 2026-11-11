@@ -9,8 +9,10 @@ import type { TestApp } from '../../infrastructure/__tests__/helpers.ts';
 
 type WriteMethod = 'post' | 'patch' | 'put' | 'delete';
 
+const inEnglish = (title: string) => ({ en: { title } });
+
 const BUDGET = {
-  title: 'Budget',
+  texts: inEnglish('Budget'),
   url: 'https://docs.example.com/budget',
   icon: 'wallet',
   scope: 'shared',
@@ -35,7 +37,9 @@ describe('tiles API', () => {
     ((await write('post', '/api/tiles', cookie, body)).body as { tile: { id: number } }).tile.id;
 
   const titlesFor = async (cookie: string): Promise<string[]> =>
-    ((await get(cookie)).body as { tiles: { title: string }[] }).tiles.map(({ title }) => title);
+    ((await get(cookie)).body as { tiles: { texts: { en: { title: string } } }[] }).tiles.map(
+      ({ texts }) => texts.en.title,
+    );
 
   beforeEach(async () => {
     ctx = createTestApp();
@@ -83,8 +87,7 @@ describe('tiles API', () => {
             id,
             dexNo: 1,
             kind: 'link',
-            title: 'Budget',
-            description: null,
+            texts: { en: { title: 'Budget', description: null } },
             icon: 'wallet',
             url: 'https://docs.example.com/budget',
             moduleId: null,
@@ -98,11 +101,14 @@ describe('tiles API', () => {
   });
 
   describe('POST /api/tiles', () => {
-    it('should create the tile and answer 201', async () => {
+    it('should create the tile with its text per language and answer 201', async () => {
       // When
       const response = await write('post', '/api/tiles', ash, {
         ...BUDGET,
-        description: 'Monthly costs',
+        texts: {
+          en: { title: 'Budget', description: 'Monthly costs' },
+          pl: { title: 'Budżet' },
+        },
       });
 
       // Then
@@ -110,8 +116,10 @@ describe('tiles API', () => {
 
       expect(response.body).toEqual({
         tile: expect.objectContaining({
-          title: 'Budget',
-          description: 'Monthly costs',
+          texts: {
+            en: { title: 'Budget', description: 'Monthly costs' },
+            pl: { title: 'Budżet', description: null },
+          },
           editable: true,
         }) as unknown,
       });
@@ -119,7 +127,7 @@ describe('tiles API', () => {
 
     it('should answer 400 when fields are missing', async () => {
       // When
-      const response = await write('post', '/api/tiles', ash, { title: 'Budget' });
+      const response = await write('post', '/api/tiles', ash, { texts: inEnglish('Budget') });
 
       // Then
       expect(response.status).toBe(400);
@@ -140,6 +148,15 @@ describe('tiles API', () => {
         error: 'URL must be a web address starting with http:// or https://',
       });
     });
+
+    it('should answer 400 with the reason when no language has a title', async () => {
+      // When
+      const response = await write('post', '/api/tiles', ash, { ...BUDGET, texts: {} });
+
+      // Then
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'A title in at least one language is required' });
+    });
   });
 
   describe('PATCH /api/tiles/:id', () => {
@@ -149,15 +166,17 @@ describe('tiles API', () => {
 
       // When
       const response = await write('patch', `/api/tiles/${String(id)}`, ash, {
-        title: 'Finances',
-        description: null,
+        texts: { pl: { title: 'Finanse', description: null } },
       });
 
       // Then
       expect(response.status).toBe(200);
 
       expect(response.body).toEqual({
-        tile: expect.objectContaining({ id, title: 'Finances', description: null }) as unknown,
+        tile: expect.objectContaining({
+          id,
+          texts: { pl: { title: 'Finanse', description: null } },
+        }) as unknown,
       });
     });
 
@@ -189,7 +208,7 @@ describe('tiles API', () => {
 
     it.each(['abc', '0', '-1', '1.5'])('should answer 404 when the id is %j', async (id) => {
       // When
-      const response = await write('patch', `/api/tiles/${id}`, ash, { title: 'Ghost' });
+      const response = await write('patch', `/api/tiles/${id}`, ash, { texts: inEnglish('Ghost') });
 
       // Then
       expect(response.status).toBe(404);
@@ -234,14 +253,14 @@ describe('tiles API', () => {
     let shared: string;
 
     beforeEach(async () => {
-      personal = `/api/tiles/${String(await createTile(ash, { ...BUDGET, title: 'Diary', scope: 'personal' }))}`;
+      personal = `/api/tiles/${String(await createTile(ash, { ...BUDGET, texts: inEnglish('Diary'), scope: 'personal' }))}`;
       shared = `/api/tiles/${String(await createTile(ash))}`;
     });
 
     it('should never show the personal tile of another user', async () => {
       // When / Then
       expect(await titlesFor(misty)).toEqual(['Budget']);
-      expect(await titlesFor(ash)).toEqual(['Budget', 'Diary']);
+      expect(await titlesFor(ash)).toEqual(['Diary', 'Budget']);
     });
 
     it.each([
@@ -253,11 +272,13 @@ describe('tiles API', () => {
       'should answer 404 to %s on the personal tile of another user',
       async (method, suffix) => {
         // When
-        const response = await write(method, `${personal}${suffix}`, misty, { title: 'Mine now' });
+        const response = await write(method, `${personal}${suffix}`, misty, {
+          texts: inEnglish('Mine now'),
+        });
 
         // Then
         expect(response.status).toBe(404);
-        expect(await titlesFor(ash)).toEqual(['Budget', 'Diary']);
+        expect(await titlesFor(ash)).toEqual(['Diary', 'Budget']);
       },
     );
 
@@ -265,12 +286,12 @@ describe('tiles API', () => {
       'should answer 403 to %s on the shared tile of another user',
       async (method) => {
         // When
-        const response = await write(method, shared, misty, { title: 'Mine now' });
+        const response = await write(method, shared, misty, { texts: inEnglish('Mine now') });
 
         // Then
         expect(response.status).toBe(403);
         expect(response.body).toEqual({ error: 'Only the creator can change this tile' });
-        expect(await titlesFor(ash)).toEqual(['Budget', 'Diary']);
+        expect(await titlesFor(ash)).toEqual(['Diary', 'Budget']);
       },
     );
 
@@ -279,7 +300,9 @@ describe('tiles API', () => {
       const response = await get(misty);
 
       // Then
-      expect(response.body).toMatchObject({ tiles: [{ title: 'Budget', editable: false }] });
+      expect(response.body).toMatchObject({
+        tiles: [{ texts: { en: { title: 'Budget' } }, editable: false }],
+      });
     });
   });
 });

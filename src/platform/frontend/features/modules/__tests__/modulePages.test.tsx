@@ -6,7 +6,6 @@ import { modulePages } from '../internal/modulePages.ts';
 
 const manifestOf = (id: string, enabled = true): ModuleManifest => ({
   id,
-  name: id,
   icon: 'star',
   route: `/m/${id}`,
   enabled,

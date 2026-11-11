@@ -5,14 +5,18 @@ import {
   TEST_PASSWORD,
   testServices,
 } from '../../../infrastructure/__tests__/helpers.ts';
-import type { NewLinkTile } from '../index.ts';
+import type { NewLinkTile, TileEdit } from '../index.ts';
 import { TileError, tilesService } from '../index.ts';
 import type { TilesService } from '../index.ts';
 
 const CREATED_AT = Date.UTC(2026, 0, 1);
 
+const inEnglish = (title: string, description?: string | null): NewLinkTile['texts'] => ({
+  en: description === undefined ? { title } : { title, description },
+});
+
 const linkTile = (overrides: Partial<NewLinkTile> = {}): NewLinkTile => ({
-  title: 'Budget',
+  texts: inEnglish('Budget'),
   url: 'https://docs.example.com/budget',
   icon: 'wallet',
   scope: 'shared',
@@ -25,7 +29,10 @@ describe('tiles service', () => {
   let ash: number;
   let misty: number;
 
-  const titlesFor = (userId: number): string[] => tiles.list(userId).map(({ title }) => title);
+  const titlesFor = (userId: number): (string | undefined)[] =>
+    tiles.list(userId).map(({ texts }) => texts.en?.title);
+
+  const titleEdit = (title: string): TileEdit => ({ texts: inEnglish(title) });
 
   const tileError = (action: () => unknown): TileError => {
     try {
@@ -45,9 +52,9 @@ describe('tiles service', () => {
     (
       db
         .prepare(
-          `INSERT INTO tiles (dex_no, kind, title, icon, module_id, scope, created_at, updated_at)
-           VALUES ((SELECT COALESCE(MAX(dex_no), 0) + 1 FROM tiles), 'module', 'Shopping list',
-             'cart', 'shopping-list', 'shared', 0, 0)
+          `INSERT INTO tiles (dex_no, kind, icon, module_id, scope, created_at, updated_at)
+           VALUES ((SELECT COALESCE(MAX(dex_no), 0) + 1 FROM tiles), 'module', 'cart',
+             'shopping-list', 'shared', 0, 0)
            RETURNING id`,
         )
         .get() as { id: number }
@@ -64,15 +71,25 @@ describe('tiles service', () => {
   describe('create', () => {
     it('should create a link tile that its creator can edit', () => {
       // When
-      const tile = tiles.create(ash, linkTile({ description: 'Monthly costs' }));
+      const tile = tiles.create(
+        ash,
+        linkTile({
+          texts: {
+            en: { title: 'Budget', description: 'Monthly costs' },
+            pl: { title: 'Budżet', description: 'Miesięczne wydatki' },
+          },
+        }),
+      );
 
       // Then
       expect(tile).toEqual({
         id: expect.any(Number) as number,
         dexNo: 1,
         kind: 'link',
-        title: 'Budget',
-        description: 'Monthly costs',
+        texts: {
+          en: { title: 'Budget', description: 'Monthly costs' },
+          pl: { title: 'Budżet', description: 'Miesięczne wydatki' },
+        },
         icon: 'wallet',
         url: 'https://docs.example.com/budget',
         moduleId: null,
@@ -91,13 +108,20 @@ describe('tiles service', () => {
       expect([first.dexNo, second.dexNo]).toEqual([1, 2]);
     });
 
-    it('should trim the title and store a blank description as null', () => {
+    it('should keep only the languages the text was written in', () => {
       // When
-      const tile = tiles.create(ash, linkTile({ title: '  Budget  ', description: '   ' }));
+      const tile = tiles.create(ash, linkTile({ texts: { pl: { title: 'Budżet' } } }));
 
       // Then
-      expect(tile.title).toBe('Budget');
-      expect(tile.description).toBeNull();
+      expect(tile.texts).toEqual({ pl: { title: 'Budżet', description: null } });
+    });
+
+    it('should trim the title and store a blank description as null', () => {
+      // When
+      const tile = tiles.create(ash, linkTile({ texts: inEnglish('  Budget  ', '   ') }));
+
+      // Then
+      expect(tile.texts).toEqual({ en: { title: 'Budget', description: null } });
     });
 
     it('should store a missing description as null', () => {
@@ -105,7 +129,30 @@ describe('tiles service', () => {
       const tile = tiles.create(ash, linkTile());
 
       // Then
-      expect(tile.description).toBeNull();
+      expect(tile.texts.en?.description).toBeNull();
+    });
+
+    it('should reject the tile when it has no text in any language', () => {
+      // When
+      const error = tileError(() => tiles.create(ash, linkTile({ texts: {} })));
+
+      // Then
+      expect(error.code).toBe('invalid');
+      expect(error.message).toBe('A title in at least one language is required');
+    });
+
+    it('should reject the tile when a language is not supported', () => {
+      // When
+      const error = tileError(() =>
+        tiles.create(
+          ash,
+          linkTile({ texts: { en: { title: 'Budget' }, de: { title: 'Budget' } } }),
+        ),
+      );
+
+      // Then
+      expect(error.code).toBe('invalid');
+      expect(error.message).toBe('Unknown language');
     });
 
     it.each([
@@ -150,9 +197,11 @@ describe('tiles service', () => {
       expect(error.message).toBe('Unknown icon');
     });
 
-    it('should reject the tile when the title is blank', () => {
+    it('should reject the tile when the title of one language is blank', () => {
       // When
-      const error = tileError(() => tiles.create(ash, linkTile({ title: '   ' })));
+      const error = tileError(() =>
+        tiles.create(ash, linkTile({ texts: { en: { title: 'Budget' }, pl: { title: '   ' } } })),
+      );
 
       // Then
       expect(error.message).toBe('Title is required');
@@ -160,7 +209,9 @@ describe('tiles service', () => {
 
     it('should reject the tile when the title is too long', () => {
       // When
-      const error = tileError(() => tiles.create(ash, linkTile({ title: 'a'.repeat(61) })));
+      const error = tileError(() =>
+        tiles.create(ash, linkTile({ texts: inEnglish('a'.repeat(61)) })),
+      );
 
       // Then
       expect(error.message).toBe('Title must be at most 60 characters');
@@ -168,7 +219,9 @@ describe('tiles service', () => {
 
     it('should reject the tile when the description is too long', () => {
       // When
-      const error = tileError(() => tiles.create(ash, linkTile({ description: 'a'.repeat(141) })));
+      const error = tileError(() =>
+        tiles.create(ash, linkTile({ texts: inEnglish('Budget', 'a'.repeat(141)) })),
+      );
 
       // Then
       expect(error.message).toBe('Description must be at most 140 characters');
@@ -178,56 +231,46 @@ describe('tiles service', () => {
   describe('list', () => {
     it('should show shared tiles and only the own personal tiles', () => {
       // Given
-      tiles.create(ash, linkTile({ title: 'Shared by Ash' }));
-      tiles.create(ash, linkTile({ title: 'Ash only', scope: 'personal' }));
-      tiles.create(misty, linkTile({ title: 'Misty only', scope: 'personal' }));
+      tiles.create(ash, linkTile({ texts: inEnglish('Shared by Ash') }));
+      tiles.create(ash, linkTile({ texts: inEnglish('Ash only'), scope: 'personal' }));
+      tiles.create(misty, linkTile({ texts: inEnglish('Misty only'), scope: 'personal' }));
 
       // When / Then
-      expect(titlesFor(ash)).toEqual(['Ash only', 'Shared by Ash']);
-      expect(titlesFor(misty)).toEqual(['Misty only', 'Shared by Ash']);
+      expect(titlesFor(ash)).toEqual(['Shared by Ash', 'Ash only']);
+      expect(titlesFor(misty)).toEqual(['Shared by Ash', 'Misty only']);
     });
 
-    it('should sort pinned tiles first, then by title ignoring case and accents', () => {
+    it('should list pinned tiles first, then by Dex number', () => {
       // Given
-      tiles.create(ash, linkTile({ title: 'banana' }));
-      tiles.create(ash, linkTile({ title: 'Éclair' }));
-      const cherry = tiles.create(ash, linkTile({ title: 'Cherry' }));
-      tiles.create(ash, linkTile({ title: 'apple' }));
-      const zucchini = tiles.create(ash, linkTile({ title: 'Zucchini' }));
-      tiles.pin(ash, zucchini.id);
+      tiles.create(ash, linkTile({ texts: inEnglish('Zucchini') }));
+      const banana = tiles.create(ash, linkTile({ texts: inEnglish('banana') }));
+      tiles.create(ash, linkTile({ texts: inEnglish('apple') }));
+      const cherry = tiles.create(ash, linkTile({ texts: inEnglish('Cherry') }));
       tiles.pin(ash, cherry.id);
+      tiles.pin(ash, banana.id);
 
       // When / Then
-      expect(titlesFor(ash)).toEqual(['Cherry', 'Zucchini', 'apple', 'banana', 'Éclair']);
-    });
-
-    it('should order tiles with the same title by Dex number', () => {
-      // Given
-      tiles.create(ash, linkTile({ title: 'Notes', icon: 'notes' }));
-      tiles.create(ash, linkTile({ title: 'notes', icon: 'book' }));
-
-      // When / Then
-      expect(tiles.list(ash).map(({ dexNo }) => dexNo)).toEqual([1, 2]);
+      expect(titlesFor(ash)).toEqual(['banana', 'Cherry', 'Zucchini', 'apple']);
     });
 
     it('should mark only the tiles the user may change as editable', () => {
       // Given
-      tiles.create(ash, linkTile({ title: 'From Ash' }));
-      tiles.create(misty, linkTile({ title: 'From Misty' }));
+      tiles.create(ash, linkTile());
+      tiles.create(misty, linkTile());
       insertModuleTile();
 
       // When
-      const editable = tiles.list(ash).map(({ title, editable }) => [title, editable]);
+      const editable = tiles.list(ash).map(({ dexNo, editable }) => [dexNo, editable]);
 
       // Then
       expect(editable).toEqual([
-        ['From Ash', true],
-        ['From Misty', false],
-        ['Shopping list', false],
+        [1, true],
+        [2, false],
+        [3, false],
       ]);
     });
 
-    it('should show module tiles to every user', () => {
+    it('should show module tiles to every user, without text of their own', () => {
       // Given
       insertModuleTile();
 
@@ -237,6 +280,7 @@ describe('tiles service', () => {
       // Then
       expect(tile).toMatchObject({
         kind: 'module',
+        texts: {},
         moduleId: 'shopping-list',
         url: null,
         scope: 'shared',
@@ -247,30 +291,47 @@ describe('tiles service', () => {
   describe('edit', () => {
     it('should change the given fields and keep the others', () => {
       // Given
-      const tile = tiles.create(ash, linkTile({ description: 'Monthly costs' }));
+      const tile = tiles.create(ash, linkTile({ texts: inEnglish('Budget', 'Monthly costs') }));
 
       // When
-      const edited = tiles.edit(ash, tile.id, { title: 'Finances', icon: 'bank' });
+      const edited = tiles.edit(ash, tile.id, { icon: 'bank' });
 
       // Then
       expect(edited).toMatchObject({
-        title: 'Finances',
+        texts: { en: { title: 'Budget', description: 'Monthly costs' } },
         icon: 'bank',
-        description: 'Monthly costs',
         url: 'https://docs.example.com/budget',
         dexNo: tile.dexNo,
       });
     });
 
-    it('should clear the description when it is set to null', () => {
+    it('should replace the text of every language', () => {
       // Given
-      const tile = tiles.create(ash, linkTile({ description: 'Monthly costs' }));
+      const tile = tiles.create(
+        ash,
+        linkTile({ texts: { en: { title: 'Budget' }, pl: { title: 'Budżet' } } }),
+      );
 
       // When
-      const edited = tiles.edit(ash, tile.id, { description: null });
+      const edited = tiles.edit(ash, tile.id, {
+        texts: { pl: { title: 'Finanse', description: 'Konta i rachunki' } },
+      });
 
       // Then
-      expect(edited.description).toBeNull();
+      expect(edited.texts).toEqual({ pl: { title: 'Finanse', description: 'Konta i rachunki' } });
+      expect(tiles.list(ash)[0]?.texts).toEqual(edited.texts);
+    });
+
+    it('should reject removing the text of every language', () => {
+      // Given
+      const tile = tiles.create(ash, linkTile());
+
+      // When
+      const error = tileError(() => tiles.edit(ash, tile.id, { texts: {} }));
+
+      // Then
+      expect(error.code).toBe('invalid');
+      expect(titlesFor(ash)).toEqual(['Budget']);
     });
 
     it('should share the own personal tile', () => {
@@ -315,7 +376,7 @@ describe('tiles service', () => {
       const tile = tiles.create(ash, linkTile());
 
       // When
-      const error = tileError(() => tiles.edit(misty, tile.id, { title: 'Mine now' }));
+      const error = tileError(() => tiles.edit(misty, tile.id, titleEdit('Mine now')));
 
       // Then
       expect(error.code).toBe('forbidden');
@@ -327,7 +388,7 @@ describe('tiles service', () => {
       const tile = tiles.create(ash, linkTile({ scope: 'personal' }));
 
       // When
-      const error = tileError(() => tiles.edit(misty, tile.id, { title: 'Mine now' }));
+      const error = tileError(() => tiles.edit(misty, tile.id, titleEdit('Mine now')));
 
       // Then
       expect(error.code).toBe('not_found');
@@ -335,7 +396,7 @@ describe('tiles service', () => {
 
     it('should not find a tile that does not exist', () => {
       // When
-      const error = tileError(() => tiles.edit(ash, 999, { title: 'Ghost' }));
+      const error = tileError(() => tiles.edit(ash, 999, titleEdit('Ghost')));
 
       // Then
       expect(error.code).toBe('not_found');
@@ -346,7 +407,7 @@ describe('tiles service', () => {
       const id = insertModuleTile();
 
       // When
-      const error = tileError(() => tiles.edit(ash, id, { title: 'Groceries' }));
+      const error = tileError(() => tiles.edit(ash, id, titleEdit('Groceries')));
 
       // Then
       expect(error.code).toBe('forbidden');
@@ -355,7 +416,7 @@ describe('tiles service', () => {
     describe('when the creator is archived', () => {
       beforeEach(() => {
         tiles.create(ash, linkTile());
-        tiles.create(ash, linkTile({ title: 'Diary', scope: 'personal' }));
+        tiles.create(ash, linkTile({ texts: inEnglish('Diary'), scope: 'personal' }));
         testServices(db).accounts.archive('Ash');
       });
 
@@ -363,10 +424,13 @@ describe('tiles service', () => {
 
       it('should let anyone change the shared tile', () => {
         // When
-        const edited = tiles.edit(misty, sharedTileId(), { title: 'Family budget' });
+        const edited = tiles.edit(misty, sharedTileId(), titleEdit('Family budget'));
 
         // Then
-        expect(edited).toMatchObject({ title: 'Family budget', editable: true });
+        expect(edited).toMatchObject({
+          texts: { en: { title: 'Family budget' } },
+          editable: true,
+        });
       });
 
       it('should let anyone delete the shared tile', () => {
@@ -393,7 +457,7 @@ describe('tiles service', () => {
   });
 
   describe('remove', () => {
-    it('should delete the own tile with its pins', () => {
+    it('should delete the own tile with its texts and pins', () => {
       // Given
       const tile = tiles.create(ash, linkTile());
       tiles.pin(misty, tile.id);
@@ -404,6 +468,7 @@ describe('tiles service', () => {
       // Then
       expect(titlesFor(ash)).toEqual([]);
       expect(db.prepare('SELECT COUNT(*) AS n FROM pins').get()).toEqual({ n: 0 });
+      expect(db.prepare('SELECT COUNT(*) AS n FROM tile_texts').get()).toEqual({ n: 0 });
     });
 
     it('should forbid deleting a shared tile of another user', () => {

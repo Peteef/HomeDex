@@ -1,6 +1,6 @@
 import { textHook } from './textHook.ts';
 
-export { LANGUAGE_STORAGE_KEY, LANGUAGES, SOURCE_LANGUAGE } from './languages.ts';
+export { isLanguage, LANGUAGE_STORAGE_KEY, LANGUAGES, SOURCE_LANGUAGE } from './languages.ts';
 export type { Language } from './languages.ts';
 export { textHook } from './textHook.ts';
 export { useLanguage } from './useLanguage.ts';
