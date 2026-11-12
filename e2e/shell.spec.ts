@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
-import { LINK_HOST, SAMPLE_TILES, SHOPPING, stubTiles } from './tiles.ts';
+import { LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
 import type { E2ETile } from './tiles.ts';
 import { SAMPLE_ITEMS, SHOPPING_LIST_PATH, stubItems } from './shoppingList.ts';
 import type { E2EItem } from './shoppingList.ts';
@@ -19,7 +19,21 @@ interface Screen {
   language?: string;
   tiles?: E2ETile[];
   items?: E2EItem[];
+  open?: (page: Page) => Promise<void>;
 }
+
+const openAddTile = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Add tile' }).click();
+  await settled(page.getByRole('dialog', { name: 'Add tile' }));
+};
+
+// Focus and Enter, as a keyboard or screen reader does: on touch screens the edit button is
+// visually hidden and a long press opens the dialog instead.
+const openEditTile = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Edit Finances' }).focus();
+  await page.keyboard.press('Enter');
+  await settled(page.getByRole('dialog', { name: 'Edit tile' }));
+};
 
 const SCREENS: Screen[] = [
   { name: 'login', path: '/login', heading: "Who's there, Trainer?", signedIn: false },
@@ -32,6 +46,22 @@ const SCREENS: Screen[] = [
   },
   { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: SAMPLE_TILES },
   { name: 'empty home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: [] },
+  {
+    name: 'add tile dialog',
+    path: '/',
+    heading: E2E_GREETING,
+    signedIn: true,
+    tiles: SAMPLE_TILES,
+    open: openAddTile,
+  },
+  {
+    name: 'edit tile dialog',
+    path: '/',
+    heading: E2E_GREETING,
+    signedIn: true,
+    tiles: SAMPLE_TILES,
+    open: openEditTile,
+  },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
   {
     name: 'login in Polish',
@@ -114,6 +144,7 @@ test.describe('shell', () => {
 
         await page.goto(screen.path);
         await expect(page.getByRole('heading', { level: 1, name: screen.heading })).toBeVisible();
+        await screen.open?.(page);
       });
 
       test('should have no accessibility or colour contrast violations', async ({ page }) => {

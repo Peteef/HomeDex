@@ -9,11 +9,20 @@ import {
   withProviders,
 } from '../../../__tests__/helpers.tsx';
 import type { FakeResponse } from '../../../__tests__/helpers.tsx';
-import { useTiles, useTogglePin } from '../index.ts';
+import { useCreateTile, useDeleteTile, useTiles, useTogglePin, useUpdateTile } from '../index.ts';
+import type { Tile, TileDraft } from '../index.ts';
 import { linkTile } from '../../../__tests__/tiles.ts';
 
 const FINANCES = linkTile({ en: { title: 'Finances', description: null } }, { id: 1 });
 const WEIGHT = linkTile({ en: { title: 'Weight log', description: null } }, { id: 2, dexNo: 2 });
+
+const useHooks = () => ({
+  tiles: useTiles(),
+  togglePin: useTogglePin(),
+  create: useCreateTile(),
+  update: useUpdateTile(),
+  remove: useDeleteTile(),
+});
 
 const renderHooks = () => {
   const queryClient = testQueryClient();
@@ -21,13 +30,35 @@ const renderHooks = () => {
   const wrapper = ({ children }: { children: ReactNode }) =>
     withProviders(children, { queryClient });
 
-  return renderHook(
-    () => ({
-      tiles: useTiles(),
-      togglePin: useTogglePin(),
-    }),
-    { wrapper },
-  );
+  return renderHook(useHooks, { wrapper });
+};
+
+const DRAFT: TileDraft = {
+  texts: { en: { title: 'Recipes', description: null } },
+  url: 'https://docs.example.com/recipes',
+  icon: 'food',
+  scope: 'personal',
+};
+
+const RECIPES = linkTile(DRAFT.texts, { id: 3, dexNo: 3, icon: 'food', scope: 'personal' });
+
+const titlesOf = (tiles: { texts: { en?: { title: string } } }[] | undefined) =>
+  tiles?.map(({ texts }) => texts.en?.title);
+
+const loaded = async (result: { current: ReturnType<typeof useHooks> }) => {
+  await waitFor(() => {
+    expect(result.current.tiles.data).toBeDefined();
+  });
+};
+
+// The first load answers; the reload after a save stays pending, so the test sees the cache update.
+const loadOnce = (tiles: Tile[]) => {
+  let loads = 0;
+
+  return () => {
+    loads += 1;
+    return loads === 1 ? ok({ tiles }) : new Promise<FakeResponse>(() => undefined);
+  };
 };
 
 const pinnedOf = (tiles: { id: number; pinned: boolean }[] | undefined) =>
@@ -197,6 +228,123 @@ describe('tiles queries', () => {
       });
 
       saved.resolve({ status: 204 });
+    });
+  });
+
+  describe('useCreateTile', () => {
+    it('should add the created tile to the list and reload it', async () => {
+      // Given
+      const api = fakeApi({
+        'GET /api/tiles': loadOnce([FINANCES]),
+        'POST /api/tiles': { status: 201, body: { tile: RECIPES } },
+      });
+
+      const { result } = renderHooks();
+      await loaded(result);
+
+      // When
+      await act(() => result.current.create.mutateAsync(DRAFT));
+
+      // Then
+      await waitFor(() => {
+        expect(titlesOf(result.current.tiles.data)).toEqual(['Finances', 'Recipes']);
+      });
+
+      expect(api.callsTo('POST /api/tiles')[0]?.body).toEqual(DRAFT);
+
+      await waitFor(() => {
+        expect(api.callsTo('GET /api/tiles')).toHaveLength(2);
+      });
+    });
+
+    it('should leave the list as it is when the API rejects the tile', async () => {
+      // Given
+      fakeApi({
+        'GET /api/tiles': ok({ tiles: [FINANCES] }),
+        'POST /api/tiles': status(400),
+      });
+
+      const { result } = renderHooks();
+      await loaded(result);
+
+      // When
+      await act(() => result.current.create.mutateAsync(DRAFT).catch(() => undefined));
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.create.isError).toBe(true);
+      });
+
+      expect(titlesOf(result.current.tiles.data)).toEqual(['Finances']);
+    });
+  });
+
+  describe('useUpdateTile', () => {
+    it('should replace the tile with the saved one', async () => {
+      // Given
+      const renamed = linkTile({ en: { title: 'Budget', description: null } }, { id: 1 });
+
+      const api = fakeApi({
+        'GET /api/tiles': loadOnce([FINANCES, WEIGHT]),
+        'PATCH /api/tiles/1': ok({ tile: renamed }),
+      });
+
+      const { result } = renderHooks();
+      await loaded(result);
+
+      // When
+      await act(() => result.current.update.mutateAsync({ id: 1, draft: DRAFT }));
+
+      // Then
+      await waitFor(() => {
+        expect(titlesOf(result.current.tiles.data)).toEqual(['Budget', 'Weight log']);
+      });
+
+      expect(api.callsTo('PATCH /api/tiles/1')[0]?.body).toEqual(DRAFT);
+    });
+
+    it('should reload the tiles when the tile is gone', async () => {
+      // Given
+      const api = fakeApi({
+        'GET /api/tiles': ok({ tiles: [FINANCES] }),
+        'PATCH /api/tiles/1': status(404),
+      });
+
+      const { result } = renderHooks();
+      await loaded(result);
+
+      // When
+      await act(() =>
+        result.current.update.mutateAsync({ id: 1, draft: DRAFT }).catch(() => undefined),
+      );
+
+      // Then
+      await waitFor(() => {
+        expect(api.callsTo('GET /api/tiles')).toHaveLength(2);
+      });
+    });
+  });
+
+  describe('useDeleteTile', () => {
+    it('should remove the tile from the list', async () => {
+      // Given
+      const api = fakeApi({
+        'GET /api/tiles': loadOnce([FINANCES, WEIGHT]),
+        'DELETE /api/tiles/1': { status: 204 },
+      });
+
+      const { result } = renderHooks();
+      await loaded(result);
+
+      // When
+      await act(() => result.current.remove.mutateAsync(1));
+
+      // Then
+      await waitFor(() => {
+        expect(titlesOf(result.current.tiles.data)).toEqual(['Weight log']);
+      });
+
+      expect(api.callsTo('DELETE /api/tiles/1')).toHaveLength(1);
     });
   });
 });

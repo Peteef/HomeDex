@@ -117,4 +117,39 @@ describe('Tile', () => {
     // Then
     expect(opened).not.toHaveBeenCalled();
   });
+
+  it('should offer no edit button without onEdit', () => {
+    // When
+    renderTile();
+
+    // Then
+    expect(screen.queryByRole('button', { name: 'Edit Finances' })).not.toBeInTheDocument();
+  });
+
+  it('should call onEdit when the edit button is clicked', () => {
+    // Given
+    const onEdit = vi.fn();
+    renderTile({ onEdit });
+
+    // When
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Finances' }));
+
+    // Then
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it('should call onEdit when the tile is held', () => {
+    // Given
+    vi.useFakeTimers();
+    const onEdit = vi.fn();
+    renderTile({ onEdit });
+
+    // When
+    fireEvent.pointerDown(screen.getByRole('link'), { pointerType: 'touch' });
+    vi.advanceTimersByTime(500);
+
+    // Then
+    expect(onEdit).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
 });

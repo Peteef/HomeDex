@@ -13,9 +13,11 @@ import type { Tile } from '../../features/tiles/index.ts';
 import { useLanguage, useText } from '../../lib/i18n/index.ts';
 import type { Language } from '../../lib/i18n/index.ts';
 import { modulePath } from '../../routes.ts';
+import { TileDialog } from './components/TileDialog.tsx';
 import { TileList } from './components/TileList.tsx';
 import type { TileEntry } from './components/TileList.tsx';
 import { findTiles, isBlankQuery } from './internal/quickFind.ts';
+import { useTileEditor } from './internal/useTileEditor.ts';
 
 const FINE_POINTER = '(pointer: fine)';
 const NEW_TAB = '_blank';
@@ -34,6 +36,7 @@ const toEntry = (tile: Tile, language: Language): TileEntry => {
     href: tile.url ?? modulePath(tile.moduleId ?? ''),
     external,
     pinned: tile.pinned,
+    editable: tile.editable,
   };
 };
 
@@ -44,6 +47,7 @@ export const HomePage = () => {
   const logout = useLogout();
   const tiles = useTiles();
   const togglePin = useTogglePin();
+  const editor = useTileEditor();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -73,6 +77,14 @@ export const HomePage = () => {
 
     if (searching && best !== undefined) {
       open(toEntry(best, language));
+    }
+  };
+
+  const edit = ({ id }: TileEntry): void => {
+    const tile = tiles.data?.find((candidate) => candidate.id === id);
+
+    if (tile !== undefined) {
+      editor.openEdit(tile);
     }
   };
 
@@ -129,7 +141,10 @@ export const HomePage = () => {
         onTogglePin={({ id, pinned }) => {
           togglePin.mutate({ id, pinned: !pinned });
         }}
+        onEdit={edit}
+        onAdd={editor.openAdd}
       />
+      <TileDialog {...editor.dialog} />
     </Panel>
   );
 };

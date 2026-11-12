@@ -1,4 +1,4 @@
-import type { Page, Route } from '@playwright/test';
+import type { Locator, Page, Route } from '@playwright/test';
 
 export const LINK_HOST = 'https://docs.example.com';
 
@@ -81,4 +81,11 @@ export const stubTiles = async (page: Page, tiles: E2ETile[]): Promise<void> => 
 
   await page.route('**/api/tiles', listTiles);
   await page.route(PIN_PATH, savePin);
+};
+
+// The dialog slides in; measuring it before the animation ends sees it half-way (and half-faded).
+export const settled = async (dialog: Locator): Promise<void> => {
+  await dialog.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished)),
+  );
 };
