@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import {
   createItem,
   deleteCheckedItems,
@@ -10,6 +11,7 @@ import type { CheckChange, Item } from './types.ts';
 
 const ITEMS_QUERY_KEY = ['shopping-list', 'items'] as const;
 const CHANGE_MUTATION_KEY = ['shopping-list', 'items', 'change'] as const;
+const REFRESH_INTERVAL_MS = 15_000;
 
 type ItemsChange = (items: Item[]) => Item[];
 
@@ -53,11 +55,32 @@ const useItemsCache = () => {
   };
 };
 
-export const useItems = () =>
-  useQuery({
+// The list is shared, so it keeps up with the other user's changes: every 15 s while the page is
+// visible (TanStack Query pauses the interval in a hidden tab), and when the browser window gets
+// focus back, which TanStack Query's own refetch (on visibilitychange only) does not notice.
+export const useItems = () => {
+  const items = useQuery({
     queryKey: ITEMS_QUERY_KEY,
     queryFn: fetchItems,
+    refetchInterval: REFRESH_INTERVAL_MS,
   });
+
+  const { refetch } = items;
+
+  useEffect(() => {
+    const refresh = () => {
+      void refetch();
+    };
+
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      window.removeEventListener('focus', refresh);
+    };
+  }, [refetch]);
+
+  return items;
+};
 
 export const useAddItem = () => {
   const { update, refreshWhenLast } = useItemsCache();

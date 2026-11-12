@@ -2,7 +2,7 @@ import { fakeApi, ok, status, withProviders } from '#platform/frontend/testing';
 import type { FakeResponse } from '#platform/frontend/testing';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import i18next from 'i18next';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Item } from '../../../features/items/index.ts';
 import { ListPage } from '../ListPage.tsx';
 
@@ -254,6 +254,34 @@ describe('ListPage', () => {
     await waitFor(() => {
       expect(api.callsTo(ITEMS)).toHaveLength(2);
     });
+  });
+
+  it('should refresh the list when the window gets focus', async () => {
+    // Given
+    const api = openList();
+    await screen.findByText('Milk');
+
+    // When
+    fireEvent.focus(window);
+
+    // Then
+    await waitFor(() => {
+      expect(api.callsTo(ITEMS)).toHaveLength(2);
+    });
+  });
+
+  it('should refresh the list every 15 seconds', async () => {
+    // Given
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const api = openList();
+    await screen.findByText('Milk');
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(15_000));
+    vi.useRealTimers();
+
+    // Then
+    expect(api.callsTo(ITEMS)).toHaveLength(2);
   });
 
   it('should show its text in Polish', async () => {
