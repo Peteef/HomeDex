@@ -63,6 +63,7 @@ export const createApp = ({
 
   const { accounts, sessions, tiles } = domainServices(storage, {
     sessionTtlDays: config.SESSION_TTL_DAYS,
+    enabledModuleIds: modules.map(({ manifest }) => manifest.id),
     now,
     ...(argon2Params && { argon2Params }),
   });

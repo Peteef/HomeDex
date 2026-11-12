@@ -4,7 +4,7 @@ A private, Pokémon-themed launch pad for home and personal life. Think of a bro
 
 It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI), the login screen (pick your Trainer, then type the password) and the tiles API (shared and personal link tiles with text per language, pins) and the module contract are in. The home screen shows the real tiles (pinned first, quick-find in the current language), and there are no modules yet.
+> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI), the login screen (pick your Trainer, then type the password) and the tiles API (shared and personal link tiles with text per language, pins), the module contract and a tile for every enabled module are in. The home screen shows the real tiles (pinned first, quick-find in the current language), and there are no modules yet.
 
 ## Goals
 
