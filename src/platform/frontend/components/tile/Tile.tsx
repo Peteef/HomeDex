@@ -27,6 +27,11 @@ const LINK_CLASSES =
 // A long press edits on touch screens, so iOS must not show its link preview or select text.
 const HOLDABLE_LINK_CLASSES = `${LINK_CLASSES} select-none [-webkit-touch-callout:none]`;
 
+// While a touch is held the tile sinks and a red ring fills in over the hold (motion only when
+// allowed; the ring alone otherwise), then it pops when the editor opens.
+const PRESS_CLASSES =
+  'transition-[scale,box-shadow] duration-150 data-[press=holding]:ring-dex-red data-[press=holding]:ring-3 data-[press=holding]:duration-500 data-[press=holding]:motion-safe:scale-97 data-[press=held]:motion-safe:animate-pop';
+
 // Shown on hover or keyboard focus with a mouse; on touch screens it stays for screen readers only.
 const EDIT_BUTTON_CLASSES =
   'no-hover:sr-only can-hover:absolute can-hover:top-1 can-hover:right-13 can-hover:opacity-0 can-hover:group-focus-within:opacity-100 can-hover:group-hover:opacity-100';
@@ -43,7 +48,7 @@ export const Tile = ({
   onEdit,
 }: TileProps) => {
   const text = useText('components.tile');
-  const longPress = useLongPress(onEdit);
+  const { phase, handlers } = useLongPress(onEdit);
   const linkClasses = onEdit ? HOLDABLE_LINK_CLASSES : LINK_CLASSES;
 
   const content = (
@@ -62,20 +67,23 @@ export const Tile = ({
   );
 
   return (
-    <article className="group border-dex-line bg-dex-card relative rounded-2xl border">
+    <article
+      data-press={phase}
+      className={`group border-dex-line bg-dex-card relative rounded-2xl border ${PRESS_CLASSES}`}
+    >
       {external ? (
         <a
           href={href}
           target="_blank"
           rel="noopener noreferrer"
           className={linkClasses}
-          {...longPress}
+          {...handlers}
         >
           {content}
           <span className="sr-only"> {text.opensInNewTab}</span>
         </a>
       ) : (
-        <Link to={href} className={linkClasses} {...longPress}>
+        <Link to={href} className={linkClasses} {...handlers}>
           {content}
         </Link>
       )}

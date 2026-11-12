@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { Tile } from '../Tile.tsx';
@@ -146,10 +146,25 @@ describe('Tile', () => {
 
     // When
     fireEvent.pointerDown(screen.getByRole('link'), { pointerType: 'touch' });
-    vi.advanceTimersByTime(500);
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
 
     // Then
     expect(onEdit).toHaveBeenCalledOnce();
+    expect(screen.getByRole('article')).toHaveAttribute('data-press', 'held');
     vi.useRealTimers();
+  });
+
+  it('should show the hold while a touch is held', () => {
+    // Given
+    renderTile({ onEdit: vi.fn() });
+
+    // When
+    fireEvent.pointerDown(screen.getByRole('link'), { pointerType: 'touch' });
+
+    // Then
+    expect(screen.getByRole('article')).toHaveAttribute('data-press', 'holding');
   });
 });

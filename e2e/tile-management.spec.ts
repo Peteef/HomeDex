@@ -280,6 +280,18 @@ test.describe('link tile management', () => {
       await expect(addTile).toBeFocused();
     });
 
+    test('should focus the dialog itself when it opens, not its close button', async ({ page }) => {
+      // Given
+      await page.goto('/');
+
+      // When
+      await page.getByRole('button', { name: 'Add tile' }).click();
+
+      // Then
+      await expect(addTileDialog(page)).toBeFocused();
+      await expect(page.getByRole('button', { name: 'Close' })).not.toBeFocused();
+    });
+
     test('should keep the focus inside the open dialog', async ({ page }) => {
       // Given
       await page.goto('/');
@@ -341,6 +353,7 @@ test.describe('link tile management', () => {
 
       // When
       await link.dispatchEvent('pointerdown', { pointerType: 'touch', isPrimary: true });
+      await expect(tileCalled(page, 'Finances')).toHaveAttribute('data-press', 'holding');
       await expect(editTileDialog(page)).toBeVisible();
       await link.dispatchEvent('pointerup', { pointerType: 'touch', isPrimary: true });
       await link.dispatchEvent('click');

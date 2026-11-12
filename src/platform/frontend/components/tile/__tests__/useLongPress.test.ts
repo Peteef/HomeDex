@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import type { MouseEvent, PointerEvent } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLongPress } from '../useLongPress.ts';
@@ -28,7 +28,7 @@ describe('useLongPress', () => {
     const { result } = renderHook(() => useLongPress(onLongPress));
 
     // When
-    result.current.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerDown(pointer('touch'));
     vi.advanceTimersByTime(500);
 
     // Then
@@ -41,9 +41,9 @@ describe('useLongPress', () => {
     const { result } = renderHook(() => useLongPress(onLongPress));
 
     // When
-    result.current.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerDown(pointer('touch'));
     vi.advanceTimersByTime(300);
-    result.current.onPointerUp();
+    result.current.handlers.onPointerUp();
     vi.advanceTimersByTime(500);
 
     // Then
@@ -56,8 +56,8 @@ describe('useLongPress', () => {
     const { result } = renderHook(() => useLongPress(onLongPress));
 
     // When
-    result.current.onPointerDown(pointer('touch'));
-    result.current.onPointerCancel();
+    result.current.handlers.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerCancel();
     vi.advanceTimersByTime(500);
 
     // Then
@@ -70,7 +70,7 @@ describe('useLongPress', () => {
     const { result } = renderHook(() => useLongPress(onLongPress));
 
     // When
-    result.current.onPointerDown(pointer('mouse'));
+    result.current.handlers.onPointerDown(pointer('mouse'));
     vi.advanceTimersByTime(500);
 
     // Then
@@ -81,11 +81,11 @@ describe('useLongPress', () => {
     // Given
     const { result } = renderHook(() => useLongPress(vi.fn()));
     const { event, preventDefault } = click();
-    result.current.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerDown(pointer('touch'));
     vi.advanceTimersByTime(500);
 
     // When
-    result.current.onClick(event);
+    result.current.handlers.onClick(event);
 
     // Then
     expect(preventDefault).toHaveBeenCalledOnce();
@@ -95,11 +95,11 @@ describe('useLongPress', () => {
     // Given
     const { result } = renderHook(() => useLongPress(vi.fn()));
     const { event, preventDefault } = click();
-    result.current.onPointerDown(pointer('touch'));
-    result.current.onPointerUp();
+    result.current.handlers.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerUp();
 
     // When
-    result.current.onClick(event);
+    result.current.handlers.onClick(event);
 
     // Then
     expect(preventDefault).not.toHaveBeenCalled();
@@ -113,8 +113,8 @@ describe('useLongPress', () => {
     const allowed = click();
 
     // When
-    withAction.current.onContextMenu(blocked.event);
-    withoutAction.current.onContextMenu(allowed.event);
+    withAction.current.handlers.onContextMenu(blocked.event);
+    withoutAction.current.handlers.onContextMenu(allowed.event);
 
     // Then
     expect(blocked.preventDefault).toHaveBeenCalledOnce();
@@ -125,7 +125,7 @@ describe('useLongPress', () => {
     // Given
     const onLongPress = vi.fn();
     const { result, unmount } = renderHook(() => useLongPress(onLongPress));
-    result.current.onPointerDown(pointer('touch'));
+    result.current.handlers.onPointerDown(pointer('touch'));
 
     // When
     unmount();
@@ -133,5 +133,83 @@ describe('useLongPress', () => {
 
     // Then
     expect(onLongPress).not.toHaveBeenCalled();
+  });
+
+  it('should be idle until a touch starts', () => {
+    // When
+    const { result } = renderHook(() => useLongPress(vi.fn()));
+
+    // Then
+    expect(result.current.phase).toBe('idle');
+  });
+
+  it('should be holding while the touch is held and held once it fires', () => {
+    // Given
+    const { result } = renderHook(() => useLongPress(vi.fn()));
+
+    // When
+    act(() => {
+      result.current.handlers.onPointerDown(pointer('touch'));
+    });
+
+    // Then
+    expect(result.current.phase).toBe('holding');
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(result.current.phase).toBe('held');
+  });
+
+  it('should go back to idle when the touch ends before the hold fires', () => {
+    // Given
+    const { result } = renderHook(() => useLongPress(vi.fn()));
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointer('touch'));
+    });
+
+    // When
+    act(() => {
+      result.current.handlers.onPointerUp();
+    });
+
+    // Then
+    expect(result.current.phase).toBe('idle');
+  });
+
+  it('should stay held after the release, so the pop can finish', () => {
+    // Given
+    const { result } = renderHook(() => useLongPress(vi.fn()));
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointer('touch'));
+      vi.advanceTimersByTime(500);
+    });
+
+    // When
+    act(() => {
+      result.current.handlers.onPointerUp();
+    });
+
+    // Then
+    expect(result.current.phase).toBe('held');
+  });
+
+  it('should not show a hold for a mouse or without onLongPress', () => {
+    // Given
+    const mouse = renderHook(() => useLongPress(vi.fn())).result;
+    const noAction = renderHook(() => useLongPress(undefined)).result;
+
+    // When
+    act(() => {
+      mouse.current.handlers.onPointerDown(pointer('mouse'));
+      noAction.current.handlers.onPointerDown(pointer('touch'));
+    });
+
+    // Then
+    expect(mouse.current.phase).toBe('idle');
+    expect(noAction.current.phase).toBe('idle');
   });
 });

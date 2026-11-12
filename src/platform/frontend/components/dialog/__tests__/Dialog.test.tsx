@@ -54,6 +54,14 @@ describe('Dialog', () => {
     expect(screen.getByRole('button', { name: 'Inside' })).toBeInTheDocument();
   });
 
+  it('should take the focus itself when it opens, not its first button', () => {
+    // When
+    renderDialog(true);
+
+    // Then
+    expect(dialog()).toHaveFocus();
+  });
+
   it('should render neither the open state nor the content when closed', () => {
     // When
     renderDialog(false);

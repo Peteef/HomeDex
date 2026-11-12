@@ -28,6 +28,7 @@
 
   --animate-float: float 7s ease-in-out infinite;
   --animate-rise: rise 0.2s ease-out;
+  --animate-pop: pop 0.25s ease-out;
 
   @keyframes float {
     0%,
@@ -36,6 +37,15 @@
     }
     50% {
       transform: translateY(-6px);
+    }
+  }
+
+  @keyframes pop {
+    from {
+      scale: 0.97;
+    }
+    50% {
+      scale: 1.03;
     }
   }
 
