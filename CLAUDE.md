@@ -32,7 +32,7 @@ If a script below does not exist yet, creating it is part of project setup.
 - The backend runs `.ts` files directly with Node's native type stripping, so there is no backend build step. Use `import type`, write relative imports with the `.ts` extension, and avoid enums and namespaces.
 - Frontend: React with Vite (build tooling only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react` as the built-in icon set, and `i18next` with `react-i18next` (plus its browser language detector) for UI text. Backend: Express with TypeScript, kept simple while the backend is small. `zod` validates config, requests and manifests.
 - Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
-- Public APIs are package.json `imports` aliases: `#platform/backend`, `#platform/frontend` and `#platform/shared` (each a `public-api/index.ts`). Modules import the platform only through them, and only what the contract needs is exported: add to a public API when a module needs it, never in advance.
+- Public APIs are package.json `imports` aliases: `#platform/backend`, `#platform/frontend` and `#platform/shared` (each a `public-api/index.ts`). Modules import the platform only through them, and only what the contract needs is exported: add to a public API when a module needs it, never in advance. `#platform/backend/testing` and `#platform/frontend/testing` are test kits for a module's `__tests__` only; they live in `public-api/__tests__/`, so the Docker image leaves them out.
 - Packaging: one Docker container serving the API and the built UI, built for both x86 and ARM.
 - Tooling: npm, Prettier and ESLint, Vitest, Playwright, GitHub Actions.
 - One npm package. Modules are folders, not separate packages, for now.

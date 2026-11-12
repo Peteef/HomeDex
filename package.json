@@ -9,7 +9,9 @@
   },
   "imports": {
     "#platform/backend": "./src/platform/backend/public-api/index.ts",
+    "#platform/backend/testing": "./src/platform/backend/public-api/__tests__/testing.ts",
     "#platform/frontend": "./src/platform/frontend/public-api/index.ts",
+    "#platform/frontend/testing": "./src/platform/frontend/public-api/__tests__/testing.ts",
     "#platform/shared": "./src/platform/shared/public-api/index.ts"
   },
   "scripts": {

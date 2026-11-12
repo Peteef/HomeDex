@@ -155,6 +155,10 @@ describe('App', () => {
         'IconButton',
         'Panel',
         'TextInput',
+        'del',
+        'getJson',
+        'postJson',
+        'put',
         'textHook',
         'useCurrentUser',
       ]);

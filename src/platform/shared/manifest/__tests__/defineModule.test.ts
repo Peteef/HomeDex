@@ -20,6 +20,12 @@ describe('defineModule', () => {
     const api = await import('#platform/shared');
 
     // Then
-    expect(Object.keys(api)).toEqual(['defineModule']);
+    expect(Object.keys(api).sort()).toEqual([
+      'BAD_REQUEST',
+      'CREATED',
+      'NOT_FOUND',
+      'NO_CONTENT',
+      'defineModule',
+    ]);
   });
 });
