@@ -1,7 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
+import { LINK_HOST, SAMPLE_TILES, SHOPPING, stubTiles } from './tiles.ts';
+import type { E2ETile } from './tiles.ts';
 
 const MIN_TOUCH_TARGET = 44;
 
@@ -12,6 +15,7 @@ interface Screen {
   signedIn: boolean;
   remembered?: string;
   language?: string;
+  tiles?: E2ETile[];
 }
 
 const SCREENS: Screen[] = [
@@ -23,7 +27,8 @@ const SCREENS: Screen[] = [
     signedIn: false,
     remembered: E2E_USER.username,
   },
-  { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true },
+  { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: SAMPLE_TILES },
+  { name: 'empty home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: [] },
   { name: 'not-found', path: '/nowhere', heading: 'Page not found', signedIn: true },
   {
     name: 'login in Polish',
@@ -38,6 +43,7 @@ const SCREENS: Screen[] = [
     heading: `Cześć, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
     signedIn: true,
     language: 'pl',
+    tiles: SAMPLE_TILES,
   },
 ];
 
@@ -53,6 +59,10 @@ test.describe('shell', () => {
       test.beforeEach(async ({ page }) => {
         if (screen.signedIn) {
           await signIn(page);
+        }
+
+        if (screen.tiles) {
+          await stubTiles(page, screen.tiles);
         }
 
         if (screen.remembered) {
@@ -148,20 +158,46 @@ test.describe('shell', () => {
   });
 
   test.describe('home screen', () => {
+    const search = (page: Page) => page.getByRole('searchbox');
+    const tiles = (page: Page) => page.getByRole('article');
+
     test.beforeEach(async ({ page }) => {
       await signIn(page);
+      await stubTiles(page, SAMPLE_TILES);
+
+      await page
+        .context()
+        .route(`${LINK_HOST}/**`, (route) => route.fulfill({ body: 'linked file' }));
     });
 
-    test('should pin and unpin a tile when its pin control is tapped', async ({ page }) => {
+    test('should show a pinned tile first and put it back when it is unpinned', async ({
+      page,
+    }) => {
       // Given
       await page.goto('/');
-      const pin = page.getByRole('button', { name: 'Pin Finances' });
+      await expect(tiles(page)).toHaveText([/clock/, /Finances/, /Shopping/, /Weight log/]);
+
+      // When
+      await page.getByRole('button', { name: 'Pin Weight log' }).click();
+
+      // Then
+      await expect(tiles(page)).toHaveText([/Weight log/, /clock/, /Finances/, /Shopping/]);
+      await page.getByRole('button', { name: 'Pin Weight log' }).click();
+      await expect(tiles(page)).toHaveText([/clock/, /Finances/, /Shopping/, /Weight log/]);
+    });
+
+    test('should keep a pin after a reload', async ({ page }) => {
+      // Given
+      await page.goto('/');
+      const pin = page.getByRole('button', { name: 'Pin Shopping' });
 
       // When
       await pin.click();
+      await expect(pin).toHaveAttribute('aria-pressed', 'true');
+      await page.reload();
 
       // Then
-      await expect(pin).toHaveAttribute('aria-pressed', 'true');
+      await expect(tiles(page).first()).toContainText('Shopping');
     });
 
     test('should show a pointer cursor over the pin control', async ({ page }) => {
@@ -177,35 +213,82 @@ test.describe('shell', () => {
       expect(cursor).toBe('pointer');
     });
 
-    test('should show a pinned tile first and put it back when it is unpinned', async ({
-      page,
-    }) => {
+    test('should open a link tile in a new tab', async ({ page }) => {
       // Given
       await page.goto('/');
-      const firstTile = page.getByRole('article').first();
-      await expect(firstTile).toContainText('Finances');
 
       // When
-      await page.getByRole('button', { name: 'Pin Weight log' }).click();
+      const [tab] = await Promise.all([
+        page.context().waitForEvent('page'),
+        page.getByRole('link', { name: /Finances/ }).click(),
+      ]);
 
       // Then
-      await expect(firstTile).toContainText('Weight log');
-      await page.getByRole('button', { name: 'Pin Weight log' }).click();
-      await expect(firstTile).toContainText('Finances');
+      await expect(tab).toHaveURL(`${LINK_HOST}/1`);
+      await expect(page).toHaveURL('/');
     });
 
-    test('should open a module tile at its route, a not-found page until the module exists', async ({
-      page,
-    }) => {
+    test('should open a module tile at its route inside the app', async ({ page }) => {
       // Given
       await page.goto('/');
 
       // When
-      await page.getByRole('link', { name: /Shopping list/ }).click();
+      await page.getByRole('link', { name: /clock/ }).click();
 
       // Then
-      await expect(page).toHaveURL(/\/m\/shopping-list$/);
+      await expect(page).toHaveURL(/\/m\/clock$/);
       await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+    });
+
+    test('should find tiles by title and description and open the best match with Enter', async ({
+      page,
+    }) => {
+      // Given
+      await page.goto('/');
+      await search(page).fill('groceries');
+      await expect(tiles(page)).toHaveText([/Shopping/]);
+
+      // When
+      const [tab] = await Promise.all([
+        page.context().waitForEvent('page'),
+        search(page).press('Enter'),
+      ]);
+
+      // Then
+      await expect(tab).toHaveURL(`${LINK_HOST}/${String(SHOPPING.id)}`);
+    });
+
+    test('should find tiles in Polish ignoring diacritics', async ({ page }) => {
+      // Given
+      await page.addInitScript(
+        ({ key }) => {
+          localStorage.setItem(key, 'pl');
+        },
+        { key: LANGUAGE_KEY },
+      );
+
+      await page.goto('/');
+
+      // When
+      await search(page).fill('zakupow');
+
+      // Then
+      await expect(page.getByRole('heading', { level: 2, name: 'Wyniki' })).toBeVisible();
+      await expect(tiles(page)).toHaveText([/Zakupy/]);
+    });
+
+    test('should clear the search with Escape and say when nothing matches', async ({ page }) => {
+      // Given
+      await page.goto('/');
+      await search(page).fill('pokeball');
+      await expect(page.getByText('No tiles match “pokeball”.')).toBeVisible();
+
+      // When
+      await search(page).press('Escape');
+
+      // Then
+      await expect(search(page)).toHaveValue('');
+      await expect(tiles(page)).toHaveCount(SAMPLE_TILES.length);
     });
   });
 

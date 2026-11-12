@@ -14,7 +14,7 @@ import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
 import { useLanguage, useText } from '../../lib/i18n/index.ts';
 import { AccountPicker } from './components/AccountPicker.tsx';
 import { PasswordStep } from './components/PasswordStep.tsx';
-import { loginFailure } from './loginMessages.ts';
+import { loginFailure } from './internal/loginMessages.ts';
 
 export const LoginPage = () => {
   const errors = useText('login.errors');

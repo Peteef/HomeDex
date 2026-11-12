@@ -14,6 +14,7 @@ src/modules/<id>/
   frontend/
     index.tsx            the module's page, as the default export (required)
     pages/<name>/        screens, with pages/<name>/components/ for parts only that screen uses
+                         and pages/<name>/internal/ for its other code (hooks, helpers)
     components/<name>/   pure components the module reuses
     features/<name>/     logic (hooks, data access, state) behind an index.ts, private files in internal/
     locales/             the module's text: one file per language (en.ts, pl.ts), and index.ts with the module's useText hook

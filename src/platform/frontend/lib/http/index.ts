@@ -1,2 +1,2 @@
-export { getJson, isClientError, isUnauthorized, post, postJson } from './client.ts';
+export { del, getJson, isClientError, isUnauthorized, post, postJson, put } from './client.ts';
 export { ApiError } from './errors.ts';

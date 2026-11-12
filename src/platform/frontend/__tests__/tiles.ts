@@ -1,4 +1,4 @@
-import type { Tile, TileTexts } from '../index.ts';
+import type { Tile, TileTexts } from '../features/tiles/index.ts';
 
 export const linkTile = (texts: TileTexts, changes: Partial<Tile> = {}): Tile => ({
   id: 1,

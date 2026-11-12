@@ -53,6 +53,12 @@ const pl = {
       placeholder: 'Szukaj w Dexie...',
     },
     allEntries: 'Wszystkie wpisy',
+    results: 'Wyniki',
+    tileList: {
+      loadFailed: 'Nie udało się wczytać kafelków.',
+      empty: 'Twój Dex jest pusty.',
+      noMatches: 'Żaden kafelek nie pasuje do „{{query}}”.',
+    },
   },
   notFound: {
     title: 'Nie ma takiej strony',

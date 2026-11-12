@@ -4,8 +4,8 @@ import { Avatar } from '../../../components/avatar/Avatar.tsx';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
 import { useText } from '../../../lib/i18n/index.ts';
-import { passwordError } from '../loginMessages.ts';
-import type { LoginError } from '../loginMessages.ts';
+import { passwordError } from '../internal/loginMessages.ts';
+import type { LoginError } from '../internal/loginMessages.ts';
 
 export interface PasswordStepProps {
   username: string;

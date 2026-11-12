@@ -1,11 +1,11 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { accountsList, fakeApi, renderApp, signedIn, signedOut, status } from './helpers.tsx';
+import { accountsList, fakeApi, ok, renderApp, signedIn, signedOut, status } from './helpers.tsx';
 
 const GREETING = 'Hello Misty! What do you need today?';
 
 const renderAt = async (path: string) => {
-  fakeApi({ 'GET /api/auth/me': signedIn() });
+  fakeApi({ 'GET /api/auth/me': signedIn(), 'GET /api/tiles': ok({ tiles: [] }) });
   renderApp(path);
   await screen.findByRole('heading', { level: 1 });
 };
@@ -19,7 +19,6 @@ describe('App', () => {
       // Then
       expect(screen.getByRole('heading', { level: 1, name: GREETING })).toBeInTheDocument();
       expect(screen.getByRole('searchbox', { name: 'Find a tile' })).toBeInTheDocument();
-      expect(screen.getAllByRole('article').length).toBeGreaterThan(0);
     });
 
     it('should show the login page at /login when nobody is signed in', async () => {
@@ -60,52 +59,6 @@ describe('App', () => {
 
       // Then
       expect(screen.getByRole('heading', { level: 1, name: GREETING })).toBeInTheDocument();
-    });
-  });
-
-  describe('home placeholder', () => {
-    it('should toggle the pin of one tile without touching the others', async () => {
-      // Given
-      await renderAt('/');
-      const pin = screen.getByRole('button', { name: 'Pin Finances' });
-
-      // When
-      fireEvent.click(pin);
-
-      // Then
-      expect(pin).toHaveAttribute('aria-pressed', 'true');
-
-      expect(screen.getByRole('button', { name: 'Pin Weight log' })).toHaveAttribute(
-        'aria-pressed',
-        'false',
-      );
-    });
-
-    it('should move a pinned tile to the front and back when it is unpinned', async () => {
-      // Given
-      await renderAt('/');
-      const firstTile = () => screen.getAllByRole('article')[0];
-
-      // When
-      fireEvent.click(screen.getByRole('button', { name: 'Pin Weight log' }));
-
-      // Then
-      expect(firstTile()).toHaveTextContent('Weight log');
-      fireEvent.click(screen.getByRole('button', { name: 'Pin Weight log' }));
-      expect(firstTile()).toHaveTextContent('Finances');
-    });
-
-    it('should unpin a tile when its pin control is clicked twice', async () => {
-      // Given
-      await renderAt('/');
-      const pin = screen.getByRole('button', { name: 'Pin Finances' });
-
-      // When
-      fireEvent.click(pin);
-      fireEvent.click(pin);
-
-      // Then
-      expect(pin).toHaveAttribute('aria-pressed', 'false');
     });
   });
 
