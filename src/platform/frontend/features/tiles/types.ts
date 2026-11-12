@@ -19,3 +19,8 @@ export interface Tile {
   pinned: boolean;
   editable: boolean;
 }
+
+export interface PinChange {
+  id: number;
+  pinned: boolean;
+}

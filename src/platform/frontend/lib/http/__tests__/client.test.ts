@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { fakeApi, ok, status } from '../../../__tests__/helpers.tsx';
-import { ApiError, getJson, isClientError, isUnauthorized, post, postJson } from '../index.ts';
+import {
+  ApiError,
+  del,
+  getJson,
+  isClientError,
+  isUnauthorized,
+  post,
+  postJson,
+  put,
+} from '../index.ts';
 
 describe('http client', () => {
   describe('getJson', () => {
@@ -56,6 +65,58 @@ describe('http client', () => {
       const [call] = api.calls;
       expect(call?.headers.get('Content-Type')).toBe('application/json');
       expect(call?.body).toEqual({});
+    });
+  });
+
+  describe('put', () => {
+    it('should send the JSON content type and an empty object when there is no body', async () => {
+      // Given
+      const api = fakeApi({ 'PUT /api/things/7/pin': { status: 204 } });
+
+      // When
+      await put('/things/7/pin');
+
+      // Then
+      const [call] = api.calls;
+      expect(call?.headers.get('Content-Type')).toBe('application/json');
+      expect(call?.body).toEqual({});
+    });
+
+    it('should throw an ApiError with the status when the response is not ok', async () => {
+      // Given
+      fakeApi({ 'PUT /api/things/7/pin': status(404) });
+
+      // When
+      const result = put('/things/7/pin');
+
+      // Then
+      await expect(result).rejects.toMatchObject({ status: 404 });
+    });
+  });
+
+  describe('del', () => {
+    it('should send a DELETE with the JSON content type and an empty object', async () => {
+      // Given
+      const api = fakeApi({ 'DELETE /api/things/7/pin': { status: 204 } });
+
+      // When
+      await del('/things/7/pin');
+
+      // Then
+      const [call] = api.calls;
+      expect(call?.headers.get('Content-Type')).toBe('application/json');
+      expect(call?.body).toEqual({});
+    });
+
+    it('should throw an ApiError with the status when the response is not ok', async () => {
+      // Given
+      fakeApi({ 'DELETE /api/things/7/pin': status(500) });
+
+      // When
+      const result = del('/things/7/pin');
+
+      // Then
+      await expect(result).rejects.toMatchObject({ status: 500 });
     });
   });
 

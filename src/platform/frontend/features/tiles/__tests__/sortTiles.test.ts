@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { displayText, sortTiles } from '../index.ts';
 import type { Tile } from '../index.ts';
-import { linkTile, moduleTile } from './tiles.ts';
+import { linkTile, moduleTile } from '../../../__tests__/tiles.ts';
 
 vi.mock('../../modules/index.ts', () => ({
   MODULE_TRANSLATIONS: [

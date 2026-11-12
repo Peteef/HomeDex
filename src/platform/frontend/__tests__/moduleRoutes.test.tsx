@@ -24,6 +24,7 @@ vi.mock('../features/modules/index.ts', () => ({
       Page: lazy(() => Promise.resolve({ default: NotesPage })),
     },
   ],
+  MODULE_TRANSLATIONS: [],
 }));
 
 describe('module routes', () => {

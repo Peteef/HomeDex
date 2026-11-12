@@ -39,3 +39,11 @@ export const postJson = async <T>(path: string, body: unknown = EMPTY_BODY): Pro
 export const post = async (path: string, body: unknown = EMPTY_BODY): Promise<void> => {
   await write('POST', path, body);
 };
+
+export const put = async (path: string, body: unknown = EMPTY_BODY): Promise<void> => {
+  await write('PUT', path, body);
+};
+
+export const del = async (path: string): Promise<void> => {
+  await write('DELETE', path, EMPTY_BODY);
+};

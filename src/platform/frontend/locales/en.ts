@@ -48,6 +48,12 @@ const en = {
       placeholder: 'Search the Dex...',
     },
     allEntries: 'All entries',
+    results: 'Results',
+    tileList: {
+      loadFailed: "Can't load the tiles.",
+      empty: 'Your Dex is empty.',
+      noMatches: 'No tiles match “{{query}}”.',
+    },
   },
   notFound: {
     title: 'Page not found',
