@@ -30,11 +30,16 @@ export interface TestApp {
   clock: { now: number };
 }
 
+interface TestAppOverrides {
+  db?: Database.Database;
+  loginLimit?: LoginLimit;
+  modules?: LoadedModule[];
+}
+
 export const createTestApp = (
   env: Record<string, string> = {},
-  overrides: { loginLimit?: LoginLimit; modules?: LoadedModule[] } = {},
+  { db = createTestDatabase(), ...overrides }: TestAppOverrides = {},
 ): TestApp => {
-  const db = createTestDatabase();
   const clock = { now: Date.now() };
 
   const app = createApp({

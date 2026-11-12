@@ -1,6 +1,6 @@
 import type { Storage } from '../../../infrastructure/storage/index.ts';
 import type { Language } from '../../../../shared/i18n/languages.ts';
-import type { TileKind, TileScope, TileText, TileTexts } from '../types.ts';
+import type { EnabledModule, TileKind, TileScope, TileText, TileTexts } from '../types.ts';
 
 interface TileRow {
   id: number;
@@ -39,6 +39,7 @@ export interface LinkTileRecord {
 
 export interface TileRepository {
   insertLink(tile: LinkTileRecord, ownerId: number, now: number): number;
+  syncModule(module: EnabledModule, now: number): void;
   findForUser(id: number, userId: number): UserTileRow | undefined;
   listForUser(userId: number): UserTileRow[];
   updateLink(id: number, tile: LinkTileRecord, now: number): void;
@@ -75,6 +76,14 @@ export const tileRepository = (db: Storage): TileRepository => {
      VALUES ((SELECT COALESCE(MAX(dex_no), 0) + 1 FROM tiles), 'link',
        @icon, @url, @scope, @ownerId, @now, @now)
      RETURNING id`,
+  );
+
+  const upsertModuleTile = db.prepare(
+    `INSERT INTO tiles (dex_no, kind, icon, module_id, scope, owner_id, created_at, updated_at)
+     VALUES ((SELECT COALESCE(MAX(dex_no), 0) + 1 FROM tiles), 'module',
+       @icon, @moduleId, 'shared', NULL, @now, @now)
+     ON CONFLICT (module_id) DO UPDATE SET icon = excluded.icon, updated_at = excluded.updated_at
+     WHERE tiles.icon <> excluded.icon`,
   );
 
   const insertText = db.prepare(
@@ -129,6 +138,10 @@ export const tileRepository = (db: Storage): TileRepository => {
   const insertLink = (tile: LinkTileRecord, ownerId: number, now: number): number =>
     db.transaction(insertLinkWithTexts)(tile, ownerId, now);
 
+  const syncModule = (module: EnabledModule, now: number): void => {
+    upsertModuleTile.run({ ...module, now });
+  };
+
   const findForUser = (id: number, userId: number): UserTileRow | undefined => {
     const row = selectForUser.get({ id, userId }) as UserTileQueryRow | undefined;
     return row && withTexts(row, textsByTile(selectTextsOf.all(id) as TileTextRow[]));
@@ -151,6 +164,7 @@ export const tileRepository = (db: Storage): TileRepository => {
 
   return {
     insertLink,
+    syncModule,
     findForUser,
     listForUser,
     updateLink,

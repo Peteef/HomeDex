@@ -1,15 +1,22 @@
+import path from 'node:path';
+import type Database from 'better-sqlite3';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createTestApp,
+  createTestDatabase,
   createTestUser,
   sessionCookieFor,
 } from '../../infrastructure/__tests__/helpers.ts';
+import { setUpModules } from '../../infrastructure/modules/setUpModules.ts';
 import type { TestApp } from '../../infrastructure/__tests__/helpers.ts';
 
 type WriteMethod = 'post' | 'patch' | 'put' | 'delete';
 
 const inEnglish = (title: string) => ({ en: { title } });
+
+const fixtures = (name: string): string =>
+  path.join(import.meta.dirname, '../../infrastructure/modules/__tests__/fixtures', name);
 
 const BUDGET = {
   texts: inEnglish('Budget'),
@@ -303,6 +310,123 @@ describe('tiles API', () => {
       expect(response.body).toMatchObject({
         tiles: [{ texts: { en: { title: 'Budget' } }, editable: false }],
       });
+    });
+  });
+
+  describe('module tiles', () => {
+    let db: Database.Database;
+
+    const start = async (modulesFixture: string): Promise<void> => {
+      ctx = createTestApp({}, { db, modules: await setUpModules(db, fixtures(modulesFixture)) });
+    };
+
+    const moduleTilesFor = async (cookie: string) =>
+      ((await get(cookie)).body as { tiles: { moduleId: string; pinned: boolean }[] }).tiles.map(
+        ({ moduleId, pinned }) => [moduleId, pinned],
+      );
+
+    const notesTileId = async (): Promise<number> =>
+      ((await get(ash)).body as { tiles: { id: number; moduleId: string }[] }).tiles.find(
+        ({ moduleId }) => moduleId === 'notes',
+      )?.id ?? 0;
+
+    beforeEach(async () => {
+      db = createTestDatabase();
+      await createTestUser(db, 'Ash');
+      await createTestUser(db, 'Misty');
+      await start('valid');
+      ash = await sessionCookieFor(ctx.app, 'Ash');
+      misty = await sessionCookieFor(ctx.app, 'Misty');
+    });
+
+    it('should list a tile for every enabled module to every user', async () => {
+      // When
+      const response = await get(misty);
+
+      // Then
+      expect(response.body).toEqual({
+        tiles: [
+          {
+            id: expect.any(Number) as number,
+            dexNo: 1,
+            kind: 'module',
+            texts: {},
+            icon: 'calendar',
+            url: null,
+            moduleId: 'clock',
+            scope: 'shared',
+            pinned: false,
+            editable: false,
+          },
+          {
+            id: expect.any(Number) as number,
+            dexNo: 2,
+            kind: 'module',
+            texts: {},
+            icon: 'notes',
+            url: null,
+            moduleId: 'notes',
+            scope: 'shared',
+            pinned: false,
+            editable: false,
+          },
+        ],
+      });
+
+      expect(await moduleTilesFor(ash)).toEqual([
+        ['clock', false],
+        ['notes', false],
+      ]);
+    });
+
+    it('should hide the tile of a module that disappeared and keep its pin for its return', async () => {
+      // Given
+      await write('put', `/api/tiles/${String(await notesTileId())}/pin`, ash);
+
+      // When
+      await start('clock-only');
+      const whileGone = await moduleTilesFor(ash);
+      await start('valid');
+
+      // Then
+      expect(whileGone).toEqual([['clock', false]]);
+
+      expect(await moduleTilesFor(ash)).toEqual([
+        ['notes', true],
+        ['clock', false],
+      ]);
+    });
+
+    it.each([
+      ['put', '/pin'],
+      ['delete', '/pin'],
+      ['patch', ''],
+      ['delete', ''],
+    ] as const)(
+      'should answer 404 to %s on the tile of a module that is not enabled',
+      async (method, suffix) => {
+        // Given
+        const id = await notesTileId();
+        await start('clock-only');
+
+        // When
+        const response = await write(method, `/api/tiles/${String(id)}${suffix}`, ash, {
+          icon: 'star',
+        });
+
+        // Then
+        expect(response.status).toBe(404);
+      },
+    );
+
+    it('should answer 403 when a module tile is changed', async () => {
+      // When
+      const response = await write('patch', `/api/tiles/${String(await notesTileId())}`, ash, {
+        icon: 'star',
+      });
+
+      // Then
+      expect(response.status).toBe(403);
     });
   });
 });

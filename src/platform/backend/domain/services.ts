@@ -15,6 +15,7 @@ export interface DomainServices {
 export interface DomainServicesOptions {
   sessionTtlDays: number;
   argon2Params?: Argon2Params;
+  enabledModuleIds?: readonly string[];
   now?: () => number;
 }
 
@@ -23,7 +24,7 @@ export interface DomainServicesOptions {
 // them are made here.
 export const domainServices = (
   storage: Storage,
-  { sessionTtlDays, argon2Params, now }: DomainServicesOptions,
+  { sessionTtlDays, argon2Params, enabledModuleIds = [], now }: DomainServicesOptions,
 ): DomainServices => {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
@@ -38,7 +39,7 @@ export const domainServices = (
     ...(now && { now }),
   });
 
-  const tiles = tilesService(storage, { ...(now && { now }) });
+  const tiles = tilesService(storage, { enabledModuleIds, ...(now && { now }) });
 
   return {
     accounts,

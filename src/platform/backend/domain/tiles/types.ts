@@ -26,6 +26,11 @@ export interface Tile {
   editable: boolean;
 }
 
+export interface EnabledModule {
+  moduleId: string;
+  icon: string;
+}
+
 export interface NewTileText {
   title: string;
   description?: string | null;

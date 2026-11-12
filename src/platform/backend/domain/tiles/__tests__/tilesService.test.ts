@@ -48,21 +48,19 @@ describe('tiles service', () => {
     throw new Error('Expected a TileError');
   };
 
-  const insertModuleTile = (): number =>
-    (
-      db
-        .prepare(
-          `INSERT INTO tiles (dex_no, kind, icon, module_id, scope, created_at, updated_at)
-           VALUES ((SELECT COALESCE(MAX(dex_no), 0) + 1 FROM tiles), 'module', 'cart',
-             'shopping-list', 'shared', 0, 0)
-           RETURNING id`,
-        )
-        .get() as { id: number }
-    ).id;
+  const SHOPPING_LIST = { moduleId: 'shopping-list', icon: 'cart' };
+
+  const startWith = (enabledModuleIds: string[]): TilesService =>
+    tilesService(db, { enabledModuleIds, now: () => CREATED_AT });
+
+  const addModuleTile = (): number => {
+    tiles.syncModuleTiles([SHOPPING_LIST]);
+    return tiles.list(ash).find(({ moduleId }) => moduleId === 'shopping-list')?.id ?? 0;
+  };
 
   beforeEach(async () => {
     db = createTestDatabase();
-    tiles = tilesService(db, { now: () => CREATED_AT });
+    tiles = startWith(['shopping-list']);
     const { accounts } = testServices(db);
     ash = (await accounts.create('Ash', TEST_PASSWORD)).id;
     misty = (await accounts.create('Misty', TEST_PASSWORD)).id;
@@ -257,7 +255,7 @@ describe('tiles service', () => {
       // Given
       tiles.create(ash, linkTile());
       tiles.create(misty, linkTile());
-      insertModuleTile();
+      addModuleTile();
 
       // When
       const editable = tiles.list(ash).map(({ dexNo, editable }) => [dexNo, editable]);
@@ -272,7 +270,7 @@ describe('tiles service', () => {
 
     it('should show module tiles to every user, without text of their own', () => {
       // Given
-      insertModuleTile();
+      addModuleTile();
 
       // When
       const [tile] = tiles.list(misty);
@@ -285,6 +283,57 @@ describe('tiles service', () => {
         url: null,
         scope: 'shared',
       });
+    });
+  });
+
+  describe('when a module is not enabled', () => {
+    let moduleTileId: number;
+
+    beforeEach(() => {
+      moduleTileId = addModuleTile();
+      tiles.pin(ash, moduleTileId);
+      tiles = startWith([]);
+    });
+
+    it('should hide its tile', () => {
+      // When / Then
+      expect(tiles.list(ash)).toEqual([]);
+    });
+
+    it('should show its tile again with the pin when the module is enabled again', () => {
+      // When
+      tiles = startWith(['shopping-list']);
+
+      // Then
+      expect(tiles.list(ash)).toMatchObject([{ id: moduleTileId, dexNo: 1, pinned: true }]);
+    });
+
+    it.each([
+      [
+        'pin',
+        () => {
+          tiles.pin(misty, moduleTileId);
+        },
+      ],
+      [
+        'unpin',
+        () => {
+          tiles.unpin(ash, moduleTileId);
+        },
+      ],
+      ['edit', () => tiles.edit(ash, moduleTileId, { icon: 'star' })],
+      [
+        'remove',
+        () => {
+          tiles.remove(ash, moduleTileId);
+        },
+      ],
+    ])('should not find its tile on %s', (_action, action) => {
+      // When
+      const error = tileError(action);
+
+      // Then
+      expect(error.code).toBe('not_found');
     });
   });
 
@@ -404,7 +453,7 @@ describe('tiles service', () => {
 
     it('should forbid changing a module tile', () => {
       // Given
-      const id = insertModuleTile();
+      const id = addModuleTile();
 
       // When
       const error = tileError(() => tiles.edit(ash, id, titleEdit('Groceries')));
@@ -501,7 +550,7 @@ describe('tiles service', () => {
 
     it('should forbid deleting a module tile', () => {
       // Given
-      const id = insertModuleTile();
+      const id = addModuleTile();
 
       // When
       const error = tileError(() => {
@@ -600,6 +649,77 @@ describe('tiles service', () => {
 
       // Then
       expect(error.code).toBe('not_found');
+    });
+  });
+
+  describe('syncModuleTiles', () => {
+    const moduleTiles = () =>
+      tiles.list(ash).map(({ dexNo, kind, icon, moduleId, scope, texts }) => ({
+        dexNo,
+        kind,
+        icon,
+        moduleId,
+        scope,
+        texts,
+      }));
+
+    it('should add a shared module tile for each module with the next Dex numbers', () => {
+      // Given
+      tiles.create(ash, linkTile());
+      tiles = startWith(['clock', 'notes']);
+
+      // When
+      tiles.syncModuleTiles([
+        { moduleId: 'clock', icon: 'calendar' },
+        { moduleId: 'notes', icon: 'notes' },
+      ]);
+
+      // Then
+      expect(moduleTiles().slice(1)).toEqual([
+        {
+          dexNo: 2,
+          kind: 'module',
+          icon: 'calendar',
+          moduleId: 'clock',
+          scope: 'shared',
+          texts: {},
+        },
+        {
+          dexNo: 3,
+          kind: 'module',
+          icon: 'notes',
+          moduleId: 'notes',
+          scope: 'shared',
+          texts: {},
+        },
+      ]);
+    });
+
+    it('should keep one tile with its Dex number and pins when a module is synced again', () => {
+      // Given
+      const id = addModuleTile();
+      tiles.pin(misty, id);
+      tiles.create(ash, linkTile());
+
+      // When
+      tiles.syncModuleTiles([SHOPPING_LIST]);
+
+      // Then
+      expect(tiles.list(misty).map(({ id, dexNo, pinned }) => [id, dexNo, pinned])).toEqual([
+        [id, 1, true],
+        [expect.any(Number), 2, false],
+      ]);
+    });
+
+    it('should follow a changed icon of the manifest', () => {
+      // Given
+      addModuleTile();
+
+      // When
+      tiles.syncModuleTiles([{ moduleId: 'shopping-list', icon: 'star' }]);
+
+      // Then
+      expect(moduleTiles()).toMatchObject([{ dexNo: 1, icon: 'star' }]);
     });
   });
 });

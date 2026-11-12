@@ -43,8 +43,10 @@ export default defineModule({
 - `id`: kebab-case and equal to the folder name. `platform` is reserved.
 - `icon`: one of the icon names in `src/platform/shared/icons/iconNames.ts`.
 - `route`: always `/m/<id>`.
-- `enabled`: `false` hides the page, does not mount the endpoints and does not run the migrations. The backend code of a disabled module is never imported.
+- `enabled`: `false` hides the page and the tile, does not mount the endpoints and does not run the migrations. The backend code of a disabled module is never imported.
 - `quickActions` (optional, unused for now): `[{ id, keyword }]`, where `id` is kebab-case and `keyword` one lowercase word. This is a placeholder until quick actions are designed.
+
+Every enabled module gets one shared tile on the home screen, created at server start, with the manifest's `icon` (a changed icon is picked up at the next start). Disabling or deleting the module hides the tile; its Dex number and the users' pins stay for when it comes back.
 
 The manifest holds no text. The module's name and description, shown on its tile in the user's language, live in its locale files under `manifest` (see Text below).
 

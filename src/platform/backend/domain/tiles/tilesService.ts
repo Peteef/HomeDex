@@ -5,9 +5,10 @@ import { tileRepository } from './internal/tileRepository.ts';
 import type { LinkTileRecord, UserTileRow } from './internal/tileRepository.ts';
 import { toTile } from './internal/toTile.ts';
 import { linkTileSchema, validate } from './internal/validation.ts';
-import type { NewLinkTile, Tile, TileEdit, TileScope } from './types.ts';
+import type { EnabledModule, NewLinkTile, Tile, TileEdit, TileScope } from './types.ts';
 
 interface TilesOptions {
+  enabledModuleIds: readonly string[];
   now?: () => number;
 }
 
@@ -18,6 +19,7 @@ export interface TilesService {
   remove(userId: number, id: number): void;
   pin(userId: number, id: number): void;
   unpin(userId: number, id: number): void;
+  syncModuleTiles(modules: EnabledModule[]): void;
 }
 
 type LinkTileRow = UserTileRow & { url: string };
@@ -41,14 +43,22 @@ const toLinkTileRecord = (row: LinkTileRow): LinkTileRecord => ({
   scope: row.scope,
 });
 
-export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {}): TilesService => {
+export const tilesService = (
+  db: Storage,
+  { enabledModuleIds, now = Date.now }: TilesOptions,
+): TilesService => {
   const tiles = tileRepository(db);
   const pins = pinRepository(db);
+  const enabledModules = new Set(enabledModuleIds);
+
+  // Rows of missing or disabled modules stay, with their pins, for when the module comes back.
+  const isShown = (row: UserTileRow): boolean =>
+    row.module_id === null || enabledModules.has(row.module_id);
 
   const requireVisible = (userId: number, id: number): UserTileRow => {
     const row = tiles.findForUser(id, userId);
 
-    if (!row) {
+    if (!row || !isShown(row)) {
       throw new TileError('not_found', `No tile with id ${String(id)}`);
     }
 
@@ -78,7 +88,10 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
   };
 
   const list = (userId: number): Tile[] =>
-    tiles.listForUser(userId).map((row) => toTile(row, isEditable(row, userId)));
+    tiles
+      .listForUser(userId)
+      .filter(isShown)
+      .map((row) => toTile(row, isEditable(row, userId)));
 
   const create = (userId: number, tile: NewLinkTile): Tile => {
     const record = validate(linkTileSchema, tile);
@@ -109,6 +122,16 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
     pins.unpin(userId, id);
   };
 
+  const syncAll = (modules: EnabledModule[]): void => {
+    for (const module of modules) {
+      tiles.syncModule(module, now());
+    }
+  };
+
+  const syncModuleTiles = (modules: EnabledModule[]): void => {
+    db.transaction(syncAll)(modules);
+  };
+
   return {
     list,
     create,
@@ -116,5 +139,6 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
     remove,
     pin,
     unpin,
+    syncModuleTiles,
   };
 };
