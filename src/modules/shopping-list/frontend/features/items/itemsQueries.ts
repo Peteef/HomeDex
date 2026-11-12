@@ -125,7 +125,7 @@ export const useDeleteItem = () => {
   });
 };
 
-export const useClearChecked = () => {
+export const useClearCheckedItems = () => {
   const { showAtOnce, refreshWhenLast } = useItemsCache();
 
   return useMutation({

@@ -5,15 +5,7 @@ import { ItemError, itemsService } from '../index.ts';
 
 const MODULE_DIR = path.resolve(import.meta.dirname, '../../../..');
 
-const newService = () => {
-  const clock = { now: 1_000 };
-  const service = itemsService(moduleTestStorage(MODULE_DIR), { now: () => clock.now });
-
-  return {
-    service,
-    clock,
-  };
-};
+const newService = () => itemsService(moduleTestStorage(MODULE_DIR));
 
 const texts = (service: ReturnType<typeof itemsService>) =>
   service.list().map(({ text, checked }) => [text, checked]);
@@ -22,7 +14,7 @@ describe('items service', () => {
   describe('add', () => {
     it('should add an item with its amount and who added it', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
 
       // When
       const item = service.add('Misty', { text: 'Milk', amount: '2 l' });
@@ -41,7 +33,7 @@ describe('items service', () => {
 
     it('should trim the text and store a blank amount as none', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
 
       // When
       const item = service.add('Misty', { text: '  Bread ', amount: '   ' });
@@ -52,7 +44,7 @@ describe('items service', () => {
 
     it('should allow the same item twice', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
       service.add('Misty', { text: 'Eggs' });
 
       // When
@@ -71,7 +63,7 @@ describe('items service', () => {
       ['an amount over 30 characters', { text: 'Milk', amount: '1'.repeat(31) }],
     ])('should reject %s', (_case, item) => {
       // Given
-      const { service } = newService();
+      const service = newService();
 
       // When / Then
       expect(() => service.add('Misty', item)).toThrow(ItemError);
@@ -82,17 +74,15 @@ describe('items service', () => {
   describe('list', () => {
     it('should list the items oldest first', () => {
       // Given
-      const { service, clock } = newService();
+      const service = newService();
       service.add('Misty', { text: 'Milk' });
-      clock.now = 500;
-      service.add('Misty', { text: 'Bread' });
-      clock.now = 2_000;
+      service.add('Brock', { text: 'Bread' });
       service.add('Misty', { text: 'Eggs' });
 
       // When / Then
       expect(texts(service)).toEqual([
-        ['Bread', false],
         ['Milk', false],
+        ['Bread', false],
         ['Eggs', false],
       ]);
     });
@@ -101,7 +91,7 @@ describe('items service', () => {
   describe('check and uncheck', () => {
     it('should check and uncheck an item', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
       const { id } = service.add('Misty', { text: 'Milk' });
 
       // When
@@ -120,7 +110,7 @@ describe('items service', () => {
 
     it('should reject an item that does not exist', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
 
       // When / Then
       expect(() => {
@@ -136,7 +126,7 @@ describe('items service', () => {
   describe('remove', () => {
     it('should remove an item and ignore one that is already gone', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
       const { id } = service.add('Misty', { text: 'Milk' });
       service.add('Misty', { text: 'Bread' });
 
@@ -152,7 +142,7 @@ describe('items service', () => {
   describe('clearChecked', () => {
     it('should remove only the checked items', () => {
       // Given
-      const { service } = newService();
+      const service = newService();
       const milk = service.add('Misty', { text: 'Milk' });
       service.add('Misty', { text: 'Bread' });
       service.check(milk.id);

@@ -1,6 +1,6 @@
 export {
   useAddItem,
-  useClearChecked,
+  useClearCheckedItems,
   useDeleteItem,
   useItems,
   useToggleCheck,

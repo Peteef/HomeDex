@@ -9,3 +9,8 @@ export class ItemError extends Error {
     this.code = code;
   }
 }
+
+export const invalidItem = (message: string): ItemError => new ItemError('invalid', message);
+
+export const itemNotFound = (id: number): ItemError =>
+  new ItemError('not_found', `No item with id ${String(id)}`);

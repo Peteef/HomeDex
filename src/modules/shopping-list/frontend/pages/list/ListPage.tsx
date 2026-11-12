@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router';
 import {
   useAddItem,
-  useClearChecked,
+  useClearCheckedItems,
   useDeleteItem,
   useItems,
   useToggleCheck,
@@ -24,7 +24,7 @@ export const ListPage = () => {
   const addItem = useAddItem();
   const toggleCheck = useToggleCheck();
   const deleteItem = useDeleteItem();
-  const clearChecked = useClearChecked();
+  const clearCheckedItems = useClearCheckedItems();
 
   const add = (item: ItemInput, onAdded: () => void): void => {
     addItem.mutate(item, { onSuccess: onAdded });
@@ -77,7 +77,7 @@ export const ListPage = () => {
               <Button
                 variant="quiet"
                 onClick={() => {
-                  clearChecked.mutate();
+                  clearCheckedItems.mutate();
                 }}
               >
                 {text.clear}

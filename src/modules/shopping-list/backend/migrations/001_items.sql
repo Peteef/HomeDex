@@ -4,6 +4,5 @@ CREATE TABLE shopping_list_items (
   text TEXT NOT NULL,
   amount TEXT,
   added_by TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
-  checked_at INTEGER
+  checked INTEGER NOT NULL DEFAULT 0 CHECK (checked IN (0, 1))
 );

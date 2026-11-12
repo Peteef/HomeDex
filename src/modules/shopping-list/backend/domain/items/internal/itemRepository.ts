@@ -5,15 +5,13 @@ export interface ItemRecord {
   text: string;
   amount: string | null;
   addedBy: string;
-  createdAt: number;
 }
 
 export interface ItemRepository {
   list(): Item[];
   find(id: number): Item | undefined;
   insert(item: ItemRecord): number;
-  check(id: number, now: number): boolean;
-  uncheck(id: number): boolean;
+  setChecked(id: number, checked: boolean): boolean;
   remove(id: number): void;
   removeChecked(): void;
 }
@@ -23,22 +21,23 @@ interface ItemRow {
   text: string;
   amount: string | null;
   added_by: string;
-  checked_at: number | null;
+  checked: number;
 }
 
-const COLUMNS = 'id, text, amount, added_by, checked_at';
+const COLUMNS = 'id, text, amount, added_by, checked';
 
 const toItem = (row: ItemRow): Item => ({
   id: row.id,
   text: row.text,
   amount: row.amount,
   addedBy: row.added_by,
-  checked: row.checked_at !== null,
+  checked: row.checked === 1,
 });
 
 export const itemRepository = (db: Storage): ItemRepository => {
+  // The id is the rowid, so it grows with every item: ordering by it lists the oldest first.
   const selectAll = db.prepare<[], ItemRow>(
-    `SELECT ${COLUMNS} FROM shopping_list_items ORDER BY created_at, id`,
+    `SELECT ${COLUMNS} FROM shopping_list_items ORDER BY id`,
   );
 
   const selectOne = db.prepare<[number], ItemRow>(
@@ -46,17 +45,12 @@ export const itemRepository = (db: Storage): ItemRepository => {
   );
 
   const insertItem = db.prepare(
-    'INSERT INTO shopping_list_items (text, amount, added_by, created_at) VALUES (?, ?, ?, ?)',
+    'INSERT INTO shopping_list_items (text, amount, added_by) VALUES (?, ?, ?)',
   );
 
-  // Checking a checked item keeps the time it was first checked.
-  const checkItem = db.prepare(
-    'UPDATE shopping_list_items SET checked_at = COALESCE(checked_at, ?) WHERE id = ?',
-  );
-
-  const uncheckItem = db.prepare('UPDATE shopping_list_items SET checked_at = NULL WHERE id = ?');
+  const updateChecked = db.prepare('UPDATE shopping_list_items SET checked = ? WHERE id = ?');
   const deleteItem = db.prepare('DELETE FROM shopping_list_items WHERE id = ?');
-  const deleteChecked = db.prepare('DELETE FROM shopping_list_items WHERE checked_at IS NOT NULL');
+  const deleteChecked = db.prepare('DELETE FROM shopping_list_items WHERE checked = 1');
 
   const list = (): Item[] => selectAll.all().map(toItem);
 
@@ -65,11 +59,13 @@ export const itemRepository = (db: Storage): ItemRepository => {
     return row === undefined ? undefined : toItem(row);
   };
 
-  const insert = ({ text, amount, addedBy, createdAt }: ItemRecord): number =>
-    Number(insertItem.run(text, amount, addedBy, createdAt).lastInsertRowid);
+  const insert = ({ text, amount, addedBy }: ItemRecord): number =>
+    Number(insertItem.run(text, amount, addedBy).lastInsertRowid);
 
-  const check = (id: number, now: number): boolean => checkItem.run(now, id).changes > 0;
-  const uncheck = (id: number): boolean => uncheckItem.run(id).changes > 0;
+  // SQLite counts a matched row as changed even when the value stays the same, so this answers
+  // whether the item exists.
+  const setChecked = (id: number, checked: boolean): boolean =>
+    updateChecked.run(checked ? 1 : 0, id).changes > 0;
 
   const remove = (id: number): void => {
     deleteItem.run(id);
@@ -83,8 +79,7 @@ export const itemRepository = (db: Storage): ItemRepository => {
     list,
     find,
     insert,
-    check,
-    uncheck,
+    setChecked,
     remove,
     removeChecked,
   };
