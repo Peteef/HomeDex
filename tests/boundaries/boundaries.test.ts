@@ -6,6 +6,7 @@ import {
   boundaryRules,
   domainRules,
   frontendRules,
+  moduleTestKitRules,
   sharedRules,
   styleRules,
 } from '../../eslint.config.js';
@@ -26,6 +27,7 @@ const violationsOf = async (file: string): Promise<string[]> => {
       ...domainRules,
       ...frontendRules,
       sharedRules,
+      moduleTestKitRules,
       styleRules,
     ],
   });
@@ -95,6 +97,32 @@ describe('lint rules', () => {
     ])('should reject %s', async (file) => {
       // When / Then
       expect(await violationsOf(file)).toContain('boundaries/dependencies');
+    });
+  });
+
+  describe('module test kits', () => {
+    const alpha = 'src/modules/alpha';
+
+    it.each([
+      `${alpha}/backend/__tests__/ok-test-kit.ts`,
+      `${alpha}/frontend/__tests__/ok-test-kit.ts`,
+    ])('should allow %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toEqual([]);
+    });
+
+    it('should reject a test kit outside the module tests', async () => {
+      // When / Then
+      expect(await violationsOf(`${alpha}/backend/routes/bad-test-kit.ts`)).toContain(
+        'no-restricted-imports',
+      );
+    });
+
+    it("should reject the other side's test kit", async () => {
+      // When / Then
+      expect(await violationsOf(`${alpha}/backend/__tests__/bad-frontend-test-kit.ts`)).toContain(
+        'boundaries/dependencies',
+      );
     });
   });
 

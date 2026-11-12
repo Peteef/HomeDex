@@ -76,7 +76,10 @@ const findMigrations = (moduleDir: string): string | null => {
   return fs.existsSync(directory) ? directory : null;
 };
 
-const loadModule = async (modulesDir: string, folder: string): Promise<LoadedModule | null> => {
+export const loadModule = async (
+  modulesDir: string,
+  folder: string,
+): Promise<LoadedModule | null> => {
   const moduleDir = path.join(modulesDir, folder);
   const manifest = await readManifest(moduleDir, folder);
   requireValidId(manifest, folder);

@@ -73,6 +73,7 @@ export default ShoppingList;
 - `useCurrentUser()` always has a user on a module's page.
 - Text the user sees comes from the module's locale files (see Text below), never from literals in the code.
 - Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. Colours, radii and fonts come from the theme tokens, never raw values.
+- Call the module's endpoints with the platform's HTTP client from `#platform/frontend`: `getJson`, `postJson`, `put` and `del`. Paths start after `/api`, so the module's own are `/m/<id>/...` (`getJson('/m/shopping-list/items')`). Writes always send `Content-Type: application/json`, as the backend requires. A failed request throws.
 - Any request that answers 401 ends the session, and the user lands on the login page. A module needs no handling for it.
 
 ## Text
@@ -185,7 +186,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
 
 - Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`.
-- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route.
+- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, and `CREATED`, `NO_CONTENT` for success).
 - If `register` throws, the server does not start.
 
 ## Data
@@ -205,6 +206,11 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 ## Tests
 
 Unit tests live in `__tests__/` folders next to the code, as in the platform (`frontend/**/__tests__/*.test.tsx` runs in jsdom, `backend/**/__tests__/*.test.ts` in Node). End-to-end tests for a module's page go in `e2e/`.
+
+The platform has a test kit for each side, importable only from a module's `__tests__` (lint checks it; the Docker image leaves the kits out):
+
+- `#platform/backend/testing`: `moduleTestStorage(moduleDir)` is an in-memory database with the module's migrations applied, for domain tests. `moduleTestApp(moduleDir)` is the real app with only this module loaded, for route tests with `supertest`: it returns `{ app, storage, signIn }`, where `signIn(username)` creates the account on first use and returns its session cookie. Pass `moduleDir` as `path.resolve(import.meta.dirname, '<up to the module folder>')`.
+- `#platform/frontend/testing`: `fakeApi({ 'GET /api/m/<id>/items': ok({ items }) })` stubs `fetch` (an unknown route answers 404) and records the calls (`callsTo('POST /api/m/<id>/items')`); `ok(body)` and `status(code)` build responses; `withProviders(element)` wraps a page or hook in the query client and a router. The module's text is loaded in tests, in English unless a test changes the language.
 
 ## Checklist
 

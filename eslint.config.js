@@ -37,6 +37,13 @@ const platformApi = (side) => ({
   file: { path: `src/platform/${side}/public-api/index.ts` },
 });
 
+// A module's tests may also use the platform's test kit of their side (lint below keeps it out of
+// the module's other files).
+const platformTestKit = (side) => ({
+  element: { type: 'platform' },
+  file: { path: `src/platform/${side}/public-api/__tests__/testing.ts` },
+});
+
 const inModule = (type) => ({ element: { type, captured: { id: SAME_MODULE } } });
 
 const sameElement = (type) => ({
@@ -59,8 +66,8 @@ const text = {
 
 const domainEntrypoint = entrypointOf('module-domain', 'backend/domain');
 const manifest = { ...inModule('module'), file: { path: 'src/modules/*/manifest.ts' } };
-const frontendApis = [platformApi('frontend'), platformApi('shared')];
-const backendApis = [platformApi('backend'), platformApi('shared')];
+const frontendApis = [platformApi('frontend'), platformApi('shared'), platformTestKit('frontend')];
+const backendApis = [platformApi('backend'), platformApi('shared'), platformTestKit('backend')];
 
 // For each element type of a module, what it may import.
 const MODULE_POLICIES = {
@@ -309,6 +316,20 @@ export const sharedRules = {
   ]),
 };
 
+// The platform's test kits (#platform/<side>/testing) live in __tests__ and are left out of the
+// Docker image, so a module may import them only from its own tests.
+/** @type {import('eslint').Linter.Config} */
+export const moduleTestKitRules = {
+  files: ['src/modules/**/*.{ts,tsx}'],
+  ignores: ['**/__tests__/**'],
+  rules: restrictImports([
+    {
+      regex: '^#platform/[^/]+/testing$',
+      message: "A platform test kit is only for a module's tests.",
+    },
+  ]),
+};
+
 // A returned object with several properties is written one property per line, as in
 // `return { create, list }` spread over lines. This also covers an arrow function that returns an
 // object directly (`=> ({ a, b })`). Prettier keeps an object expanded when its first property is
@@ -429,6 +450,7 @@ export default defineConfig(
     ...uiTextRules,
   },
   sharedRules,
+  moduleTestKitRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
   prettier,
