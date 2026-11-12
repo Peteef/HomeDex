@@ -157,7 +157,7 @@ describe('App', () => {
         'TextInput',
         'del',
         'getJson',
-        'postJson',
+        'postForJson',
         'put',
         'textHook',
         'useCurrentUser',

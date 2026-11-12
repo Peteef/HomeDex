@@ -1,4 +1,4 @@
-import { getJson, isUnauthorized, post, postJson } from '../../../lib/http/index.ts';
+import { getJson, isUnauthorized, post, postForJson } from '../../../lib/http/index.ts';
 import type { Credentials, CurrentUser, SignInAccount } from '../types.ts';
 
 interface UserResponse {
@@ -27,7 +27,7 @@ export const fetchCurrentUser = async (): Promise<CurrentUser | null> => {
 };
 
 export const login = async (credentials: Credentials): Promise<CurrentUser> =>
-  (await postJson<UserResponse>(LOGIN_PATH, credentials)).user;
+  (await postForJson<UserResponse>(LOGIN_PATH, credentials)).user;
 
 export const fetchAccounts = async (): Promise<SignInAccount[]> =>
   (await getJson<AccountsResponse>(ACCOUNTS_PATH)).accounts;
