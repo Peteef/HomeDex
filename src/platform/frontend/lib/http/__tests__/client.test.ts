@@ -7,7 +7,7 @@ import {
   isClientError,
   isUnauthorized,
   post,
-  postJson,
+  postForJson,
   put,
 } from '../index.ts';
 
@@ -37,13 +37,13 @@ describe('http client', () => {
     });
   });
 
-  describe('postJson', () => {
+  describe('postForJson', () => {
     it('should send the body as JSON with the JSON content type', async () => {
       // Given
       const api = fakeApi({ 'POST /api/things': ok({ id: 7 }) });
 
       // When
-      const body = await postJson('/things', { name: 'Pikachu' });
+      const body = await postForJson('/things', { name: 'Pikachu' });
 
       // Then
       expect(body).toEqual({ id: 7 });

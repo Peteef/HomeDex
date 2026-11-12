@@ -33,7 +33,7 @@ const write = (method: string, path: string, body: unknown) =>
 export const getJson = async <T>(path: string): Promise<T> =>
   (await request('GET', path)).json() as Promise<T>;
 
-export const postJson = async <T>(path: string, body: unknown = EMPTY_BODY): Promise<T> =>
+export const postForJson = async <T>(path: string, body: unknown = EMPTY_BODY): Promise<T> =>
   (await write('POST', path, body)).json() as Promise<T>;
 
 export const post = async (path: string, body: unknown = EMPTY_BODY): Promise<void> => {
