@@ -5,6 +5,8 @@ import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
 import { LINK_HOST, SAMPLE_TILES, SHOPPING, stubTiles } from './tiles.ts';
 import type { E2ETile } from './tiles.ts';
+import { SAMPLE_ITEMS, SHOPPING_LIST_PATH, stubItems } from './shoppingList.ts';
+import type { E2EItem } from './shoppingList.ts';
 
 const MIN_TOUCH_TARGET = 44;
 
@@ -16,6 +18,7 @@ interface Screen {
   remembered?: string;
   language?: string;
   tiles?: E2ETile[];
+  items?: E2EItem[];
 }
 
 const SCREENS: Screen[] = [
@@ -45,6 +48,28 @@ const SCREENS: Screen[] = [
     language: 'pl',
     tiles: SAMPLE_TILES,
   },
+  {
+    name: 'shopping list',
+    path: SHOPPING_LIST_PATH,
+    heading: 'Shopping list',
+    signedIn: true,
+    items: SAMPLE_ITEMS,
+  },
+  {
+    name: 'empty shopping list',
+    path: SHOPPING_LIST_PATH,
+    heading: 'Shopping list',
+    signedIn: true,
+    items: [],
+  },
+  {
+    name: 'shopping list in Polish',
+    path: SHOPPING_LIST_PATH,
+    heading: 'Lista zakupów',
+    signedIn: true,
+    language: 'pl',
+    items: SAMPLE_ITEMS,
+  },
 ];
 
 interface Manifest {
@@ -63,6 +88,10 @@ test.describe('shell', () => {
 
         if (screen.tiles) {
           await stubTiles(page, screen.tiles);
+        }
+
+        if (screen.items) {
+          await stubItems(page, screen.items);
         }
 
         if (screen.remembered) {
