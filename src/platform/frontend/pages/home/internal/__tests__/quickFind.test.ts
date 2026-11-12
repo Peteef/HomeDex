@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { linkTile } from '../../../__tests__/tiles.ts';
-import type { Tile } from '../../../features/tiles/index.ts';
+import { linkTile } from '../../../../__tests__/tiles.ts';
+import type { Tile } from '../../../../features/tiles/index.ts';
 import { findTiles, isBlankQuery } from '../quickFind.ts';
 
 let nextId = 1;

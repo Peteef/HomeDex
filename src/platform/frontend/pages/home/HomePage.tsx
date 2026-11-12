@@ -15,7 +15,7 @@ import type { Language } from '../../lib/i18n/index.ts';
 import { modulePath } from '../../routes.ts';
 import { TileList } from './components/TileList.tsx';
 import type { TileEntry } from './components/TileList.tsx';
-import { findTiles, isBlankQuery } from './quickFind.ts';
+import { findTiles, isBlankQuery } from './internal/quickFind.ts';
 
 const FINE_POINTER = '(pointer: fine)';
 const NEW_TAB = '_blank';

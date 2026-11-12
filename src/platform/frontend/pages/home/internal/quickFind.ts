@@ -1,7 +1,7 @@
-import { displayText } from '../../features/tiles/index.ts';
-import type { Tile, TileText } from '../../features/tiles/index.ts';
-import type { Language } from '../../lib/i18n/index.ts';
-import { foldText } from '../../lib/search/index.ts';
+import { displayText } from '../../../features/tiles/index.ts';
+import type { Tile, TileText } from '../../../features/tiles/index.ts';
+import type { Language } from '../../../lib/i18n/index.ts';
+import { foldText } from '../../../lib/search/index.ts';
 
 const TITLE_PREFIX = 4;
 const WORD_PREFIX = 3;

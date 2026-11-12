@@ -1,6 +1,6 @@
-import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../shared/http/status.ts';
-import { ApiError } from '../../lib/http/index.ts';
-import type en from '../../locales/en.ts';
+import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../../shared/http/status.ts';
+import { ApiError } from '../../../lib/http/index.ts';
+import type en from '../../../locales/en.ts';
 
 export type LoginError = keyof (typeof en)['login']['errors'];
 
