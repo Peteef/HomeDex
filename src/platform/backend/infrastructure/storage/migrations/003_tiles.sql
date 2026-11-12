@@ -2,8 +2,6 @@ CREATE TABLE tiles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   dex_no INTEGER NOT NULL UNIQUE,
   kind TEXT NOT NULL CHECK (kind IN ('link', 'module')),
-  title TEXT NOT NULL,
-  description TEXT,
   icon TEXT NOT NULL,
   url TEXT,
   module_id TEXT UNIQUE,
@@ -20,3 +18,11 @@ CREATE TABLE tiles (
 );
 
 CREATE INDEX tiles_owner_id ON tiles (owner_id);
+
+CREATE TABLE tile_texts (
+  tile_id INTEGER NOT NULL REFERENCES tiles (id) ON DELETE CASCADE,
+  language TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  PRIMARY KEY (tile_id, language)
+);

@@ -20,11 +20,6 @@ export interface TilesService {
   unpin(userId: number, id: number): void;
 }
 
-const titleOrder = new Intl.Collator(undefined, { sensitivity: 'base' });
-
-const pinnedFirstThenByTitle = (a: Tile, b: Tile): number =>
-  Number(b.pinned) - Number(a.pinned) || titleOrder.compare(a.title, b.title) || a.dexNo - b.dexNo;
-
 type LinkTileRow = UserTileRow & { url: string };
 
 const isLinkTile = (row: UserTileRow): row is LinkTileRow =>
@@ -40,8 +35,7 @@ const isEditable = (row: UserTileRow, userId: number): row is LinkTileRow =>
   isLinkTile(row) && (isCreator(row, userId) || isOrphaned(row));
 
 const toLinkTileRecord = (row: LinkTileRow): LinkTileRecord => ({
-  title: row.title,
-  description: row.description,
+  texts: row.texts,
   icon: row.icon,
   url: row.url,
   scope: row.scope,
@@ -84,10 +78,7 @@ export const tilesService = (db: Storage, { now = Date.now }: TilesOptions = {})
   };
 
   const list = (userId: number): Tile[] =>
-    tiles
-      .listForUser(userId)
-      .map((row) => toTile(row, isEditable(row, userId)))
-      .sort(pinnedFirstThenByTitle);
+    tiles.listForUser(userId).map((row) => toTile(row, isEditable(row, userId)));
 
   const create = (userId: number, tile: NewLinkTile): Tile => {
     const record = validate(linkTileSchema, tile);

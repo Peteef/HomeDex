@@ -52,15 +52,11 @@ describe('modules API', () => {
         modules: [
           {
             id: 'clock',
-            name: 'Clock',
-            description: null,
             icon: 'calendar',
             route: '/m/clock',
           },
           {
             id: 'notes',
-            name: 'Notes',
-            description: 'Short notes',
             icon: 'notes',
             route: '/m/notes',
           },

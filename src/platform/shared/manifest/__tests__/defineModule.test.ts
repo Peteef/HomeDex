@@ -6,7 +6,6 @@ describe('defineModule', () => {
     // Given
     const manifest = {
       id: 'notes',
-      name: 'Notes',
       icon: 'notes',
       route: '/m/notes',
       enabled: true,

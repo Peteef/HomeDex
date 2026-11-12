@@ -33,8 +33,6 @@ import { defineModule } from '#platform/shared';
 
 export default defineModule({
   id: 'shopping-list',
-  name: 'Shopping list',
-  description: 'What we need from the shop',
   icon: 'cart',
   route: '/m/shopping-list',
   enabled: true,
@@ -42,11 +40,12 @@ export default defineModule({
 ```
 
 - `id`: kebab-case and equal to the folder name. `platform` is reserved.
-- `name`: up to 60 characters. `description` (optional): up to 140.
 - `icon`: one of the icon names in `src/platform/shared/icons/iconNames.ts`.
 - `route`: always `/m/<id>`.
 - `enabled`: `false` hides the page, does not mount the endpoints and does not run the migrations. The backend code of a disabled module is never imported.
-- `quickActions` (optional, unused for now): `[{ id, keyword, label }]`, where `id` is kebab-case and `keyword` one lowercase word. This is a placeholder until quick actions are designed.
+- `quickActions` (optional, unused for now): `[{ id, keyword }]`, where `id` is kebab-case and `keyword` one lowercase word. This is a placeholder until quick actions are designed.
+
+The manifest holds no text. The module's name and description, shown on its tile in the user's language, live in its locale files under `manifest` (see Text below).
 
 The server validates every manifest at startup and refuses to start when one is invalid.
 
@@ -77,6 +76,7 @@ export default ShoppingList;
 
 The UI text of a module lives in one file per language, `frontend/locales/<language>.ts`: `en.ts` and one file for every other language the platform supports (today `pl.ts`). The platform finds these files on its own and loads each one into a namespace named after the module's id. The keys follow the module's folders, like the platform's:
 
+- `manifest.name` (up to 60 characters) and optionally `manifest.description` (up to 140): the module's tile on the home screen. Required in every language;
 - one top-level key per page folder, camelCased (`pages/list/` is `list`), with the page's own components nested inside it;
 - `components.<name>` for each of the module's components in `components/<name>/`;
 - `common` only for text two or more places share, grouped by kind (`common.actions`, `common.errors`). Move a string there when the second use appears, and only when the meaning is the same, not just the English words.
@@ -84,6 +84,10 @@ The UI text of a module lives in one file per language, `frontend/locales/<langu
 ```ts
 // frontend/locales/en.ts
 export default {
+  manifest: {
+    name: 'Shopping list',
+    description: 'What we need from the shop',
+  },
   common: {
     actions: { tryAgain: 'Try again' },
   },
@@ -134,6 +138,10 @@ import type { Translation } from '#platform/frontend';
 import type en from './en.ts';
 
 export default {
+  manifest: {
+    name: 'Lista zakupów',
+    description: 'Czego potrzebujemy ze sklepu',
+  },
   common: {
     actions: { tryAgain: 'Spróbuj ponownie' },
   },
@@ -188,7 +196,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 
 - A module imports only its own files and the platform's public APIs: `manifest.ts` only `#platform/shared`, `frontend/` only `#platform/frontend` and `#platform/shared`, `backend/` only `#platform/backend` and `#platform/shared`. Never another module, never the platform's internals. Packages from `package.json` (React, React Router, TanStack Query, zod) are fine.
 - Inside a module the platform's layer rules apply: components are pure and import no pages or features; features and domains are used only through their `index.ts`; domains do not import routes. `npm run verify` checks all of it with lint.
-- The contract test (`tests/modules/contract.test.ts`) checks every module: the required files exist, the manifest is valid, the id matches the folder and every table carries the prefix.
+- The contract test (`tests/modules/contract.test.ts`) checks every module: the required files exist, the manifest is valid, the id matches the folder, every supported language has a locale file with `manifest.name`, and every table carries the prefix.
 - **Need something the public APIs do not offer?** Add it to the platform first, in its own PR, then build the module on it. Never reach into the platform's internals.
 
 ## Tests
@@ -199,7 +207,7 @@ Unit tests live in `__tests__/` folders next to the code, as in the platform (`f
 
 1. `src/modules/<id>/manifest.ts` and `frontend/index.tsx`, plus `backend/` if the module has endpoints or data.
 2. Tables prefixed with `<id_snake>_`, created by the module's own migrations.
-3. Text in `frontend/locales/en.ts` and a file for every other supported language (`pl.ts`), with `frontend/locales/index.ts` for the module's `useText`.
+3. Text in `frontend/locales/en.ts` and a file for every other supported language (`pl.ts`), starting with `manifest.name`, with `frontend/locales/index.ts` for the module's `useText`.
 4. Unit tests next to the code, and an e2e test for the page at both phone widths (375 and 402 pt).
 5. `npm run fix`, then `npm run verify` and `npm run test:e2e`.
 6. No change in `src/platform/`. If one is needed, it comes first, in its own PR.

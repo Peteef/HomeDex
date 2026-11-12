@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { isIconName } from '../../../../shared/icons/iconNames.ts';
+import { isLanguage } from '../../../../shared/i18n/languages.ts';
 import { TileError } from '../errors.ts';
 import { TILE_SCOPES } from '../types.ts';
+import type { TileTexts } from '../types.ts';
 
 const MAX_TITLE_LENGTH = 60;
 const MAX_DESCRIPTION_LENGTH = 140;
@@ -27,6 +29,22 @@ const descriptionSchema = z
   .nullable()
   .transform((description) => (description === '' ? null : description));
 
+const textSchema = z.object({
+  title: titleSchema,
+  description: descriptionSchema.default(null),
+});
+
+const hasOnlyLanguages = (texts: Record<string, unknown>): boolean =>
+  Object.keys(texts).every(isLanguage);
+
+const hasAnyText = (texts: Record<string, unknown>): boolean => Object.keys(texts).length > 0;
+
+const textsSchema = z
+  .record(z.string(), textSchema)
+  .refine(hasOnlyLanguages, 'Unknown language')
+  .refine(hasAnyText, 'A title in at least one language is required')
+  .transform((texts) => texts as TileTexts);
+
 const urlSchema = z
   .string()
   .trim()
@@ -36,8 +54,7 @@ const urlSchema = z
 const iconSchema = z.string().refine(isIconName, 'Unknown icon');
 
 export const linkTileSchema = z.object({
-  title: titleSchema,
-  description: descriptionSchema.default(null),
+  texts: textsSchema,
   icon: iconSchema,
   url: urlSchema,
   scope: z.enum(TILE_SCOPES),
