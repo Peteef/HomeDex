@@ -27,6 +27,8 @@
   --shadow-panel: 0 10px 40px rgb(43 33 24 / 0.25);
 
   --animate-float: float 7s ease-in-out infinite;
+  --animate-rise: rise 0.2s ease-out;
+  --animate-pop: pop 0.25s ease-out;
 
   @keyframes float {
     0%,
@@ -37,13 +39,38 @@
       transform: translateY(-6px);
     }
   }
+
+  @keyframes pop {
+    from {
+      scale: 0.97;
+    }
+    50% {
+      scale: 1.03;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+  }
 }
+
+@custom-variant can-hover (@media (hover: hover) and (pointer: fine));
+@custom-variant no-hover (@media not ((hover: hover) and (pointer: fine)));
 
 @utility safe-area {
   padding-top: max(1rem, env(safe-area-inset-top));
   padding-right: max(0.75rem, env(safe-area-inset-right));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
   padding-left: max(0.75rem, env(safe-area-inset-left));
+}
+
+@utility safe-area-sheet {
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
 }
 
 @layer base {

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchTiles, savePin } from './internal/tilesApi.ts';
+import { createTile, deleteTile, fetchTiles, savePin, updateTile } from './internal/tilesApi.ts';
 import type { PinChange, Tile } from './types.ts';
 
 const TILES_QUERY_KEY = ['tiles'] as const;
@@ -7,6 +7,38 @@ const PIN_MUTATION_KEY = ['tiles', 'pin'] as const;
 
 const withPin = (tiles: Tile[] | undefined, { id, pinned }: PinChange): Tile[] | undefined =>
   tiles?.map((tile) => (tile.id === id ? { ...tile, pinned } : tile));
+
+const withTile = (tiles: Tile[] | undefined, saved: Tile): Tile[] | undefined =>
+  tiles?.some(({ id }) => id === saved.id)
+    ? tiles.map((tile) => (tile.id === saved.id ? saved : tile))
+    : tiles && [...tiles, saved];
+
+const withoutTile = (tiles: Tile[] | undefined, id: number): Tile[] | undefined =>
+  tiles?.filter((tile) => tile.id !== id);
+
+const useTileCache = () => {
+  const queryClient = useQueryClient();
+
+  const store = (tile: Tile): void => {
+    queryClient.setQueryData<Tile[]>(TILES_QUERY_KEY, (tiles) => withTile(tiles, tile));
+  };
+
+  const forget = (_result: unknown, id: number): void => {
+    queryClient.setQueryData<Tile[]>(TILES_QUERY_KEY, (tiles) => withoutTile(tiles, id));
+  };
+
+  // Also after a failure: the tile may have been changed or removed by someone else. Not awaited,
+  // so a save settles as soon as the server answers.
+  const refresh = (): void => {
+    void queryClient.invalidateQueries({ queryKey: TILES_QUERY_KEY });
+  };
+
+  return {
+    store,
+    forget,
+    refresh,
+  };
+};
 
 export const useTiles = () =>
   useQuery({
@@ -44,5 +76,35 @@ export const useTogglePin = () => {
     onMutate: showAtOnce,
     onError: undo,
     onSettled: refreshWhenLast,
+  });
+};
+
+export const useCreateTile = () => {
+  const { store, refresh } = useTileCache();
+
+  return useMutation({
+    mutationFn: createTile,
+    onSuccess: store,
+    onSettled: refresh,
+  });
+};
+
+export const useUpdateTile = () => {
+  const { store, refresh } = useTileCache();
+
+  return useMutation({
+    mutationFn: updateTile,
+    onSuccess: store,
+    onSettled: refresh,
+  });
+};
+
+export const useDeleteTile = () => {
+  const { forget, refresh } = useTileCache();
+
+  return useMutation({
+    mutationFn: deleteTile,
+    onSuccess: forget,
+    onSettled: refresh,
   });
 };

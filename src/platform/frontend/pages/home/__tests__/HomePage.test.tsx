@@ -44,7 +44,10 @@ const tileTitles = () =>
   screen
     .queryAllByRole('article')
     .map((article) =>
-      within(article).getByRole('button').getAttribute('aria-label')?.replace(PIN_LABEL, ''),
+      within(article)
+        .getByRole('button', { name: PIN_LABEL })
+        .getAttribute('aria-label')
+        ?.replace(PIN_LABEL, ''),
     );
 
 const search = () => screen.getByRole('searchbox', { name: 'Find a tile' });
@@ -261,5 +264,84 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(api.callsTo('GET /api/tiles')).toHaveLength(2);
     });
+  });
+
+  it('should add a tile through the add dialog and show it in the Dex', async () => {
+    // Given
+    const recipes = linkTile(
+      { en: { title: 'Recipes', description: null } },
+      { id: 4, dexNo: 4, url: 'https://docs.example.com/recipes', scope: 'personal' },
+    );
+
+    const stored = [FINANCES];
+
+    const saveRecipes = (): FakeResponse => {
+      stored.push(recipes);
+      return {
+        status: 201,
+        body: { tile: recipes },
+      };
+    };
+
+    const api = fakeApi({
+      'GET /api/auth/me': signedIn(),
+      'GET /api/tiles': () => ok({ tiles: stored }),
+      'POST /api/tiles': saveRecipes,
+    });
+
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add tile' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add tile' });
+
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), {
+      target: { value: 'Recipes' },
+    });
+
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Address' }), {
+      target: { value: 'https://docs.example.com/recipes' },
+    });
+
+    // When
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    // Then
+    await waitFor(() => {
+      expect(tileTitles()).toEqual(['Finances', 'Recipes']);
+    });
+
+    expect(screen.getByRole('dialog', { hidden: true })).not.toHaveAttribute('open');
+
+    expect(api.callsTo('POST /api/tiles')[0]?.body).toEqual({
+      texts: { en: { title: 'Recipes', description: null } },
+      url: 'https://docs.example.com/recipes',
+      icon: 'link',
+      scope: 'personal',
+    });
+  });
+
+  it('should open the edit dialog with the tile from its edit button', async () => {
+    // Given
+    await openHome();
+
+    // When
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit Finances' }));
+
+    // Then
+    const dialog = screen.getByRole('dialog', { name: 'Edit tile' });
+    expect(within(dialog).getByRole('group', { name: '🇬🇧 EN' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('group', { name: '🇵🇱 PL' })).toBeInTheDocument();
+
+    expect(within(dialog).getByRole('textbox', { name: 'Address' })).toHaveValue(
+      'https://docs.example.com/finances',
+    );
+  });
+
+  it('should offer no edit button on a tile the user cannot change', async () => {
+    // When
+    await openHome([{ ...FINANCES, editable: false }]);
+
+    // Then
+    await screen.findByText('Finances');
+    expect(screen.queryByRole('button', { name: 'Edit Finances' })).not.toBeInTheDocument();
   });
 });

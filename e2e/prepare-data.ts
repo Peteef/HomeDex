@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import { E2E_ARCHIVED_USER, E2E_DATA_DIR, E2E_USER } from './fixtures.ts';
+import { E2E_ARCHIVED_USER, E2E_DATA_DIR, E2E_SECOND_USER, E2E_USER } from './fixtures.ts';
 
 const USERS_CLI = 'src/platform/backend/infrastructure/cli/users.ts';
 
@@ -17,7 +17,7 @@ const users = (...args: string[]): void => {
 
 fs.rmSync(E2E_DATA_DIR, { recursive: true, force: true });
 
-for (const { username, password } of [E2E_USER, E2E_ARCHIVED_USER]) {
+for (const { username, password } of [E2E_USER, E2E_SECOND_USER, E2E_ARCHIVED_USER]) {
   users('create', username, '--password', password);
 }
 

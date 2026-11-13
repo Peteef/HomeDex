@@ -1,30 +1,28 @@
 import { z } from 'zod';
 import { isIconName } from '../../../../shared/icons/iconNames.ts';
 import { isLanguage } from '../../../../shared/i18n/languages.ts';
+import {
+  isWebUrl,
+  MAX_TILE_DESCRIPTION_LENGTH,
+  MAX_TILE_TITLE_LENGTH,
+  MAX_TILE_URL_LENGTH,
+} from '../../../../shared/tiles/linkTileRules.ts';
 import { TileError } from '../errors.ts';
 import { TILE_SCOPES } from '../types.ts';
 import type { TileTexts } from '../types.ts';
-
-const MAX_TITLE_LENGTH = 60;
-const MAX_DESCRIPTION_LENGTH = 140;
-const MAX_URL_LENGTH = 2048;
-const WEB_PROTOCOLS = ['http:', 'https:'];
-
-const isWebUrl = (value: string): boolean =>
-  URL.canParse(value) && WEB_PROTOCOLS.includes(new URL(value).protocol);
 
 const titleSchema = z
   .string()
   .trim()
   .min(1, 'Title is required')
-  .max(MAX_TITLE_LENGTH, `Title must be at most ${String(MAX_TITLE_LENGTH)} characters`);
+  .max(MAX_TILE_TITLE_LENGTH, `Title must be at most ${String(MAX_TILE_TITLE_LENGTH)} characters`);
 
 const descriptionSchema = z
   .string()
   .trim()
   .max(
-    MAX_DESCRIPTION_LENGTH,
-    `Description must be at most ${String(MAX_DESCRIPTION_LENGTH)} characters`,
+    MAX_TILE_DESCRIPTION_LENGTH,
+    `Description must be at most ${String(MAX_TILE_DESCRIPTION_LENGTH)} characters`,
   )
   .nullable()
   .transform((description) => (description === '' ? null : description));
@@ -48,7 +46,7 @@ const textsSchema = z
 const urlSchema = z
   .string()
   .trim()
-  .max(MAX_URL_LENGTH, `URL must be at most ${String(MAX_URL_LENGTH)} characters`)
+  .max(MAX_TILE_URL_LENGTH, `URL must be at most ${String(MAX_TILE_URL_LENGTH)} characters`)
   .refine(isWebUrl, 'URL must be a web address starting with http:// or https://');
 
 const iconSchema = z.string().refine(isIconName, 'Unknown icon');

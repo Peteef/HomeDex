@@ -1,10 +1,14 @@
 import { Button } from '../../../components/button/Button.tsx';
 import { LoadingStatus } from '../../../components/loading-status/LoadingStatus.tsx';
+import { AddTile } from '../../../components/tile/AddTile.tsx';
 import { Tile } from '../../../components/tile/Tile.tsx';
 import type { TileProps } from '../../../components/tile/Tile.tsx';
 import { useText } from '../../../lib/i18n/index.ts';
 
-export type TileEntry = Omit<TileProps, 'onTogglePin'> & { id: number };
+export type TileEntry = Omit<TileProps, 'onTogglePin' | 'onEdit'> & {
+  id: number;
+  editable: boolean;
+};
 
 export interface TileListProps {
   entries: TileEntry[] | undefined;
@@ -12,11 +16,21 @@ export interface TileListProps {
   query: string;
   onRetry: () => void;
   onTogglePin: (entry: TileEntry) => void;
+  onEdit: (entry: TileEntry) => void;
+  onAdd: () => void;
 }
 
 const MESSAGE_CLASSES = 'text-dex-ink-muted py-6 text-center text-base font-bold';
 
-export const TileList = ({ entries, failed, query, onRetry, onTogglePin }: TileListProps) => {
+export const TileList = ({
+  entries,
+  failed,
+  query,
+  onRetry,
+  onTogglePin,
+  onEdit,
+  onAdd,
+}: TileListProps) => {
   const text = useText('home.tileList');
   const actions = useText('common.actions');
 
@@ -37,25 +51,51 @@ export const TileList = ({ entries, failed, query, onRetry, onTogglePin }: TileL
     return <LoadingStatus />;
   }
 
-  if (entries.length === 0) {
+  const searching = query !== '';
+
+  if (searching && entries.length === 0) {
     return (
       <p role="status" className={MESSAGE_CLASSES}>
-        {query === '' ? text.empty : text.noMatches({ query })}
+        {text.noMatches({ query })}
       </p>
     );
   }
 
+  const tile = (entry: TileEntry) => {
+    const { id, editable, ...props } = entry;
+
+    return (
+      <Tile
+        key={id}
+        {...props}
+        onTogglePin={() => {
+          onTogglePin(entry);
+        }}
+        {...(editable
+          ? {
+              onEdit: () => {
+                onEdit(entry);
+              },
+            }
+          : {})}
+      />
+    );
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-      {entries.map((entry) => (
-        <Tile
-          key={entry.id}
-          {...entry}
-          onTogglePin={() => {
-            onTogglePin(entry);
-          }}
-        />
-      ))}
+    <div className="flex flex-col gap-3">
+      {entries.length === 0 ? (
+        <p role="status" className={MESSAGE_CLASSES}>
+          {text.empty}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {entries.map(tile)}
+        {searching ? null : <AddTile onAdd={onAdd} />}
+      </div>
+      {!searching && entries.some(({ editable }) => editable) ? (
+        <p className="text-dex-ink-muted can-hover:hidden text-center text-sm">{text.holdToEdit}</p>
+      ) : null}
     </div>
   );
 };

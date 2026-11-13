@@ -7,6 +7,8 @@ export interface TileText {
 
 export type TileTexts = Partial<Record<Language, TileText>>;
 
+export type TileScope = 'shared' | 'personal';
+
 export interface Tile {
   id: number;
   dexNo: number;
@@ -15,7 +17,7 @@ export interface Tile {
   icon: string;
   url: string | null;
   moduleId: string | null;
-  scope: 'shared' | 'personal';
+  scope: TileScope;
   pinned: boolean;
   editable: boolean;
 }
@@ -23,4 +25,16 @@ export interface Tile {
 export interface PinChange {
   id: number;
   pinned: boolean;
+}
+
+export interface TileDraft {
+  texts: TileTexts;
+  url: string;
+  icon: string;
+  scope: TileScope;
+}
+
+export interface TileUpdate {
+  id: number;
+  draft: TileDraft;
 }

@@ -6,6 +6,7 @@ import {
   getJson,
   isClientError,
   isUnauthorized,
+  patchForJson,
   post,
   postForJson,
   put,
@@ -50,6 +51,22 @@ describe('http client', () => {
       const [call] = api.calls;
       expect(call?.headers.get('Content-Type')).toBe('application/json');
       expect(call?.body).toEqual({ name: 'Pikachu' });
+    });
+  });
+
+  describe('patchForJson', () => {
+    it('should send the body as JSON with PATCH and read the JSON answer', async () => {
+      // Given
+      const api = fakeApi({ 'PATCH /api/things/7': ok({ id: 7, name: 'Raichu' }) });
+
+      // When
+      const body = await patchForJson('/things/7', { name: 'Raichu' });
+
+      // Then
+      expect(body).toEqual({ id: 7, name: 'Raichu' });
+      const [call] = api.calls;
+      expect(call?.headers.get('Content-Type')).toBe('application/json');
+      expect(call?.body).toEqual({ name: 'Raichu' });
     });
   });
 

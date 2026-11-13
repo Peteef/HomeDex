@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { Tile } from '../Tile.tsx';
@@ -116,5 +116,55 @@ describe('Tile', () => {
 
     // Then
     expect(opened).not.toHaveBeenCalled();
+  });
+
+  it('should offer no edit button without onEdit', () => {
+    // When
+    renderTile();
+
+    // Then
+    expect(screen.queryByRole('button', { name: 'Edit Finances' })).not.toBeInTheDocument();
+  });
+
+  it('should call onEdit when the edit button is clicked', () => {
+    // Given
+    const onEdit = vi.fn();
+    renderTile({ onEdit });
+
+    // When
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Finances' }));
+
+    // Then
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it('should call onEdit when the tile is held', () => {
+    // Given
+    vi.useFakeTimers();
+    const onEdit = vi.fn();
+    renderTile({ onEdit });
+
+    // When
+    fireEvent.pointerDown(screen.getByRole('link'), { pointerType: 'touch' });
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    // Then
+    expect(onEdit).toHaveBeenCalledOnce();
+    expect(screen.getByRole('article')).toHaveAttribute('data-press', 'held');
+    vi.useRealTimers();
+  });
+
+  it('should show the hold while a touch is held', () => {
+    // Given
+    renderTile({ onEdit: vi.fn() });
+
+    // When
+    fireEvent.pointerDown(screen.getByRole('link'), { pointerType: 'touch' });
+
+    // Then
+    expect(screen.getByRole('article')).toHaveAttribute('data-press', 'holding');
   });
 });
