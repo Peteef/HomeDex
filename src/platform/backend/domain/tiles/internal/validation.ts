@@ -3,9 +3,9 @@ import { isIconName } from '../../../../shared/icons/iconNames.ts';
 import { isLanguage } from '../../../../shared/i18n/languages.ts';
 import {
   isWebUrl,
-  MAX_TILE_DESCRIPTION_LENGTH,
-  MAX_TILE_TITLE_LENGTH,
-  MAX_TILE_URL_LENGTH,
+  TILE_DESCRIPTION_MAX_LENGTH,
+  TILE_TITLE_MAX_LENGTH,
+  TILE_URL_MAX_LENGTH,
 } from '../../../../shared/tiles/linkTileRules.ts';
 import { TileError } from '../errors.ts';
 import { TILE_SCOPES } from '../types.ts';
@@ -15,14 +15,14 @@ const titleSchema = z
   .string()
   .trim()
   .min(1, 'Title is required')
-  .max(MAX_TILE_TITLE_LENGTH, `Title must be at most ${String(MAX_TILE_TITLE_LENGTH)} characters`);
+  .max(TILE_TITLE_MAX_LENGTH, `Title must be at most ${String(TILE_TITLE_MAX_LENGTH)} characters`);
 
 const descriptionSchema = z
   .string()
   .trim()
   .max(
-    MAX_TILE_DESCRIPTION_LENGTH,
-    `Description must be at most ${String(MAX_TILE_DESCRIPTION_LENGTH)} characters`,
+    TILE_DESCRIPTION_MAX_LENGTH,
+    `Description must be at most ${String(TILE_DESCRIPTION_MAX_LENGTH)} characters`,
   )
   .nullable()
   .transform((description) => (description === '' ? null : description));
@@ -46,7 +46,7 @@ const textsSchema = z
 const urlSchema = z
   .string()
   .trim()
-  .max(MAX_TILE_URL_LENGTH, `URL must be at most ${String(MAX_TILE_URL_LENGTH)} characters`)
+  .max(TILE_URL_MAX_LENGTH, `URL must be at most ${String(TILE_URL_MAX_LENGTH)} characters`)
   .refine(isWebUrl, 'URL must be a web address starting with http:// or https://');
 
 const iconSchema = z.string().refine(isIconName, 'Unknown icon');

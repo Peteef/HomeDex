@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import type { SubmitEvent } from 'react';
-import { MAX_TILE_URL_LENGTH } from '../../../../shared/tiles/linkTileRules.ts';
+import { TILE_URL_MAX_LENGTH } from '../../../../shared/tiles/linkTileRules.ts';
 import type { IconName } from '../../../../shared/icons/iconNames.ts';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
@@ -99,7 +99,7 @@ export const TileForm = ({
         autoCorrect="off"
         spellCheck={false}
         placeholder={messages.urlPlaceholder}
-        maxLength={MAX_TILE_URL_LENGTH}
+        maxLength={TILE_URL_MAX_LENGTH}
         value={values.url}
         {...(errors.url ? { error: messages.errors[errors.url] } : {})}
         onChange={(event) => {

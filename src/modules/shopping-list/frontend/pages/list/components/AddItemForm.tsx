@@ -3,8 +3,8 @@ import { useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useText } from '../../../locales/index.ts';
 
-const MAX_TEXT_LENGTH = 100;
-const MAX_AMOUNT_LENGTH = 30;
+const TEXT_MAX_LENGTH = 100;
+const AMOUNT_MAX_LENGTH = 30;
 
 export interface ItemInput {
   text: string;
@@ -48,7 +48,7 @@ export const AddItemForm = ({ adding, failed, onAdd }: AddItemFormProps) => {
             ref={itemRef}
             label={text.item}
             placeholder={text.itemPlaceholder}
-            maxLength={MAX_TEXT_LENGTH}
+            maxLength={TEXT_MAX_LENGTH}
             enterKeyHint="done"
             value={itemText}
             onChange={(event) => {
@@ -60,7 +60,7 @@ export const AddItemForm = ({ adding, failed, onAdd }: AddItemFormProps) => {
           <TextInput
             label={text.amount}
             placeholder={text.amountPlaceholder}
-            maxLength={MAX_AMOUNT_LENGTH}
+            maxLength={AMOUNT_MAX_LENGTH}
             enterKeyHint="done"
             value={amount}
             onChange={(event) => {
