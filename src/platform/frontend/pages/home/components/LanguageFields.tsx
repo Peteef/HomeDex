@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import {
-  MAX_TILE_DESCRIPTION_LENGTH,
-  MAX_TILE_TITLE_LENGTH,
+  TILE_DESCRIPTION_MAX_LENGTH,
+  TILE_TITLE_MAX_LENGTH,
 } from '../../../../shared/tiles/linkTileRules.ts';
 import { IconButton } from '../../../components/icon-button/IconButton.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
@@ -45,7 +45,7 @@ export const LanguageFields = ({
       <TextInput
         label={messages.title}
         lang={text.language}
-        maxLength={MAX_TILE_TITLE_LENGTH}
+        maxLength={TILE_TITLE_MAX_LENGTH}
         value={text.title}
         {...(error ? { error: messages.errors[error] } : {})}
         onChange={(event) => {
@@ -55,7 +55,7 @@ export const LanguageFields = ({
       <TextInput
         label={messages.description}
         lang={text.language}
-        maxLength={MAX_TILE_DESCRIPTION_LENGTH}
+        maxLength={TILE_DESCRIPTION_MAX_LENGTH}
         value={text.description}
         onChange={(event) => {
           onChange({ ...text, description: event.target.value });

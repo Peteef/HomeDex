@@ -7,8 +7,8 @@ import { toAccount } from './internal/toAccount.ts';
 import { userRepository } from './internal/userRepository.ts';
 import type { UserRow } from './internal/userRepository.ts';
 import {
-  MAX_PASSWORD_LENGTH,
-  MAX_USERNAME_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  USERNAME_MAX_LENGTH,
   passwordSchema,
   usernameSchema,
   validate,
@@ -40,7 +40,7 @@ interface AccountUpdate {
 }
 
 const isWithinLimits = (username: string, password: string): boolean =>
-  username.length <= MAX_USERNAME_LENGTH && password.length <= MAX_PASSWORD_LENGTH;
+  username.length <= USERNAME_MAX_LENGTH && password.length <= PASSWORD_MAX_LENGTH;
 
 export const accountsService = (
   db: Storage,

@@ -3,8 +3,8 @@ import { invalidItem, itemNotFound } from './errors.ts';
 import { itemRepository } from './internal/itemRepository.ts';
 import type { Item, NewItem } from './types.ts';
 
-const MAX_TEXT_LENGTH = 100;
-const MAX_AMOUNT_LENGTH = 30;
+const TEXT_MAX_LENGTH = 100;
+const AMOUNT_MAX_LENGTH = 30;
 
 export interface ItemsService {
   list(): Item[];
@@ -22,8 +22,8 @@ const requireText = (text: string): string => {
     throw invalidItem('The item text is empty');
   }
 
-  if (trimmed.length > MAX_TEXT_LENGTH) {
-    throw invalidItem(`The item text is longer than ${String(MAX_TEXT_LENGTH)} characters`);
+  if (trimmed.length > TEXT_MAX_LENGTH) {
+    throw invalidItem(`The item text is longer than ${String(TEXT_MAX_LENGTH)} characters`);
   }
 
   return trimmed;
@@ -32,8 +32,8 @@ const requireText = (text: string): string => {
 const optionalAmount = (amount = ''): string | null => {
   const trimmed = amount.trim();
 
-  if (trimmed.length > MAX_AMOUNT_LENGTH) {
-    throw invalidItem(`The amount is longer than ${String(MAX_AMOUNT_LENGTH)} characters`);
+  if (trimmed.length > AMOUNT_MAX_LENGTH) {
+    throw invalidItem(`The amount is longer than ${String(AMOUNT_MAX_LENGTH)} characters`);
   }
 
   return trimmed === '' ? null : trimmed;
