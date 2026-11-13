@@ -20,6 +20,7 @@ const en = {
       opensInNewTab: '(opens in a new tab)',
       pin: 'Pin {{title}}',
       edit: 'Edit {{title}}',
+      add: 'Add tile',
     },
   },
   login: {
@@ -57,7 +58,6 @@ const en = {
       loadFailed: "Can't load the tiles.",
       empty: 'Your Dex is empty.',
       noMatches: 'No tiles match “{{query}}”.',
-      addTile: 'Add tile',
       holdToEdit: 'Hold a tile to edit it.',
     },
     tileDialog: {

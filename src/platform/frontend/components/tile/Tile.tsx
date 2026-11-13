@@ -27,8 +27,6 @@ const LINK_CLASSES =
 // A long press edits on touch screens, so iOS must not show its link preview or select text.
 const HOLDABLE_LINK_CLASSES = `${LINK_CLASSES} select-none [-webkit-touch-callout:none]`;
 
-// While a touch is held the tile sinks and a red ring fills in over the hold (motion only when
-// allowed; the ring alone otherwise), then it pops when the editor opens.
 const PRESS_CLASSES =
   'transition-[scale,box-shadow] duration-150 data-[press=holding]:ring-dex-red data-[press=holding]:ring-3 data-[press=holding]:duration-500 data-[press=holding]:motion-safe:scale-97 data-[press=held]:motion-safe:animate-pop';
 

@@ -1,9 +1,9 @@
 import { Button } from '../../../components/button/Button.tsx';
 import { LoadingStatus } from '../../../components/loading-status/LoadingStatus.tsx';
+import { AddTile } from '../../../components/tile/AddTile.tsx';
 import { Tile } from '../../../components/tile/Tile.tsx';
 import type { TileProps } from '../../../components/tile/Tile.tsx';
 import { useText } from '../../../lib/i18n/index.ts';
-import { AddTileButton } from './AddTileButton.tsx';
 
 export type TileEntry = Omit<TileProps, 'onTogglePin' | 'onEdit'> & {
   id: number;
@@ -91,7 +91,7 @@ export const TileList = ({
       ) : null}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {entries.map(tile)}
-        {searching ? null : <AddTileButton onAdd={onAdd} />}
+        {searching ? null : <AddTile onAdd={onAdd} />}
       </div>
       {!searching && entries.some(({ editable }) => editable) ? (
         <p className="text-dex-ink-muted can-hover:hidden text-center text-sm">{text.holdToEdit}</p>

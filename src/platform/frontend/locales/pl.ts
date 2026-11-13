@@ -25,6 +25,7 @@ const pl = {
       opensInNewTab: '(otwiera się w nowej karcie)',
       pin: 'Przypnij: {{title}}',
       edit: 'Edytuj: {{title}}',
+      add: 'Dodaj kafelek',
     },
   },
   login: {
@@ -62,7 +63,6 @@ const pl = {
       loadFailed: 'Nie udało się wczytać kafelków.',
       empty: 'Twój Dex jest pusty.',
       noMatches: 'Żaden kafelek nie pasuje do „{{query}}”.',
-      addTile: 'Dodaj kafelek',
       holdToEdit: 'Przytrzymaj kafelek, aby go edytować.',
     },
     tileDialog: {

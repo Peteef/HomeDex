@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { AddTileButton } from '../AddTileButton.tsx';
+import { AddTile } from '../AddTile.tsx';
 
-describe('AddTileButton', () => {
+describe('AddTile', () => {
   it('should call onAdd when clicked', () => {
     // Given
     const onAdd = vi.fn();
-    render(<AddTileButton onAdd={onAdd} />);
+    render(<AddTile onAdd={onAdd} />);
 
     // When
     fireEvent.click(screen.getByRole('button', { name: 'Add tile' }));
