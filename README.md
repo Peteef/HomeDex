@@ -76,6 +76,7 @@ Settings come from environment variables. Copy `.env.example` to `.env` to chang
 | `COOKIE_SECURE`    | `false`    | Set to `true` once HTTPS is on                                   |
 | `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in                                |
 | `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                             |
+| `HOMEDEX_VERSION`  | `latest`   | Docker Compose only: the published image version to run          |
 
 ## Accounts
 
@@ -116,6 +117,6 @@ The core and the modules are kept apart on purpose: a module can only use the pl
 
 ## Contributing
 
-Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e` and a secret scan on every PR.
+Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e`, a secret scan and a Docker build with a smoke test on every PR, and publishes the image to GHCR (`ghcr.io/peteef/homedex`).
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).

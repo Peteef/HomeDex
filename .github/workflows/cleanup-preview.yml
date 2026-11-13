@@ -1,0 +1,35 @@
+name: Cleanup preview image
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup-preview:
+    name: cleanup-preview
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      packages: write
+    steps:
+      # The action deletes a multi-arch image together with its platform images, which GitHub's
+      # own delete-package-versions action does not know about.
+      - name: Delete pr-${{ github.event.pull_request.number }}
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+        with:
+          package: homedex
+          delete-tags: pr-${{ github.event.pull_request.number }}
+      # Each push to a pull request moves its pr-<number> tag and leaves the previous build
+      # untagged. The age limit keeps the step away from an image that is being pushed right now.
+      - name: Delete untagged images
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+        with:
+          package: homedex
+          delete-untagged: true
+          older-than: 1 hour

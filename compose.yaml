@@ -1,7 +1,9 @@
 services:
   homedex:
+    # The server pulls the published image; development builds it with `docker compose up --build`.
+    # HOMEDEX_VERSION (in .env, for example 1.2.3) pins a release; without it, latest from master.
+    image: ghcr.io/peteef/homedex:${HOMEDEX_VERSION:-latest}
     build: .
-    image: homedex:local
     restart: unless-stopped
     ports:
       - '3000:3000'
