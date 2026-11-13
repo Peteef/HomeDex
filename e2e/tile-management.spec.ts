@@ -280,6 +280,23 @@ test.describe('link tile management', () => {
       await expect(addTile).toBeFocused();
     });
 
+    test('should turn the add tile red while it is pressed', async ({ page }) => {
+      // Given
+      await page.goto('/');
+      const addTile = page.getByRole('button', { name: 'Add tile' });
+      const box = await addTile.boundingBox();
+      expect(box).not.toBeNull();
+      await page.mouse.move((box?.x ?? 0) + 20, (box?.y ?? 0) + 20);
+
+      // When
+      await page.mouse.down();
+
+      // Then
+      await expect(addTile).toHaveCSS('border-top-color', 'rgb(200, 32, 47)');
+      await page.mouse.up();
+      await expect(addTileDialog(page)).toBeVisible();
+    });
+
     test('should focus the dialog itself when it opens, not its close button', async ({ page }) => {
       // Given
       await page.goto('/');
