@@ -1,6 +1,12 @@
 # HomeDex
 
-**A private, Pokémon-themed mission control for home and personal life.**
+[![Version](https://img.shields.io/badge/version-coming%20soon-lightgrey)](#running-homedex)
+[![CI](https://img.shields.io/github/actions/workflow/status/Peteef/HomeDex/ci.yml?branch=master&event=push&label=CI)](https://github.com/Peteef/HomeDex/actions/workflows/ci.yml?query=branch%3Amaster)
+![Node.js 26](https://img.shields.io/badge/Node.js-26-5FA04E?logo=nodedotjs&logoColor=white)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Docker amd64 and arm64](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
+
+**A Pokémon-themed mission control for home and personal life.**
 
 HomeDex is a self-hosted web app that gathers a household's everyday tools in one place. Each person signs in to a home screen of tiles: saved links that open any page on the web, and modules, small apps built into HomeDex. Frequently used tiles are pinned to the top, and quick-find opens any of them in a few keystrokes, on a computer or a phone.
 
@@ -200,7 +206,7 @@ Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
 
 ## Contributing
 
-HomeDex is a personal project developed by Peteef. Thank you for your interest, but contributions are not needed at the moment.
+HomeDex is a personal project that I develop on my own. Thank you for your interest, but contributions are not needed at the moment. If you spot something odd, feel free to open an issue.
 
 ## Disclaimer
 
