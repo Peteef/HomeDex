@@ -82,7 +82,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 
 - Check every UI change with Playwright on desktop and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
 - Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only). Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
-- Pokémon wording: "Party" for pinned tiles, Dex numbers ("No. 001"), "Dex" for all tiles.
+- Pokémon wording: Dex numbers ("No. 001") and "Dex" for the tiles; pinned tiles come first, with no name of their own.
 - All UI text lives in TypeScript locale files (`export default { ... } as const`): `platform/frontend/locales/<language>.ts` (namespace `platform`) and `<module>/frontend/locales/<language>.ts` (namespace = module id). Keys follow folders: one camelCased key per page folder with its components inside, `components.<name>` for generic components, and `common.<kind>` only for text two or more places share with the same meaning.
 - Read text with `useText('login.picker')`, then `text.title` or `text.greeting({ username })`; `<Trans>` for text with markup.
 - English is the source language and types every other one. Other languages (today Polish) read naturally, not word for word, avoid gendered forms, and are declared `as const satisfies Translation<typeof en>`; the locale test checks them against English. A new language needs its code in `LANGUAGE_CODES` (`shared/i18n/languages.ts`), its flag in `lib/i18n/languages.ts`, and its files.
