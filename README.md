@@ -10,7 +10,7 @@
 
 HomeDex is a self-hosted web app that gathers a household's everyday tools in one place. Each person signs in to a home screen of tiles: saved links that open any page on the web, and modules, small apps built into HomeDex. Frequently used tiles are pinned to the top, and quick-find opens any of them in a few keystrokes, on a computer or a phone.
 
-HomeDex is a personal project, built for my own household and run on the home network, never on the public internet. The code is public to show how it is built: a small platform core that grows through self-contained modules, with strict boundaries, automated tests and CI.
+HomeDex is a personal project, built for my own household and run on the home network, never on the public internet.
 
 > **Status:** close to v1.0.0. Everything below works today, but release images are not published yet (see [Running HomeDex](#running-homedex)).
 
