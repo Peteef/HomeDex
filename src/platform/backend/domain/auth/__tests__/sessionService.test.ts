@@ -1,10 +1,11 @@
 import type Database from 'better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDatabase, createTestUser } from '../../../infrastructure/__tests__/helpers.ts';
-import { sessionService, SLIDE_AFTER_MS } from '../sessionService.ts';
+import { sessionService } from '../sessionService.ts';
 import type { SessionService } from '../sessionService.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
 const TTL_DAYS = 30;
 
 describe('session service', () => {
@@ -115,7 +116,7 @@ describe('session service', () => {
     it('should not write again when the session is used again within the slide interval', () => {
       // Given
       const { token } = sessions.create(userId, undefined);
-      clock.now += SLIDE_AFTER_MS - 1;
+      clock.now += HOUR - 1;
 
       // When
       const resolved = sessions.resolve(token);
