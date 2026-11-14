@@ -3,8 +3,8 @@ import { FORBIDDEN, UNSUPPORTED_MEDIA_TYPE } from '../../../shared/http/status.t
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const JSON_TYPE = 'application/json';
-export const FOREIGN_ORIGIN_RESPONSE = { error: 'Foreign origin' };
-export const JSON_REQUIRED_RESPONSE = { error: 'Content-Type must be application/json' };
+const FOREIGN_ORIGIN_RESPONSE = { error: 'Foreign origin' };
+const JSON_REQUIRED_RESPONSE = { error: 'Content-Type must be application/json' };
 
 const isSameOrigin = (origin: string, req: Request): boolean => {
   try {

@@ -48,7 +48,7 @@ const ICONS = {
   star: Star,
 } as const satisfies Record<IconName, LucideIcon>;
 
-export const FALLBACK_ICON: LucideIcon = CircleHelp;
+const FALLBACK_ICON: LucideIcon = CircleHelp;
 
 export const resolveIcon = (name: string): LucideIcon =>
   isIconName(name) ? ICONS[name] : FALLBACK_ICON;

@@ -4,7 +4,7 @@ import type { SessionCookies } from './sessionCookie.ts';
 import type { SessionService } from '../../../domain/auth/index.ts';
 import { UNAUTHORIZED } from '../../../../shared/http/status.ts';
 
-export const NOT_AUTHENTICATED_RESPONSE = { error: 'Not authenticated' };
+const NOT_AUTHENTICATED_RESPONSE = { error: 'Not authenticated' };
 
 export const requireAuth =
   (sessions: SessionService, cookies: SessionCookies): RequestHandler =>

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AccountError } from '../errors.ts';
 
 export const USERNAME_MAX_LENGTH = 32;
-export const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
 export const usernameSchema = z

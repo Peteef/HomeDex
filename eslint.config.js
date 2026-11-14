@@ -293,7 +293,7 @@ export const frontendRules = [
 const USER_FACING_ATTRIBUTES = ['label', 'title', 'message', 'placeholder', 'alt', 'aria-label'];
 
 /** @type {import('eslint').Linter.Config} */
-export const uiTextRules = {
+const uiTextRules = {
   plugins: { i18next },
   rules: {
     'i18next/no-literal-string': [

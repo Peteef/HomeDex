@@ -8,7 +8,7 @@ const TOKEN_ENCODING = 'base64url';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MS_PER_HOUR = 60 * 60 * 1000;
 // Extending the expiry on every request would write to the database on every request.
-export const SLIDE_AFTER_MS = MS_PER_HOUR;
+const SLIDE_AFTER_MS = MS_PER_HOUR;
 const USER_AGENT_MAX_LENGTH = 256;
 
 interface SessionServiceOptions {

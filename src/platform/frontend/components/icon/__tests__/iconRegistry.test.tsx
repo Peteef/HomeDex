@@ -1,26 +1,27 @@
 import { render } from '@testing-library/react';
+import { CircleHelp } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { Icon } from '../Icon.tsx';
 import { ICON_NAMES } from '../../../../shared/icons/iconNames.ts';
-import { FALLBACK_ICON, resolveIcon } from '../iconRegistry.ts';
+import { resolveIcon } from '../iconRegistry.ts';
 
 describe('icon registry', () => {
   describe('resolveIcon', () => {
     it('should resolve every registered name to its own icon', () => {
       // When / Then
       for (const name of ICON_NAMES) {
-        expect(resolveIcon(name)).not.toBe(FALLBACK_ICON);
+        expect(resolveIcon(name)).not.toBe(CircleHelp);
       }
     });
 
     it('should fall back when the name is unknown', () => {
       // When / Then
-      expect(resolveIcon('no-such-icon')).toBe(FALLBACK_ICON);
+      expect(resolveIcon('no-such-icon')).toBe(CircleHelp);
     });
 
     it('should fall back when the name is an inherited object key', () => {
       // When / Then
-      expect(resolveIcon('toString')).toBe(FALLBACK_ICON);
+      expect(resolveIcon('toString')).toBe(CircleHelp);
     });
   });
 

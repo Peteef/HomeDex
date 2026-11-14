@@ -13,14 +13,14 @@ const PRODUCTION = 'production';
 const EXIT_FAILURE = 1;
 const DEV_USER_VARIABLES = ['DEV_USERNAME', 'DEV_PASSWORD'];
 
-export interface DevUserCredentials {
+interface DevUserCredentials {
   username: string;
   password: string;
 }
 
-export type DevUserResult = 'created' | 'skipped';
+type DevUserResult = 'created' | 'skipped';
 
-export const devUserCredentials = (env: NodeJS.ProcessEnv): DevUserCredentials | null => {
+const devUserCredentials = (env: NodeJS.ProcessEnv): DevUserCredentials | null => {
   const { DEV_USERNAME: username, DEV_PASSWORD: password } = env;
 
   if (username === undefined && password === undefined) {
@@ -38,7 +38,7 @@ export const devUserCredentials = (env: NodeJS.ProcessEnv): DevUserCredentials |
 };
 
 // Seeds an empty database only, so it never touches a database that already has accounts.
-export const ensureDevUser = async (
+const ensureDevUser = async (
   accounts: AccountsService,
   { username, password }: DevUserCredentials,
 ): Promise<DevUserResult> => {
@@ -82,14 +82,10 @@ const run = async (): Promise<void> => {
   await createDevUser(credentials);
 };
 
-if (import.meta.main) {
-  try {
-    await run();
-  } catch (error) {
-    console.error(
-      `Development test user: ${error instanceof Error ? error.message : String(error)}`,
-    );
+try {
+  await run();
+} catch (error) {
+  console.error(`Development test user: ${error instanceof Error ? error.message : String(error)}`);
 
-    process.exitCode = EXIT_FAILURE;
-  }
+  process.exitCode = EXIT_FAILURE;
 }

@@ -1,6 +1,6 @@
 import type { CookieOptions, Request, Response } from 'express';
 
-export const SESSION_COOKIE = 'hd_session';
+const SESSION_COOKIE = 'hd_session';
 
 export interface SessionCookies {
   read(req: Request): string | undefined;
