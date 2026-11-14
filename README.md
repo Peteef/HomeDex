@@ -117,6 +117,6 @@ The core and the modules are kept apart on purpose: a module can only use the pl
 
 ## Contributing
 
-Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e`, a secret scan and a Docker build with a smoke test on every PR, and publishes the image to GHCR (`ghcr.io/peteef/homedex`).
+Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e`, a secret scan and a Docker build with a smoke test on every PR, and publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, deleted when the PR closes. Release images are not published yet.
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).

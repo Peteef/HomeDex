@@ -103,7 +103,9 @@ jobs:
 
   publish:
     name: publish
-    if: github.event_name == 'push'
+    # Paused until releases come with git tags and version bumping; re-enable with
+    # `if: github.event_name == 'push'`.
+    if: false
     needs: [verify, e2e, secrets, docker]
     runs-on: ubuntu-latest
     timeout-minutes: 20
