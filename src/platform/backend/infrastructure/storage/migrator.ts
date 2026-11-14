@@ -69,11 +69,6 @@ export const runMigrations = (db: Storage, scope: string, directory: string): st
     'INSERT INTO schema_migrations (scope, version, name, applied_at) VALUES (?, ?, ?, ?)',
   );
 
-  const apply = (migration: Migration): void => {
-    db.exec(fs.readFileSync(migration.file, 'utf8'));
-    record.run(scope, migration.version, migration.name, Date.now());
-  };
-
   const appliedNow: string[] = [];
 
   for (const migration of listMigrations(directory)) {
@@ -81,7 +76,12 @@ export const runMigrations = (db: Storage, scope: string, directory: string): st
       continue;
     }
 
-    db.transaction(apply)(migration);
+    const sql = fs.readFileSync(migration.file, 'utf8');
+
+    db.transaction(() => {
+      db.exec(sql);
+      record.run(scope, migration.version, migration.name, Date.now());
+    })();
 
     appliedNow.push(migration.name);
   }

@@ -122,14 +122,12 @@ export const tilesService = (
     pins.unpin(userId, id);
   };
 
-  const syncAll = (modules: EnabledModule[]): void => {
-    for (const module of modules) {
-      tiles.syncModule(module, now());
-    }
-  };
-
   const syncModuleTiles = (modules: EnabledModule[]): void => {
-    db.transaction(syncAll)(modules);
+    db.transaction(() => {
+      for (const module of modules) {
+        tiles.syncModule(module, now());
+      }
+    })();
   };
 
   return {

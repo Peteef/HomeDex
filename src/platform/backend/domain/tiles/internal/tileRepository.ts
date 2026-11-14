@@ -123,20 +123,12 @@ export const tileRepository = (db: Storage): TileRepository => {
     }
   };
 
-  const insertLinkWithTexts = (tile: LinkTileRecord, ownerId: number, now: number): number => {
-    const { id } = insertLinkTile.get({ ...tile, ownerId, now }) as { id: number };
-    insertTexts(id, tile.texts);
-    return id;
-  };
-
-  const updateLinkWithTexts = (id: number, tile: LinkTileRecord, now: number): void => {
-    updateLinkTile.run({ ...tile, id, now });
-    deleteTexts.run(id);
-    insertTexts(id, tile.texts);
-  };
-
   const insertLink = (tile: LinkTileRecord, ownerId: number, now: number): number =>
-    db.transaction(insertLinkWithTexts)(tile, ownerId, now);
+    db.transaction(() => {
+      const { id } = insertLinkTile.get({ ...tile, ownerId, now }) as { id: number };
+      insertTexts(id, tile.texts);
+      return id;
+    })();
 
   const syncModule = (module: EnabledModule, now: number): void => {
     upsertModuleTile.run({ ...module, now });
@@ -155,7 +147,11 @@ export const tileRepository = (db: Storage): TileRepository => {
   };
 
   const updateLink = (id: number, tile: LinkTileRecord, now: number): void => {
-    db.transaction(updateLinkWithTexts)(id, tile, now);
+    db.transaction(() => {
+      updateLinkTile.run({ ...tile, id, now });
+      deleteTexts.run(id);
+      insertTexts(id, tile.texts);
+    })();
   };
 
   const remove = (id: number): void => {

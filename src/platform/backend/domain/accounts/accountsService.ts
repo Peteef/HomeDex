@@ -82,7 +82,7 @@ export const accountsService = (
   });
 
   const applyUpdate = (user: UserRow, update: AccountUpdate): void => {
-    const writeUpdate = (): void => {
+    db.transaction(() => {
       if (update.username !== undefined) {
         users.updateUsername(user.id, update.username);
       }
@@ -91,9 +91,7 @@ export const accountsService = (
         users.updatePasswordHash(user.id, update.passwordHash);
         revokeSessions(user.id);
       }
-    };
-
-    db.transaction(writeUpdate)();
+    })();
   };
 
   const create = async (username: string, password: string): Promise<Account> => {
@@ -112,14 +110,14 @@ export const accountsService = (
     return toAccount(requireUser(update.username ?? user.username));
   };
 
-  const archiveAndSignOut = (userId: number): void => {
-    users.setArchivedAt(userId, now());
-    revokeSessions(userId);
-  };
-
   const archive = (username: string): Account => {
     const user = requireUser(username);
-    db.transaction(archiveAndSignOut)(user.id);
+
+    db.transaction(() => {
+      users.setArchivedAt(user.id, now());
+      revokeSessions(user.id);
+    })();
+
     return toAccount(requireUser(user.username));
   };
 
