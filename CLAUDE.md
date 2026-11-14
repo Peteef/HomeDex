@@ -1,133 +1,114 @@
 # HomeDex
 
-## The idea
-
-HomeDex is a private, Pokémon-themed launch pad for home and personal life. Think of a browser start page for personal stuff: a greeting, a quick-find input and a grid of tiles that open links or small modules. Two users (more are possible), used from PC, laptop and iPhone.
-
-It is a platform first. New tiles and modules are added over time, mostly by prompting an agent, so the core must stay small, clear and easy to extend.
+A private, Pokémon-themed mission control for a household: a greeting, quick-find and a grid of tiles that open links or modules. A few accounts, used from PCs and iPhones on the home network. It is a platform first: modules are added over time, mostly by agents, so the core stays small, clear and easy to extend.
 
 ## Principles
 
-- **Simple and lightweight.** No paid services. Prefer popular, well-maintained libraries and justify every new dependency.
-- **Modular.** Adding a module never means editing the core.
-- **Private.** Never exposed publicly. No registration, accounts are created with the CLI.
-- **Mobile-first.** It has to feel right on a phone before a desktop.
-- **Popular, transferable technology.** This is also a learning project, so choose mainstream tools over exotic ones.
+- **Simple and lightweight.** No paid services. Prefer a popular, well-maintained library over writing your own, and justify every new dependency. It is also a learning project, so prefer mainstream tools.
+- **Modular.** Adding a module never edits the core.
+- **Private.** Never exposed publicly. No registration; accounts come from the CLI.
+- **Native on every device.** Phone and desktop matter equally. Each gets a UI that feels native to it, not one layout squeezed or stretched, even when that means separate components or pages.
 
 ## Commands
 
-If a script below does not exist yet, creating it is part of project setup.
-
-- `npm run dev`: local development. Vite on port 5173 (open this one, also from a phone on the LAN) and the backend on port 3000 with auto-restart. It first runs `scripts/dev-user.ts`, which creates a test user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when they are set and the database has no accounts.
-- `npm run build`: builds the UI to `dist/web`. `npm start`: production server (API plus built UI).
-- `npm test`: unit tests (Vitest).
-- `npm run test:e2e`: Playwright end-to-end tests, including phone viewports.
-- `npm run fix`: formats and auto-fixes everything with Prettier and ESLint. One command, so formatting is never a discussion.
-- `npm run verify`: typecheck, lint (including the module boundary rules), format check, unit tests and build. CI runs the same command.
-- `npm run users -- list | create | edit | remove`: the account CLI. There is no registration and no artificial limit on accounts.
+- `npm run dev`: Vite on 5173 (open this one, also from a phone on the LAN) and the backend on 3000, both reloading. It first runs `scripts/dev-user.ts`, which creates a user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when the database has no accounts.
+- `npm run build` (UI to `dist/web`); `npm start` (production server: API plus built UI).
+- `npm test` (Vitest); `npm run test:e2e` (Playwright, phone viewports included).
+- `npm run fix`: Prettier and ESLint auto-fix. `npm run verify`: typecheck, lint (boundary rules included), format check, unit tests and build; CI runs the same.
+- `npm run users -- list | create | edit | archive | restore`: the account CLI.
 
 ## Tech
 
-- TypeScript in strict mode everywhere, with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and in the Docker image.
-- The backend runs `.ts` files directly with Node's native type stripping, so there is no backend build step. Use `import type`, write relative imports with the `.ts` extension, and avoid enums and namespaces.
-- Frontend: React with Vite (build tooling only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react` as the built-in icon set, and `i18next` with `react-i18next` (plus its browser language detector) for UI text. Backend: Express with TypeScript, kept simple while the backend is small. `zod` validates config, requests and manifests.
-- Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
-- Public APIs are package.json `imports` aliases: `#platform/backend`, `#platform/frontend` and `#platform/shared` (each a `public-api/index.ts`). Modules import the platform only through them, and only what the contract needs is exported: add to a public API when a module needs it, never in advance. `#platform/backend/testing` and `#platform/frontend/testing` are test kits for a module's `__tests__` only; they live in `public-api/__tests__/`, so the Docker image leaves them out.
-- Packaging: one Docker container serving the API and the built UI, built for both x86 and ARM and published to GHCR (`ghcr.io/peteef/homedex`) as a `pr-<number>` preview per pull request, deleted when it closes (unless it is the only tagged image, which GHCR does not allow). Publishing from `master` and `v*` tags (`latest`, `sha-<short>`, the version) is prepared but paused (`if: false`) until releases come with git tags and version bumping.
-- Tooling: npm, Prettier and ESLint, Vitest, Playwright, GitHub Actions.
-- One npm package. Modules are folders, not separate packages, for now.
+The current stack, not a limit: when a task needs something it lacks, look for a library before building it yourself (see Principles).
 
-## Code structure
+- TypeScript strict with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and the Docker image. The backend runs `.ts` directly through Node's type stripping, with no build step: use `import type`, `.ts` extensions on relative imports, and no enums or namespaces.
+- Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
+- One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
+- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Pull requests publish `pr-<number>`, deleted on close. Release publishing (`latest`, `sha-<short>`, versions) is in CI but paused with `if: false` until releases get git tags and version bumping.
+
+## Structure
 
 ```
-src/                    all application code
-  platform/             the core: everything generic
-    frontend/           components/ (generic, pure), pages/ (route screens), features/ (logic per area),
-                        lib/ (generic utilities), locales/ (UI text), app skeleton, public-api/
-    backend/            domain/ (logic per area), routes/ (HTTP endpoints), infrastructure/, public-api/
-    shared/             what frontend and backend both use (HTTP status codes, icon names, languages, link tile
-                        rules, the module manifest schema), public-api/; imports neither
-  modules/              one folder per module, laid out like the platform (see src/modules/README.md)
-    <id>/
-      manifest.ts       defineModule({ id, icon, route, enabled, ... })
-      frontend/         index.tsx (the module's page), pages/, components/, features/, locales/
-      backend/          index.ts (register(ctx)), domain/, routes/, migrations/
-e2e/                    Playwright end-to-end tests
-tests/                  tests of the repository itself, such as the lint boundary rules
-assets/                 placeholder art, loaded at runtime from ASSETS_DIR
+src/platform/          the core
+  frontend/            components/, pages/, features/, lib/, locales/, app skeleton, public-api/
+  backend/             domain/, routes/, infrastructure/, public-api/
+  shared/              code both sides use (status codes, icon names, languages, rules, manifest schema); imports neither side
+src/modules/<id>/      one module, laid out like the platform (guide: src/modules/README.md)
+e2e/                   Playwright tests
+tests/                 tests of the repository itself (lint boundaries, module contract)
+assets/                art, loaded at runtime from ASSETS_DIR
 ```
 
-- **Unit tests live in a `__tests__/` folder next to the code they test**, created only where tests exist, so a module's tests stay inside the module. Test files are named `*.test.ts(x)`.
-- **Test names** read `should X` or `should X when Y [and Z]`, for example `it('should reject the login when the password is wrong')`. `describe` names the unit under test; nest one `describe` per function tested when the file tests several (`describe('accounts service')` > `describe('create')`).
-- **Tests follow Given, When, Then**, marked with `// Given`, `// When` and `// Then` comments; join them (`// When / Then`) or skip one when it is empty.
-- **Tests never shape production code.** Never export a function, constant or type only so a test can use it, just as you would not make a Java method public for a test. Test each file through what it already exports (its functions, the rendered component, the HTTP endpoint), like the public methods of a class, and write expected values in the test literally.
-- **Every file with logic has its own unit tests**, including files in `internal/` folders (repositories, API wrappers, query hooks, page components): `internal/` means "used only inside its folder", not "untested". Coverage from a higher layer (a page test, a service test) does not replace them. Pure types, barrels (`index.ts`) and locale files need none.
+### Platform and modules
 
-- **Developing a module never changes `platform/`.** If a module needs something from the core, add it to the platform's public API first, as a separate change.
-- **Dependencies point one way.** Modules use only the platform's public API. The platform never imports a module by name and finds modules through their manifests. Modules never import each other. Lint rules enforce this in `verify`.
-- **Removing or disabling a module is one action:** delete its folder, or set `enabled: false` in its manifest. Nothing else may reference it.
-- **A module owns its data.** Its tables are named `<module_id_snake>_<table>` (module `shopping-list`: `shopping_list_items`) and created by its own migrations; the contract test checks the prefix. Removing the code leaves the data in place. Deleting data is a separate, deliberate step.
-- Backend layout: `domain/<name>/` holds the logic of one area (accounts, auth) behind an `index.ts`, the only file other code may import; it exports the service factory, its interface and the models. Repositories and helpers live in the domain's `internal/` folder and define how a use case uses the database. `domain/services.ts` is the domain layer's single entrypoint: it wires the domains together for the server and the CLI. `routes/` holds every HTTP endpoint, one file per resource with its own paths, thin: validate, call a domain service, shape the response. `infrastructure/` holds the technical side: Express plumbing (guards, error handler, cookies, rate limit), storage (connection, migrations), the module loader (`modules/`), config, logger, the CLI, `app.ts` and `main.ts`. Domains use infrastructure only through `infrastructure/storage/index.ts` and never import routes or each other's internals; lint enforces this. To add a domain, extend `DOMAINS` in `eslint.config.js`. Factories are named after what they build (`accountsService()`, not `createAccountsService()`).
-- Functions are arrow functions assigned to `const`, never `function` declarations or expressions; lint enforces it. Class and object methods are fine. An arrow function whose body is a single expression uses the concise form, with no braces and no `return` (`=> expr`); lint enforces it. Only a function with a one-statement body may be written inline (a JSX handler, a callback argument); anything longer becomes a named `const` function (`onChange={pick}`). `if`, `else` and loops always keep their braces. A statement spanning several lines (a block, a multi-line declaration or call) has a blank line before and after it; lint enforces it and `npm run fix` adds them.
-- A factory defines small single-purpose functions and ends with `return { create, list, ... }` of function references, never inline functions. A returned object with several properties is written one property per line; lint enforces it. Prefer several small functions over one long one.
-- Expected domain failures are thrown as `Error` subclasses (for example `AccountError`) and caught at the edge (route, CLI). Optional input is `field?: T`; a stored value that can be empty is `T | null`, mapped directly from the database.
-- Types stay in the file that owns them. The interface of what a file exports (a service, a repository) stays next to its implementation. Model types shared by several files of a folder (a domain, a feature, a page) move to `types.ts` in that folder (error classes to `errors.ts`). This applies to the frontend too; component prop types stay with their component. Internal shapes, such as a database row, stay with their code. No global `types.ts`.
-- Frontend layout (`platform/frontend/`): `components/<name>/` holds generic, reusable components, one folder each with only its own files (component, tests, helpers). `pages/<name>/` holds one screen: the page component at its base, in `pages/<name>/components/` the components only that page uses, and in `pages/<name>/internal/` its other code (hooks, data, helpers). Those components are pure like the generic ones; a component two pages need moves to `components/`, and logic two pages need moves to a feature. `features/<name>/` holds the logic of one area (hooks, data access, state; today `auth`: session, login, logout, `useCurrentUser`, the account list and the remembered account; `modules`: the module pages found through their manifests; and `tiles`: the tile type, `displayText`, `sortTiles`, `useTiles`, the optimistic `useTogglePin` and `useCreateTile`, `useUpdateTile`, `useDeleteTile`) and `lib/<name>/` generic utilities (today `http`: the API client (`getJson`, `postForJson`, `patchForJson`, `post`, `put`, `del`), which always sends `Content-Type: application/json` on writes; `i18n`: `useText`, `textHook`, the supported languages and `useLanguage`; and `search`: `foldText`). Both are used only through their `index.ts`, with private files in `internal/`, like backend domains. `App.tsx`, `AppLayout.tsx`, `RequireAuth.tsx` (route guard), `i18n.ts`, `queryClient.ts`, `routes.ts` and `sceneLayers.ts` are the app skeleton at the base. Dependencies point one way: components import none of pages, features, libs (except `lib/i18n`) or the skeleton; libs import no features or pages; features import no pages. Lint enforces all of it (to add a feature or lib, extend `FRONTEND_FEATURES` or `FRONTEND_LIBS` in `eslint.config.js`). A 401 from any request ends the session, and the guard sends the user to the login page. UI that belongs to one module stays in that module.
-- Components are pure: everything comes in through props, with no data fetching, business logic or global state (local UI state such as an open menu is fine). The one exception is `useText()`: the language is ambient, like the theme. Pages own the logic, through hooks for anything reusable, and compose components. There is no separate container layer: the page is the container.
+- Public APIs are the `imports` aliases `#platform/backend`, `#platform/frontend` and `#platform/shared` (each a `public-api/index.ts`). Modules use the platform only through them and never import each other. The platform never imports a module by name; it finds modules through their manifests.
+- A public API grows only when a module needs something, in its own platform PR before the module PR, never in advance. Changing an existing export is its own PR too. `#platform/backend/testing` and `#platform/frontend/testing` are test kits for a module's `__tests__` only.
+- Removing or disabling a module is one action: delete its folder or set `enabled: false`. Nothing else references it.
+- A module owns its data: tables are named `<module_id_snake>_<table>` and created by its own migrations. Removing the code leaves the data; deleting data is a separate, deliberate step.
 
-## Architecture guidelines
+### Backend
 
-- Code documents itself through clear names and structure. Write a comment only for what the code cannot say: a hidden constraint, a workaround, surprising behaviour, a non-obvious decision. Remove redundant comments when you see them. The Given, When, Then markers in tests are the exception.
-- Name your own paths, defaults, file names, ports and messages as constants instead of repeating inline strings or numbers. Library-defined names, route paths in `routes/` and the expected values in tests stay literal. HTTP status codes are the named constants of `src/platform/shared/http/status.ts`, used by both sides, imported directly (`BAD_REQUEST`, not `HTTP_STATUS.BAD_REQUEST`).
-- Keep route handlers thin and put logic in services, so the web framework can be swapped later.
-- Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
-- All data access goes through the storage layer. No SQL scattered through handlers. Migrations are committed, data is not.
-- A tile is either a link or a module, and is shared or personal. Pins are per user. Users add link tiles from the "+" tile at the end of the grid and edit or delete their own (`editable`) from a pencil button (on hover with a mouse) or a long press (touch); the form lives in `pages/home/` inside the generic `Dialog` (bottom sheet on phones, centred dialog from `sm`). The form checks everything the API checks (limits and the http(s) rule come from `shared/tiles/linkTileRules.ts`), so the API's English 400 messages are never shown; a failed save shows a translated generic message.
-- At startup `setUpModules` gives every enabled module one shared tile (its icon follows the manifest). The tiles service gets the enabled module ids from `createApp` and hides the tiles of missing or disabled modules; their rows and pins stay for when the module comes back.
-- Tile text follows the user's language. A link tile stores a title (and optional description) per language, at least one; `GET /api/tiles` returns them all, so switching language needs no refetch. A module tile takes `manifest.name` and `manifest.description` from the module's locale files; the manifest holds no text. The UI shows tile text only through `displayText` (current language, else English, else any; title and description from one language) and sorts by it (`sortTiles`); the API orders tiles pinned first, then by Dex number. Anything that matches text compares `foldText` of both sides (case and diacritics ignored, "lodz" finds "Łódź").
-- Dev and prod differ only through configuration (HTTPS, secure cookies, backups), never through code. Dev runs plain HTTP on the local network. HTTPS-only headers (HSTS, `upgrade-insecure-requests`) follow `COOKIE_SECURE`, because they break plain HTTP in Safari.
-- The background scene is built in layers (background plus separate sprites) so it can change and be animated later. All art loads from one configurable assets location.
+- `domain/<name>/`: the logic of one area behind an `index.ts` (service factory, its interface, models); repositories and helpers in `internal/`. `domain/services.ts` wires the domains for the server and the CLI. Domains reach infrastructure only through `infrastructure/storage/index.ts`. A new domain goes into `DOMAINS` in `eslint.config.js`.
+- `routes/`: one file per resource, thin (validate, call a service, shape the response), so the framework can be swapped.
+- `infrastructure/`: Express plumbing, storage and migrations, the module loader, config, logger, CLI, `app.ts`, `main.ts`.
+- Factories are named after what they build (`accountsService()`), define small single-purpose functions and end with `return { create, list }` of function references.
+- Expected failures are `Error` subclasses (`AccountError`), caught at the edge (route, CLI). Optional input is `field?: T`; a stored value that can be empty is `T | null`.
+- All SQL lives in repositories. Migrations are committed. Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
+
+### Frontend (`src/platform/frontend/`)
+
+- `components/<name>/`: generic, pure components. Everything comes through props: no fetching, business logic or global state (local UI state is fine; `useText()` is the one exception).
+- `pages/<name>/`: one screen. The page component at its base owns the logic (there is no container layer), its own pure components go in `components/`, its other code in `internal/`. A component two pages need moves to `components/`, logic two pages need to a feature.
+- `features/<name>/` (logic of one area: hooks, data access, state) and `lib/<name>/` (generic utilities, such as the `http` API client) are used only through their `index.ts`, with private files in `internal/`. Add a new one to `FRONTEND_FEATURES` or `FRONTEND_LIBS` in `eslint.config.js`.
+- The app skeleton sits at the base (`App.tsx`, `AppLayout.tsx`, `RequireAuth.tsx`, `routes.ts`, ...). A 401 from any request ends the session and the guard sends the user to the login page, so data hooks don't handle it.
+- UI that belongs to one module stays in that module.
+
+## Code style
+
+- Code documents itself. Comment only what the code cannot say (a hidden constraint, a workaround, surprising behaviour, a non-obvious decision), and remove redundant comments on sight. Test section markers are the exception.
+- Name your own paths, defaults, file names, ports and messages as constants. Library-defined names, route paths in `routes/` and expected values in tests stay literal. HTTP status codes come from `src/platform/shared/http/status.ts`, imported by name (`BAD_REQUEST`).
+- Types stay in the file that owns them. Model types shared within a folder go to its `types.ts`, error classes to `errors.ts`; prop types stay with their component. No global `types.ts`.
+- Only a function with a one-statement body may be inlined (a JSX handler, a callback argument); anything longer becomes a named `const` (`onChange={pick}`).
+- Lint and `npm run fix` handle the rest: arrow functions only, concise bodies, braces everywhere, blank lines around multi-line statements, one property per line in returned objects.
+
+## Tests
+
+- Unit tests live in a `__tests__/` folder next to the code, named `*.test.ts(x)`.
+- Every file with logic has its own tests, `internal/` included (repositories, API wrappers, hooks, page components). Coverage from a higher layer does not count. Pure types, barrels and locale files need none.
+- Tests never shape production code: export nothing only for a test, test through what a file already exports, and write expected values literally.
+- `describe` names the unit (nested per function when a file tests several); `it('should X when Y')`. Mark sections with `// Given`, `// When`, `// Then`, joined (`// When / Then`) or skipped when empty.
+
+## UI and text
+
+- Check every UI change with Playwright on desktop and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
+- Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only). Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
+- Pokémon wording: "Party" for pinned tiles, Dex numbers ("No. 001"), "Dex" for all tiles.
+- All UI text lives in TypeScript locale files (`export default { ... } as const`): `platform/frontend/locales/<language>.ts` (namespace `platform`) and `<module>/frontend/locales/<language>.ts` (namespace = module id). Keys follow folders: one camelCased key per page folder with its components inside, `components.<name>` for generic components, and `common.<kind>` only for text two or more places share with the same meaning.
+- Read text with `useText('login.picker')`, then `text.title` or `text.greeting({ username })`; `<Trans>` for text with markup.
+- English is the source language and types every other one. Other languages (today Polish) read naturally, not word for word, avoid gendered forms, and are declared `as const satisfies Translation<typeof en>`; the locale test checks them against English. A new language needs its code in `LANGUAGE_CODES` (`shared/i18n/languages.ts`), its flag in `lib/i18n/languages.ts`, and its files.
+- User data (usernames, tile text) and the brand are not translated. The backend stays English: its messages are for logs, the CLI and developers, so the UI never shows an API error text and uses its own translated message instead.
 
 ## Security and privacy
 
-- **Never commit user data or secrets:** `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and review your diff for these before every push.
-- Never put absolute local paths, machine names or personal details in repo files, comments or commit messages. The repo is meant to be public.
-- Tests, fixtures and examples use fake data only.
-- Accounts are created by the CLI, never from committed files. The development test user is the only automatic account: its credentials live in the git-ignored `.env.development`, only `npm run dev` creates it, `scripts/` is kept out of the Docker image (the smoke test checks it), and the server refuses to start in production when any `DEV_*` variable is set (the prefix is reserved for development; `infrastructure/devConfig.ts`).
-- The login page lists the usernames of active accounts without a session (`GET /api/auth/accounts`): pick your account, then type the password. The device remembers only the last username, in `localStorage`; the session stays in the `HttpOnly` cookie.
-- No home-made crypto. Passwords are stored as salted hashes with a vetted algorithm. Session cookies are `HttpOnly` and `SameSite`, and `Secure` whenever HTTPS is on.
-- Do not fetch anything from external sites at runtime (for example icons). Use a built-in icon set.
-
-## UI and theme
-
-- Check every UI change with Playwright at 375 pt (iPhone 13 mini) and 402 pt (iPhone 17 Pro) wide. Touch targets are large.
-- Functional elements sit in a translucent panel over the background scene. Text contrast is at least 4.5:1 on any background.
-- Modern 2D style with Pokémon-inspired wording: "Party" for pinned tiles, Dex numbers on entries ("No. 001"), "Dex" for the full tile list.
-- Animation is optional polish and respects the "reduce motion" setting.
-- **Text the user sees lives in locale files**, never in code: one file per language for the platform (`platform/frontend/locales/<language>.ts`, namespace `platform`) and one per module (`frontend/locales/<language>.ts`, namespace = module id). They are TypeScript (`export default { ... } as const`), not JSON, so the types know each message. Keys follow the folders: one top-level key per page folder, camelCased (`notFound`), with the page's own components inside it; `components.<name>` for generic components; `common` only for text two or more places share, grouped by kind (`common.actions`, `common.errors`), moved there when the second use appears and only when the meaning is the same, not just the English words. Read a section with `useText('login.picker')`, then `text.title` for plain text and `text.greeting({ username })` for text with `{{values}}` or plural forms; `<Trans>` for text with markup. English is the source language and types it all, so a wrong key or a missing value fails the typecheck. Every other language (today Polish) is written as natural text, not word for word, avoids gendered forms, and is declared `as const satisfies Translation<typeof en>`; the locale test (`platform/frontend/__tests__/locales.test.ts`) checks every file of the platform and the modules against English: same keys, same `{{values}}` and markup, the plural forms `Intl.PluralRules` lists for the language, and a file for every language in `LANGUAGES`. To add a language, add it to `LANGUAGE_CODES` in `platform/shared/i18n/languages.ts` (the backend validates tile text against it) and its flag in `lib/i18n/languages.ts`, and write its files. The language comes from the device's choice in the switcher (`localStorage`), then the browser, then English. User data (usernames, tile titles) and the brand are not translated by the app; users write link tile text per language themselves. The backend stays English: its messages are for logs, the CLI and developers.
-- Colours, radii and fonts come from the `@theme` tokens in `platform/frontend/index.css`, never raw values. Fonts are system fonts, so nothing is fetched at runtime. PWA icons live in `public/`, scene art in `assets/`.
+- Never commit user data or secrets: `data/`, `.env`, SQLite files, password hashes, personal links, tokens. Only `.env.example` with fake values is committed. Check `git status` before every commit and the diff before every push.
+- The repo is public: no absolute local paths, machine names or personal details in files, comments or commit messages. Tests, fixtures and examples use fake data.
+- Accounts come only from the CLI. The development test user is the only automatic account; `scripts/` stays out of the Docker image, and the server refuses to start in production when any `DEV_*` variable is set.
+- The login page lists active usernames without a session. A device remembers only the last username (`localStorage`); the session lives in the `HttpOnly` cookie.
+- No home-made crypto: passwords are salted hashes from a vetted algorithm. Session cookies are `HttpOnly`, `SameSite`, and `Secure` with HTTPS.
+- Dev and prod differ only through configuration. HTTPS-only headers (HSTS, `upgrade-insecure-requests`) follow `COOKIE_SECURE`, because they break plain HTTP in Safari.
+- Nothing is fetched from external sites at runtime; icons come from the built-in set.
 
 ## Git and pull requests
 
-- **Every change comes as a GitHub Pull Request.** Work on a branch and open a PR. Never commit or push to `master`.
-- **Never merge, and never merge branches yourself, unless the owner explicitly asks.** The owner reviews, approves and merges.
-- The default branch is `master`. Agents open PRs with the owner's GitHub account, and GitHub does not allow approving your own PR, so approval means the owner's review comments plus the owner's merge. CI checks (`verify`, `e2e`, `secrets`) must be green. Address each review comment by fixing it or explaining why not, and wait for the owner's go-ahead.
-- Keep each PR cohesive, with one purpose and a short description of what changed, why and how it was tested. Larger PRs are fine, especially early in the project. Avoid extreme ones touching tens or hundreds of files, and split those. Use a draft PR for unfinished work instead of "WIP" in the title.
-
-### Naming
-
-- **Branches:** `<type>/<short-kebab-description>`, with a prefix such as `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/` or `ci/`. Lowercase, hyphens, short.
-- **Commit messages and PR titles** start with your model name in square brackets, for example `[Claude Opus 5.5] Add pin button to tile`. Use your actual model name and the same prefix everywhere. After it, write an imperative summary ("Add", "Fix", not "Adding") of about 70 characters or less.
-- **Merges are squash merges**, so the PR title becomes the one commit on `master`. Write the PR title as the final commit message.
+- Every change is a pull request from a branch. Never commit or push to `master`, and never merge unless the owner asks. The owner reviews and merges; agents use the owner's account, so approval is the owner's review plus the merge. Required checks: `verify`, `e2e`, `secrets`, `docker`.
+- Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/` or `ci/`.
+- Commit messages and PR titles: `[<model name>] Imperative summary`, about 70 characters. Merges are squash merges, so the PR title becomes the commit on `master`.
+- Anything posted on GitHub (descriptions, comments, review replies) starts with `**🤖 [<model name>]**` on its own line, then a blank line.
+- One cohesive purpose per PR, with a short description of what changed, why and how it was tested. Split very large PRs. Use a draft PR for unfinished work. Address every review comment by fixing it or explaining why not.
 
 ## Working practices
 
-- When this file does not cover something, follow the conventions already in the codebase. Ask the owner only as a last resort, when neither answers it; never guess. Do not build beyond what was asked.
-- **Done means, before you open a PR:**
-  1. `npm run fix` and then `npm run verify` pass.
-  2. New behavior has tests. Never disable or weaken a check to make it pass.
-  3. UI changes are checked at both phone widths.
-  4. Your diff contains no secrets, personal data or local paths.
-  5. The branch, commit and PR names follow the naming rules.
-- Planning docs (PRD, plans, module PRDs) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo guide to the module contract.
-- Keep the docs current: on a significant change or decision, update this file, `README.md`, `src/modules/README.md` and any other affected docs in the same PR. Keep this file short and do not add rules that lint or tooling already enforce.
+- When this file does not cover something, follow the codebase's conventions. Ask the owner only as a last resort; never guess. Do not build beyond what was asked.
+- Planning docs (PRDs, plans) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo module guide.
+- **Done means, before a PR:** `npm run fix` then `npm run verify` pass; new behaviour has tests and no check was weakened; UI changes are checked on desktop and at both phone widths; the diff has no secrets, personal data or local paths; names follow the rules above.
+- Keep docs current in the same PR: this file, `README.md`, `src/modules/README.md`. Keep this file short, with no rules that lint or tooling already enforce.
