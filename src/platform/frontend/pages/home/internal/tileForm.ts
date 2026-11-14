@@ -31,20 +31,22 @@ export const newTileValues = (language: Language): TileFormValues => ({
   scope: DEFAULT_SCOPE,
 });
 
-const textsOf = (texts: TileTexts, language: Language): LanguageText[] =>
-  languageOrder(language).flatMap((code) => {
-    const text = texts[code];
+const textIn = (texts: TileTexts, language: Language): LanguageText[] => {
+  const text = texts[language];
 
-    return text === undefined
-      ? []
-      : [
-          {
-            language: code,
-            title: text.title,
-            description: text.description ?? '',
-          },
-        ];
-  });
+  return text === undefined
+    ? []
+    : [
+        {
+          language,
+          title: text.title,
+          description: text.description ?? '',
+        },
+      ];
+};
+
+const textsOf = (texts: TileTexts, language: Language): LanguageText[] =>
+  languageOrder(language).flatMap((code) => textIn(texts, code));
 
 export const tileValues = (tile: Tile, language: Language): TileFormValues => ({
   texts: textsOf(tile.texts, language),

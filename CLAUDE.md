@@ -68,7 +68,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - Code documents itself. Comment only what the code cannot say (a hidden constraint, a workaround, surprising behaviour, a non-obvious decision), and remove redundant comments on sight. Test section markers are the exception.
 - Name your own paths, defaults, file names, ports and messages as constants. Library-defined names, route paths in `routes/` and expected values in tests stay literal. HTTP status codes come from `src/platform/shared/http/status.ts`, imported by name (`BAD_REQUEST`).
 - Types stay in the file that owns them. Model types shared within a folder go to its `types.ts`, error classes to `errors.ts`; prop types stay with their component. No global `types.ts`.
-- Only a function with a one-statement body may be inlined (a JSX handler, a callback argument); anything longer becomes a named `const` (`onChange={pick}`).
+- Only a function with a one-statement body may be inlined (a JSX handler, a callback argument); anything longer becomes a named `const` (`onChange={pick}`). Four idioms may stay inline at any length: Express route handlers in `routes/`, React hook bodies (`useEffect`, `useMemo`), a `new Promise` executor, and test callbacks (`describe`, `it`, hooks, mocks).
 - Lint and `npm run fix` handle the rest: arrow functions only, concise bodies, braces everywhere, blank lines around multi-line statements, one property per line in returned objects.
 
 ## Tests

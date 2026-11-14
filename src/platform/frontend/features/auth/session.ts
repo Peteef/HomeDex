@@ -31,12 +31,15 @@ export const useSession = () =>
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
+
+  const startSession = (user: CurrentUser): void => {
+    rememberAccount(user.username);
+    switchSession(queryClient, user);
+  };
+
   return useMutation({
     mutationFn: login,
-    onSuccess: (user) => {
-      rememberAccount(user.username);
-      switchSession(queryClient, user);
-    },
+    onSuccess: startSession,
   });
 };
 

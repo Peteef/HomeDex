@@ -18,24 +18,26 @@ interface Migration {
   file: string;
 }
 
+const toMigration = (directory: string, name: string): Migration => {
+  const match = MIGRATION_FILE.exec(name);
+
+  if (!match?.[1]) {
+    throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
+  }
+
+  return {
+    version: Number(match[1]),
+    name,
+    file: path.join(directory, name),
+  };
+};
+
 const listMigrations = (directory: string): Migration[] => {
   const migrations = fs
     .readdirSync(directory)
     .filter((name) => name.endsWith('.sql'))
     .sort()
-    .map((name) => {
-      const match = MIGRATION_FILE.exec(name);
-
-      if (!match?.[1]) {
-        throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
-      }
-
-      return {
-        version: Number(match[1]),
-        name,
-        file: path.join(directory, name),
-      };
-    });
+    .map((name) => toMigration(directory, name));
 
   const seen = new Set<number>();
 
@@ -67,6 +69,11 @@ export const runMigrations = (db: Storage, scope: string, directory: string): st
     'INSERT INTO schema_migrations (scope, version, name, applied_at) VALUES (?, ?, ?, ?)',
   );
 
+  const apply = (migration: Migration): void => {
+    db.exec(fs.readFileSync(migration.file, 'utf8'));
+    record.run(scope, migration.version, migration.name, Date.now());
+  };
+
   const appliedNow: string[] = [];
 
   for (const migration of listMigrations(directory)) {
@@ -74,12 +81,7 @@ export const runMigrations = (db: Storage, scope: string, directory: string): st
       continue;
     }
 
-    const sql = fs.readFileSync(migration.file, 'utf8');
-
-    db.transaction(() => {
-      db.exec(sql);
-      record.run(scope, migration.version, migration.name, Date.now());
-    })();
+    db.transaction(apply)(migration);
 
     appliedNow.push(migration.name);
   }
