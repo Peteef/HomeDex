@@ -1,35 +1,126 @@
 # HomeDex
 
-A private, Pokémon-themed launch pad for home and personal life. Think of a browser start page for personal things: a greeting, a quick-find box and a grid of tiles that open links or small modules.
+**A private, Pokémon-themed launch pad for home and personal life.**
 
-It is built for two people, used from a PC, a laptop and iPhones, and it is never exposed to the public internet.
+A Pokédex catalogues every creature you meet. HomeDex catalogues everything you reach for at home: the spreadsheets, documents, dashboards and small tools of everyday life, each one a numbered Dex entry one tap away. Pick your Trainer, keep your favourites in your Party, and find anything else with a few letters.
 
-> **Status:** early development. The foundation is in place (server, UI shell, tooling, CI). Storage, accounts (with the `users` CLI), the login screen (pick your Trainer, then type the password) and the tiles API (shared and personal link tiles with text per language, pins), the module contract and a tile for every enabled module are in. The home screen shows the real tiles (pinned first, quick-find in the current language), and users add, edit and delete their link tiles there, with text per language. The first module is a shared shopping list (items with an optional amount, checked off into the cart).
+HomeDex is self-hosted and made for a household: a few accounts, used from computers and phones on the home network, never exposed to the public internet.
 
-## Goals
+> **Status:** close to v1.0.0. Everything below works today, but release images are not published yet (see [Running HomeDex](#running-homedex)).
 
-- **Launch pad first.** Quick to open, quick to find, quick to leave for the thing you need.
-- **Modular.** New tiles and modules are added without touching the core.
-- **Private and simple.** No registration, no paid services, no secrets in the repository.
-- **Mobile-first.** It has to feel right on a phone before a desktop.
+## Features
 
-## Tech
+- **Home screen:** a greeting, quick-find and one grid of tiles, with your pinned tiles (your Party) first.
+- **Link tiles:** add, edit and delete them from the home screen. Each one is shared with everyone or visible only to you.
+- **Modules:** small built-in apps that live behind a tile. The first one is a shared shopping list.
+- **Quick-find:** type a few letters and press Enter to open the best match. Case and accents are ignored, so "lodz" finds "Łódź".
+- **Two languages:** English and Polish, chosen per device. Tile titles and descriptions can be written in each language.
+- **Phone-first:** designed for iPhones and installable on the home screen, while still comfortable on a desktop.
+- **Private by design:** accounts are created from the command line, there is no sign-up, and nothing is loaded from outside sites.
 
-TypeScript everywhere, running on Node.js 26.
+## Running HomeDex
 
-| Part     | Technology                                                                    |
-| -------- | ----------------------------------------------------------------------------- |
-| Frontend | React, Vite, React Router, TanStack Query, Tailwind CSS, lucide-react icons   |
-| UI text  | i18next and react-i18next behind a small `useText` hook, English and Polish   |
-| Backend  | Express (runs `.ts` files directly through Node's built-in type stripping)    |
-| Tests    | Vitest (unit), Playwright (end-to-end, including iPhone-sized WebKit and axe) |
-| Quality  | ESLint, Prettier, husky and lint-staged, GitHub Actions                       |
-| Storage  | SQLite (`better-sqlite3`), Argon2id password hashes, cookie sessions          |
-| Package  | One Docker image (API and built UI) for amd64 and arm64                       |
+HomeDex runs as one Docker container that serves both the app and its API. Its data lives in a `data/` folder next to it. You need [Docker](https://docs.docker.com/get-docker/) with Docker Compose.
 
-## Getting started
+> **Before the first release:** the `latest` image does not exist yet, so `docker compose pull` fails. Until then, either [build from source](#building-from-source) or run the preview image of an open pull request by setting `HOMEDEX_VERSION=pr-<number>` in `.env`.
 
-You need [nvm](https://github.com/nvm-sh/nvm) (or any way to get Node.js 26) and npm.
+### Install
+
+Create a folder for HomeDex and download the Compose file and the example settings:
+
+```bash
+mkdir homedex && cd homedex
+curl -fsSLO https://raw.githubusercontent.com/Peteef/HomeDex/master/compose.yaml
+curl -fsSL -o .env https://raw.githubusercontent.com/Peteef/HomeDex/master/.env.example
+chmod 600 .env
+mkdir data
+```
+
+On Linux, the container runs as user 1000, so give it the data folder: `sudo chown 1000:1000 data`. Docker Desktop does not need this.
+
+Start it:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+HomeDex is now at `http://localhost:3000`. Set `HOMEDEX_VERSION` in `.env` to run a specific version instead of `latest`.
+
+### Create accounts
+
+There is no registration. Create an account for each person (it asks for a username and a hidden password):
+
+```bash
+docker compose exec homedex node src/platform/backend/infrastructure/cli/users.ts create
+```
+
+The same command takes `list`, `edit <username>`, `archive <username>` and `restore <username>`. They work like the [accounts CLI](#accounts-cli) used in development.
+
+### Use it on your phone
+
+1. Connect the phone to the same Wi-Fi as the computer running HomeDex.
+2. Find the computer's local address, for example in your Wi-Fi settings, or with `ipconfig getifaddr en0` on a Mac.
+3. Open `http://<address>:3000` in Safari. If the computer asks whether to allow incoming connections, allow them.
+4. Tap **Share**, then **Add to Home Screen**. HomeDex then opens full screen with its own icon.
+
+HomeDex runs over plain HTTP on the home network. Keep `COOKIE_SECURE=false` until it is served over HTTPS (see [Configuration](#configuration)).
+
+### Upgrading
+
+Back up first (see below), then:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Database changes are applied automatically when the new version starts, and they only go forward. To roll back, restore the backup and set `HOMEDEX_VERSION` to the previous version.
+
+### Backups
+
+Everything HomeDex stores is in `data/`. Stop the container so the database is written out completely, copy the folder, and start again:
+
+```bash
+docker compose stop
+mkdir -p backups && cp -R data "backups/data-$(date +%F)"
+docker compose start
+```
+
+To restore, run `docker compose down`, replace `data/` with a copy, and run `docker compose up -d`. Scheduled backups are not built in yet.
+
+### Building from source
+
+Until release images exist, or to run your own changes, build the image from a clone:
+
+```bash
+git clone https://github.com/Peteef/HomeDex.git
+cd HomeDex
+docker compose up -d --build
+```
+
+Settings go in `.env` in the clone (git-ignored). The container uses the clone's `data/` folder, the same one `npm run dev` uses. To upgrade, back up, then run `git pull` and `docker compose up -d --build`.
+
+## Configuration
+
+Settings come from environment variables, read from `.env`. Copy `.env.example` to start. Every setting has a default.
+
+| Variable           | Default    | Meaning                                                                                                                                                                                    |
+| ------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`             | `3000`     | Port the server listens on                                                                                                                                                                 |
+| `HOST`             | `0.0.0.0`  | Address to listen on (all interfaces, so phones can connect)                                                                                                                               |
+| `DATA_DIR`         | `./data`   | Where HomeDex keeps its data, the SQLite database included                                                                                                                                 |
+| `ASSETS_DIR`       | `./assets` | Folder with the background art, served at `/media`                                                                                                                                         |
+| `COOKIE_SECURE`    | `false`    | `true` only when HomeDex is served over HTTPS. It marks the session cookie `Secure` and turns on HTTPS-only headers. Over plain HTTP that breaks signing in, and Safari shows a blank page |
+| `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in without being used                                                                                                                                       |
+| `TRUST_PROXY`      | `false`    | `true` when HomeDex runs behind a reverse proxy, so it sees each client's real address (the login rate limit relies on it)                                                                 |
+| `HOMEDEX_VERSION`  | `latest`   | Docker Compose only: the image tag to run, such as a version or `pr-<number>` for a pull request preview                                                                                   |
+
+With Docker Compose, `compose.yaml` fixes `DATA_DIR`, `HOST` and `PORT`: the data is always in `data/` next to `compose.yaml`, and the port is changed in its `ports` mapping (`'8080:3000'` serves HomeDex on port 8080).
+
+## Development
+
+You need [nvm](https://github.com/nvm-sh/nvm) (or another way to get Node.js 26) and npm.
 
 ```bash
 nvm use
@@ -37,75 +128,59 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173.
+Open http://localhost:5173. To try it on a phone, open the "Network" address that Vite prints, on the same Wi-Fi.
 
-To try it on a phone, connect it to the same Wi-Fi and open `http://<your computer's address>:5173`.
-
-To run it the way production does (one process serving the API and the built UI):
+To run it the way production does, one process serving the API and the built UI on port 3000:
 
 ```bash
 npm run build
 npm start
 ```
 
-Then open http://localhost:3000.
-
-## Commands
+### Commands
 
 | Command            | What it does                                                                                        |
 | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload (see the test user below)  |
+| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload on changes                 |
 | `npm run build`    | Builds the UI into `dist/web`                                                                       |
 | `npm start`        | Production server (API plus built UI)                                                               |
 | `npm test`         | Unit tests                                                                                          |
 | `npm run test:e2e` | End-to-end tests against the production build (first run: `npx playwright install webkit chromium`) |
-| `npm run users --` | Account CLI: `list`, `create`, `edit`, `archive`, `restore` (see below)                             |
+| `npm run users --` | Accounts CLI (see below)                                                                            |
 | `npm run fix`      | Formats and auto-fixes everything                                                                   |
 | `npm run verify`   | Typecheck, lint, format check, unit tests and build. CI runs the same                               |
 
-## Configuration
+### Development test user
 
-Settings come from environment variables. Copy `.env.example` to `.env` to change them. All have defaults.
-
-| Variable           | Default    | Meaning                                                          |
-| ------------------ | ---------- | ---------------------------------------------------------------- |
-| `PORT`             | `3000`     | Port of the backend and of the production server                 |
-| `HOST`             | `0.0.0.0`  | Address to listen on (all interfaces, so phones can connect)     |
-| `DATA_DIR`         | `./data`   | Where runtime data lives, the SQLite file included (git-ignored) |
-| `ASSETS_DIR`       | `./assets` | Folder with all art, served at `/media`                          |
-| `COOKIE_SECURE`    | `false`    | Set to `true` once HTTPS is on                                   |
-| `SESSION_TTL_DAYS` | `365`      | How long a device stays signed in                                |
-| `TRUST_PROXY`      | `false`    | Set to `true` behind a reverse proxy                             |
-| `HOMEDEX_VERSION`  | `latest`   | Docker Compose only: the published image version to run          |
-
-## Accounts
-
-**Development test user.** To get an account automatically after you wipe `data/`, create a `.env.development` file (git-ignored) with fake credentials:
+To get an account automatically after wiping `data/`, create a `.env.development` file (git-ignored) with made-up credentials:
 
 ```bash
 DEV_USERNAME=Tester
 DEV_PASSWORD=test12345
 ```
 
-`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Without the file, no user is created. Only `npm run dev` reads `.env.development`; it is never part of the Docker image, and the server refuses to start in production when any variable starting with `DEV_` is set: that prefix is reserved for development settings.
+`npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Only `npm run dev` reads this file. The server refuses to start in production when any variable starting with `DEV_` is set.
 
-There is no registration. Accounts are created with the CLI, which asks for the values (the password is hidden) or takes flags for scripts:
+### Accounts CLI
+
+Without options, the CLI asks for the values (the password is hidden). Options and a piped password make it scriptable:
 
 ```bash
 npm run users -- create
 npm run users -- list
 npm run users -- edit <username> --password <new password>
 npm run users -- archive <username>
+npm run users -- restore <username>
 ```
 
-Archiving blocks an account from logging in and signs it out everywhere, but keeps its data. `restore` undoes it. Changing a password signs out all of that user's devices. Passwords need at least 8 characters.
+Archiving blocks an account from signing in and signs it out everywhere, but keeps its data. `restore` undoes it, and `list --all` includes archived accounts. Changing a password signs out all of that user's devices. Passwords need at least 8 characters.
 
-## Project layout
+### Project layout
 
 ```
 src/
   platform/    the core: server, app shell, shared UI (frontend/, backend/ and shared/)
-  modules/     one folder per module, each with its own UI, routes and data
+  modules/     one folder per module, each with its own UI, API and data
 e2e/           end-to-end tests
 tests/         tests of the repository itself (lint boundary rules, the module contract)
 assets/        placeholder art, loaded at runtime from ASSETS_DIR
@@ -113,10 +188,16 @@ assets/        placeholder art, loaded at runtime from ASSETS_DIR
 
 Unit tests sit in `__tests__/` folders next to the code they test.
 
-The core and the modules are kept apart on purpose: a module can only use the platform's public API, never the core's internals or another module, and lint enforces this. Removing a module means deleting its folder. How to add one: [src/modules/README.md](src/modules/README.md).
+### Adding a module
+
+A module is a folder in `src/modules/` with its own pages, API and data. The platform finds it on its own, and removing it means deleting the folder. A module uses only the platform's public API, never the core's internals or another module, and lint enforces this. The guide is in [src/modules/README.md](src/modules/README.md).
 
 ## Contributing
 
-Every change is a pull request from a branch, and nothing is pushed to `master` directly. Before opening a PR, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, `e2e`, a secret scan and a Docker build with a smoke test on every PR, and publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, deleted when the PR closes (unless it is the only tagged image, which GHCR does not allow). Release images are not published yet.
+Every change is a pull request from a branch; nothing is pushed to `master` directly. Before opening one, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, the end-to-end tests, a secret scan and a Docker build with a smoke test on every pull request. It also publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, which is deleted when the pull request closes (unless it is the only tagged image, which GHCR does not allow).
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
+
+## Disclaimer
+
+HomeDex is a non-commercial fan project. Pokémon is a trademark of Nintendo, Creatures Inc. and GAME FREAK inc. HomeDex is not affiliated with or endorsed by them.
