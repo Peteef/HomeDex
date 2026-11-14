@@ -18,9 +18,26 @@ jobs:
     permissions:
       packages: write
     steps:
+      # GHCR refuses to delete the last tagged version of a package. While no release images are
+      # published, a closing pull request's preview can be the only tagged image; it then stays
+      # until another tagged image exists.
+      - name: Check for other tagged images
+        id: other-tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          PREVIEW_TAG: pr-${{ github.event.pull_request.number }}
+        run: |
+          count=$(gh api --paginate "/users/$OWNER/packages/container/homedex/versions" \
+            --jq ".[] | .metadata.container.tags | select(length > 0 and . != [\"$PREVIEW_TAG\"]) | 1" \
+            | wc -l)
+
+          echo "Other tagged images: $count"
+          echo "found=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       # The action deletes a multi-arch image together with its platform images, which GitHub's
       # own delete-package-versions action does not know about.
       - name: Delete pr-${{ github.event.pull_request.number }}
+        if: steps.other-tags.outputs.found == 'true'
         uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           package: homedex
