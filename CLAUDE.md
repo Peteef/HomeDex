@@ -4,10 +4,10 @@ A private, Pokémon-themed launch pad for a household: a greeting, quick-find an
 
 ## Principles
 
-- **Simple and lightweight.** No paid services. Popular, well-maintained libraries only, and every new dependency is justified. It is also a learning project, so prefer mainstream tools.
+- **Simple and lightweight.** No paid services. Prefer a popular, well-maintained library over writing your own, and justify every new dependency. It is also a learning project, so prefer mainstream tools.
 - **Modular.** Adding a module never edits the core.
 - **Private.** Never exposed publicly. No registration; accounts come from the CLI.
-- **Mobile-first.** Right on a phone before a desktop.
+- **Native on every device.** Phone and desktop matter equally. Each gets a UI that feels native to it, not one layout squeezed or stretched, even when that means separate components or pages.
 
 ## Commands
 
@@ -18,6 +18,8 @@ A private, Pokémon-themed launch pad for a household: a greeting, quick-find an
 - `npm run users -- list | create | edit | archive | restore`: the account CLI.
 
 ## Tech
+
+The current stack, not a limit: when a task needs something it lacks, look for a library before building it yourself (see Principles).
 
 - TypeScript strict with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and the Docker image. The backend runs `.ts` directly through Node's type stripping, with no build step: use `import type`, `.ts` extensions on relative imports, and no enums or namespaces.
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
@@ -78,20 +80,13 @@ assets/                art, loaded at runtime from ASSETS_DIR
 
 ## UI and text
 
-- Check every UI change with Playwright at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
+- Check every UI change with Playwright on desktop and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
 - Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only). Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
 - Pokémon wording: "Party" for pinned tiles, Dex numbers ("No. 001"), "Dex" for all tiles.
 - All UI text lives in TypeScript locale files (`export default { ... } as const`): `platform/frontend/locales/<language>.ts` (namespace `platform`) and `<module>/frontend/locales/<language>.ts` (namespace = module id). Keys follow folders: one camelCased key per page folder with its components inside, `components.<name>` for generic components, and `common.<kind>` only for text two or more places share with the same meaning.
 - Read text with `useText('login.picker')`, then `text.title` or `text.greeting({ username })`; `<Trans>` for text with markup.
 - English is the source language and types every other one. Other languages (today Polish) read naturally, not word for word, avoid gendered forms, and are declared `as const satisfies Translation<typeof en>`; the locale test checks them against English. A new language needs its code in `LANGUAGE_CODES` (`shared/i18n/languages.ts`), its flag in `lib/i18n/languages.ts`, and its files.
-- User data (usernames, tile text) and the brand are not translated. The backend stays English: its messages are for logs, the CLI and developers.
-
-## Tiles
-
-- A tile is a link or a module, shared or personal. Pins are per user. Users edit and delete only link tiles marked `editable`.
-- Tile text is per language. Show it only through `displayText`, sort with `sortTiles`, and match text with `foldText` on both sides.
-- Every enabled module gets one shared tile at startup. Tiles of missing or disabled modules are hidden but kept. A module tile's text is `manifest.name` and `manifest.description` from the module's locale files; the manifest holds no text.
-- The link tile form checks everything the API checks (`shared/tiles/linkTileRules.ts`), so the API's English 400 messages are never shown.
+- User data (usernames, tile text) and the brand are not translated. The backend stays English: its messages are for logs, the CLI and developers, so the UI never shows an API error text and uses its own translated message instead.
 
 ## Security and privacy
 
@@ -115,5 +110,5 @@ assets/                art, loaded at runtime from ASSETS_DIR
 
 - When this file does not cover something, follow the codebase's conventions. Ask the owner only as a last resort; never guess. Do not build beyond what was asked.
 - Planning docs (PRDs, plans) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo module guide.
-- **Done means, before a PR:** `npm run fix` then `npm run verify` pass; new behaviour has tests and no check was weakened; UI changes are checked at both phone widths; the diff has no secrets, personal data or local paths; names follow the rules above.
+- **Done means, before a PR:** `npm run fix` then `npm run verify` pass; new behaviour has tests and no check was weakened; UI changes are checked on desktop and at both phone widths; the diff has no secrets, personal data or local paths; names follow the rules above.
 - Keep docs current in the same PR: this file, `README.md`, `src/modules/README.md`. Keep this file short, with no rules that lint or tooling already enforce.
