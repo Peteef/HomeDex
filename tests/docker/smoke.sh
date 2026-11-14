@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Smoke test of a built HomeDex image: starts it with a throwaway data volume, waits for the
 # HEALTHCHECK, creates a fake user through the CLI, then checks the API, the UI and a login.
-# Usage: tests/docker/smoke.sh [image]   (default: homedex:local)
+# Usage: tests/docker/smoke.sh [image]   (default: ghcr.io/peteef/homedex:latest)
 set -euo pipefail
 
-readonly IMAGE="${1:-homedex:local}"
+readonly IMAGE="${1:-ghcr.io/peteef/homedex:latest}"
 readonly NAME="homedex-smoke-$$"
 readonly VOLUME="${NAME}-data"
 readonly CONTAINER_PORT=3000
