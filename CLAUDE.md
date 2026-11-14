@@ -1,6 +1,6 @@
 # HomeDex
 
-A private, Pokémon-themed launch pad for a household: a greeting, quick-find and a grid of tiles that open links or modules. A few accounts, used from PCs and iPhones on the home network. It is a platform first: modules are added over time, mostly by agents, so the core stays small, clear and easy to extend.
+A private, Pokémon-themed mission control for a household: a greeting, quick-find and a grid of tiles that open links or modules. A few accounts, used from PCs and iPhones on the home network. It is a platform first: modules are added over time, mostly by agents, so the core stays small, clear and easy to extend.
 
 ## Principles
 
