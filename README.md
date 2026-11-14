@@ -16,7 +16,7 @@ HomeDex is a personal project, built for my own household and run on the home ne
 
 ## Features
 
-- **Home screen:** a greeting, quick-find and one grid of tiles, with your pinned tiles (your Party) first.
+- **Home screen:** a greeting, quick-find and one grid of tiles, with your pinned tiles first.
 - **Link tiles:** add, edit and delete them from the home screen. Each one is shared with everyone or visible only to you.
 - **Modules:** small built-in apps that live behind a tile. The first one is a shared shopping list.
 - **Quick-find:** type a few letters and press Enter to open the best match. Case and accents are ignored, so "lodz" finds "Łódź".
