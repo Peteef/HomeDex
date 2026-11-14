@@ -158,11 +158,11 @@ npm start
 
 ### Development test user
 
-To get an account automatically after wiping `data/`, create a `.env.development` file (git-ignored) with made-up credentials:
+To get an account automatically after wiping `data/`, create a `.env.development` file (git-ignored) with a username and password of your choice (at least 8 characters):
 
 ```bash
-DEV_USERNAME=Tester
-DEV_PASSWORD=test12345
+DEV_USERNAME=<username>
+DEV_PASSWORD=<password>
 ```
 
 `npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Only `npm run dev` reads this file. The server refuses to start in production when any variable starting with `DEV_` is set.
