@@ -8,6 +8,7 @@ const DEFAULT_HOST = '0.0.0.0';
 const DEFAULT_DATA_DIR = './data';
 const DEFAULT_ASSETS_DIR = './assets';
 const DEFAULT_SESSION_TTL_DAYS = 365;
+const DEFAULT_TRUSTED_PROXIES = 0;
 const ENV_FILE = '.env';
 
 const booleanFlag = z.enum(['true', 'false']).transform((value) => value === 'true');
@@ -20,7 +21,7 @@ const schema = z.object({
   ASSETS_DIR: z.string().min(1).default(DEFAULT_ASSETS_DIR),
   COOKIE_SECURE: booleanFlag.default(false),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).default(DEFAULT_SESSION_TTL_DAYS),
-  TRUST_PROXY: booleanFlag.default(false),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(DEFAULT_TRUSTED_PROXIES),
 });
 
 export type Config = z.infer<typeof schema>;

@@ -3,10 +3,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import { loadConfig } from '../config.ts';
-import { createTestDatabase } from './helpers.ts';
+import { createTestApp, createTestDatabase, postJson } from './helpers.ts';
 
 const root = path.resolve(import.meta.dirname, '../../../../..');
 const assetsDir = path.join(root, 'assets');
@@ -166,6 +166,49 @@ describe('app', () => {
         child.kill();
         fs.rmSync(dataDir, { recursive: true, force: true });
       }
+    });
+  });
+
+  describe('trusted proxies', () => {
+    const LOGIN_LIMIT = { windowMs: 60_000, maxFailedAttempts: 1 };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    const failedLoginFrom = (app: ReturnType<typeof createTestApp>['app'], address: string) =>
+      postJson(app, '/api/auth/login', { username: 'nobody', password: 'wrong-password' }).set(
+        'X-Forwarded-For',
+        address,
+      );
+
+    it('should count failed logins per forwarded address when one proxy is trusted', async () => {
+      // Given
+      const { app } = createTestApp({ TRUST_PROXY: '1' }, { loginLimit: LOGIN_LIMIT });
+
+      // When
+      const first = await failedLoginFrom(app, '203.0.113.7');
+      const second = await failedLoginFrom(app, '203.0.113.7');
+      const otherClient = await failedLoginFrom(app, '203.0.113.8');
+
+      // Then
+      expect(first.status).toBe(401);
+      expect(second.status).toBe(429);
+      expect(otherClient.status).toBe(401);
+    });
+
+    it('should ignore the forwarded address when no proxy is trusted', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const { app } = createTestApp({}, { loginLimit: LOGIN_LIMIT });
+
+      // When
+      const first = await failedLoginFrom(app, '203.0.113.7');
+      const second = await failedLoginFrom(app, '203.0.113.8');
+
+      // Then
+      expect(first.status).toBe(401);
+      expect(second.status).toBe(429);
     });
   });
 
