@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "A private, Pokémon-themed launch pad for home and personal life.",
+  "description": "A private, Pokémon-themed mission control for home and personal life.",
   "engines": {
     "node": ">=26 <27"
   },

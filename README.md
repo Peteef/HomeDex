@@ -1,10 +1,10 @@
 # HomeDex
 
-**A private, Pokémon-themed launch pad for home and personal life.**
+**A private, Pokémon-themed mission control for home and personal life.**
 
-A Pokédex catalogues every creature you meet. HomeDex catalogues everything you reach for at home: the spreadsheets, documents, dashboards and small tools of everyday life, each one a numbered Dex entry one tap away. Pick your Trainer, keep your favourites in your Party, and find anything else with a few letters.
+HomeDex is a self-hosted web app that gathers a household's everyday tools in one place. Each person signs in to a home screen of tiles: saved links that open any page on the web, and modules, small apps built into HomeDex. Frequently used tiles are pinned to the top, and quick-find opens any of them in a few keystrokes, on a computer or a phone.
 
-HomeDex is self-hosted and made for a household: a few accounts, used from computers and phones on the home network, never exposed to the public internet.
+HomeDex is a personal project, built for my own household and run on the home network, never on the public internet. The code is public to show how it is built: a small platform core that grows through self-contained modules, with strict boundaries, automated tests and CI.
 
 > **Status:** close to v1.0.0. Everything below works today, but release images are not published yet (see [Running HomeDex](#running-homedex)).
 
@@ -192,12 +192,21 @@ Unit tests sit in `__tests__/` folders next to the code they test.
 
 A module is a folder in `src/modules/` with its own pages, API and data. The platform finds it on its own, and removing it means deleting the folder. A module uses only the platform's public API, never the core's internals or another module, and lint enforces this. The guide is in [src/modules/README.md](src/modules/README.md).
 
-## Contributing
+### Workflow and CI
 
 Every change is a pull request from a branch; nothing is pushed to `master` directly. Before opening one, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, the end-to-end tests, a secret scan and a Docker build with a smoke test on every pull request. It also publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, which is deleted when the pull request closes (unless it is the only tagged image, which GHCR does not allow).
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
 
+## Contributing
+
+HomeDex is a personal project developed by Peteef. Thank you for your interest, but contributions are not needed at the moment.
+
 ## Disclaimer
 
 HomeDex is a non-commercial fan project. Pokémon is a trademark of Nintendo, Creatures Inc. and GAME FREAK inc. HomeDex is not affiliated with or endorsed by them.
+
+---
+
+Created by Peteef, 2026.\
+よろしくお願いします!
