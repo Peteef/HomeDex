@@ -143,12 +143,11 @@ describe('dev user', () => {
 
     it('should fail and stop npm run dev when the password breaks the account rules', () => {
       // When
-      const { status, output } = runScript({ ...DEV_ENV, DEV_PASSWORD: 'short' });
+      const { status, errors } = runScript({ ...DEV_ENV, DEV_PASSWORD: 'short' });
 
       // Then
       expect(status).toBe(1);
-      expect(output).toContain('Development test user:');
-      expect(output).toMatch(/password/i);
+      expect(errors).toContain('Development test user: Password must be at least 8 characters');
     });
 
     it('should refuse to run and touch no data when NODE_ENV is production', () => {
