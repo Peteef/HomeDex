@@ -15,7 +15,7 @@ HomeDex is self-hosted and made for a household: a few accounts, used from compu
 - **Modules:** small built-in apps that live behind a tile. The first one is a shared shopping list.
 - **Quick-find:** type a few letters and press Enter to open the best match. Case and accents are ignored, so "lodz" finds "Łódź".
 - **Two languages:** English and Polish, chosen per device. Tile titles and descriptions can be written in each language.
-- **Phone-first:** designed for iPhones and installable on the home screen, while still comfortable on a desktop.
+- **At home on every device:** built to feel native on a phone and on a desktop, and installable on the iPhone home screen.
 - **Private by design:** accounts are created from the command line, there is no sign-up, and nothing is loaded from outside sites.
 
 ## Running HomeDex
