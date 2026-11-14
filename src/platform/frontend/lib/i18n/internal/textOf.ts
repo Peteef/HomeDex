@@ -12,14 +12,13 @@ const hasPlural = (tree: Tree, key: string): boolean =>
 
 const keyOf = (path: string, key: string): string => (path === '' ? key : `${path}.${key}`);
 
+const childOf = (tree: Tree, key: string): Tree => {
+  const node = tree[key];
+  return isTree(node) ? node : {};
+};
+
 export const sectionOf = (source: unknown, prefix: string): Tree =>
-  prefix.split('.').reduce<Tree>(
-    (tree, key) => {
-      const node = tree[key];
-      return isTree(node) ? node : {};
-    },
-    isTree(source) ? source : {},
-  );
+  prefix.split('.').reduce<Tree>(childOf, isTree(source) ? source : {});
 
 const entryOf = (translate: Translate, tree: Tree, path: string, key: string): unknown => {
   const fullKey = keyOf(path, key);

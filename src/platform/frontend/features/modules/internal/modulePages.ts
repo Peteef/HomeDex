@@ -16,6 +16,11 @@ const toModulePage = (manifest: ModuleManifest, loader: PageLoader): ModulePage 
   Page: lazy(loader),
 });
 
+const pagesOf = (manifest: ModuleManifest, entries: Record<string, PageLoader>): ModulePage[] => {
+  const loader = entries[entryOf(manifest.id)];
+  return loader ? [toModulePage(manifest, loader)] : [];
+};
+
 // Matches the manifests to their page entries, keyed by file path as import.meta.glob returns them.
 export const modulePages = (
   manifests: Record<string, ModuleManifest>,
@@ -23,7 +28,4 @@ export const modulePages = (
 ): ModulePage[] =>
   Object.values(manifests)
     .filter((manifest) => manifest.enabled)
-    .flatMap((manifest) => {
-      const loader = entries[entryOf(manifest.id)];
-      return loader ? [toModulePage(manifest, loader)] : [];
-    });
+    .flatMap((manifest) => pagesOf(manifest, entries));

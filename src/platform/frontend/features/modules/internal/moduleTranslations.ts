@@ -11,16 +11,21 @@ const localesDirOf = (id: string): string => `${MODULES_ROOT}/${id}/${LOCALES_DI
 const languageOf = (fileName: string): string | undefined =>
   LOCALE_FILE.exec(fileName)?.groups?.language;
 
+const translationOf = (
+  manifest: ModuleManifest,
+  path: string,
+  messages: ResourceKey,
+): ModuleTranslation[] => {
+  const prefix = localesDirOf(manifest.id);
+  const language = path.startsWith(prefix) ? languageOf(path.slice(prefix.length)) : undefined;
+  return language ? [{ namespace: manifest.id, language, messages }] : [];
+};
+
 const translationsOf = (
   manifest: ModuleManifest,
   files: Record<string, ResourceKey>,
-): ModuleTranslation[] => {
-  const prefix = localesDirOf(manifest.id);
-  return Object.entries(files).flatMap(([path, messages]) => {
-    const language = path.startsWith(prefix) ? languageOf(path.slice(prefix.length)) : undefined;
-    return language ? [{ namespace: manifest.id, language, messages }] : [];
-  });
-};
+): ModuleTranslation[] =>
+  Object.entries(files).flatMap(([path, messages]) => translationOf(manifest, path, messages));
 
 // Matches the manifests to their locale files, keyed by file path as import.meta.glob returns them.
 export const moduleTranslations = (

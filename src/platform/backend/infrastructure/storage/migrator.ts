@@ -18,24 +18,26 @@ interface Migration {
   file: string;
 }
 
+const toMigration = (directory: string, name: string): Migration => {
+  const match = MIGRATION_FILE.exec(name);
+
+  if (!match?.[1]) {
+    throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
+  }
+
+  return {
+    version: Number(match[1]),
+    name,
+    file: path.join(directory, name),
+  };
+};
+
 const listMigrations = (directory: string): Migration[] => {
   const migrations = fs
     .readdirSync(directory)
     .filter((name) => name.endsWith('.sql'))
     .sort()
-    .map((name) => {
-      const match = MIGRATION_FILE.exec(name);
-
-      if (!match?.[1]) {
-        throw new Error(`Invalid migration file name: ${name} (expected NNN_name.sql)`);
-      }
-
-      return {
-        version: Number(match[1]),
-        name,
-        file: path.join(directory, name),
-      };
-    });
+    .map((name) => toMigration(directory, name));
 
   const seen = new Set<number>();
 

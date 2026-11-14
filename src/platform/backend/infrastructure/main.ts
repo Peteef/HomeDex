@@ -27,11 +27,15 @@ const server = app.listen(config.PORT, config.HOST, () => {
   console.log(`HomeDex listening on http://${config.HOST}:${String(config.PORT)}`);
 });
 
+const closeAndExit = (): void => {
+  storage.close();
+  process.exit(0);
+};
+
+const shutDown = (): void => {
+  server.close(closeAndExit);
+};
+
 for (const signal of SHUTDOWN_SIGNALS) {
-  process.on(signal, () => {
-    server.close(() => {
-      storage.close();
-      process.exit(0);
-    });
-  });
+  process.on(signal, shutDown);
 }
