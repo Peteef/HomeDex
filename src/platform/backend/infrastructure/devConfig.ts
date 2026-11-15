@@ -1,4 +1,5 @@
 import type { Config } from './config.ts';
+import { ConfigError } from './errors.ts';
 
 // Variables starting with DEV_ are reserved for local development (for example the test user of
 // scripts/dev-user.ts). They must never reach a production environment, so any of them there
@@ -11,7 +12,7 @@ export const rejectDevConfigInProduction = (config: Config, env: NodeJS.ProcessE
     .sort();
 
   if (config.NODE_ENV === 'production' && present.length > 0) {
-    throw new Error(
+    throw new ConfigError(
       `Invalid configuration: ${present.join(', ')} are for development only, remove them from the production environment`,
     );
   }

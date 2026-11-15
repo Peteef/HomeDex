@@ -4,6 +4,7 @@ import { AccountError } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
 import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
+import { ConfigError } from '../errors.ts';
 import { openStorage } from '../storage/index.ts';
 import { ask, askHidden, confirm, hasTerminal, readPipedPassword } from './prompt.ts';
 
@@ -221,7 +222,11 @@ const run = async (argv: string[]): Promise<void> => {
 try {
   await run(process.argv.slice(2));
 } catch (error) {
-  if (error instanceof UsageError || error instanceof AccountError) {
+  if (
+    error instanceof UsageError ||
+    error instanceof AccountError ||
+    error instanceof ConfigError
+  ) {
     console.error(error.message);
   } else if (error instanceof TypeError && 'code' in error) {
     // Bad command-line options from util.parseArgs.

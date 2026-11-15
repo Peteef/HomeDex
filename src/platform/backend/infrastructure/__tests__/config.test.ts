@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadConfig, loadEnvFile } from '../config.ts';
+import { ConfigError } from '../errors.ts';
 
 describe('config', () => {
   describe('loadConfig', () => {
@@ -51,12 +52,17 @@ describe('config', () => {
     it('should refuse production when a development test user variable is set', () => {
       // When / Then
       expect(() => loadConfig({ NODE_ENV: 'production', DEV_USERNAME: 'Tester' })).toThrow(
+        ConfigError,
+      );
+
+      expect(() => loadConfig({ NODE_ENV: 'production', DEV_USERNAME: 'Tester' })).toThrow(
         /for development only/,
       );
     });
 
     it('should throw when a variable is invalid', () => {
       // When / Then
+      expect(() => loadConfig({ PORT: 'abc' })).toThrow(ConfigError);
       expect(() => loadConfig({ PORT: 'abc' })).toThrow(/Invalid configuration: PORT/);
       expect(() => loadConfig({ COOKIE_SECURE: 'yes' })).toThrow(/COOKIE_SECURE/);
     });
