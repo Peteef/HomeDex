@@ -204,6 +204,8 @@ Every change is a pull request from a branch; nothing is pushed to `master` dire
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
 
+Dependabot opens weekly pull requests for npm packages and GitHub Actions. Three things are bumped by hand, together: `@playwright/test` in `package.json` with the Playwright image in `.github/workflows/ci.yml` (same version, new digest), and the Node.js image digest in the `Dockerfile`.
+
 ## Contributing
 
 HomeDex is a personal project that I develop on my own. Thank you for your interest, but contributions are not needed at the moment. If you spot something odd, feel free to open an issue.
