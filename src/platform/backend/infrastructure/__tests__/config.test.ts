@@ -17,7 +17,7 @@ describe('config', () => {
         HOST: '0.0.0.0',
         COOKIE_SECURE: false,
         SESSION_TTL_DAYS: 365,
-        TRUST_PROXY: false,
+        TRUST_PROXY: 0,
       });
     });
 
@@ -29,6 +29,24 @@ describe('config', () => {
       expect(config.PORT).toBe(8081);
       expect(config.COOKIE_SECURE).toBe(true);
     });
+
+    it('should read the number of trusted proxies when TRUST_PROXY is a number', () => {
+      // When
+      const config = loadConfig({ TRUST_PROXY: '1' });
+
+      // Then
+      expect(config.TRUST_PROXY).toBe(1);
+    });
+
+    it.each(['true', 'false', '-1', '1.5'])(
+      'should reject TRUST_PROXY when it is not a whole number from 0 up (%s)',
+      (value) => {
+        // When / Then
+        expect(() => loadConfig({ TRUST_PROXY: value })).toThrow(
+          /Invalid configuration: TRUST_PROXY/,
+        );
+      },
+    );
 
     it('should refuse production when a development test user variable is set', () => {
       // When / Then
