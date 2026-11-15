@@ -9,6 +9,10 @@ updates:
     commit-message:
       prefix: '[Dependabot]'
     groups:
+      # react-i18next majors require the matching i18next major, so neither can be bumped alone.
+      # Listed first because a dependency joins the first group that matches it.
+      i18next:
+        patterns: ['i18next', 'react-i18next']
       production:
         dependency-type: production
         update-types: [minor, patch]
