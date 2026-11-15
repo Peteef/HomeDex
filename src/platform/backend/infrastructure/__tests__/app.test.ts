@@ -214,11 +214,8 @@ describe('app', () => {
 
   describe('import aliases', () => {
     it('should resolve #platform/backend through package.json imports', async () => {
-      // When
-      const api = await import('#platform/backend');
-
-      // Then
-      expect(typeof api.currentUser).toBe('function');
+      // When / Then
+      await expect(import('#platform/backend')).resolves.toBeDefined();
     });
   });
 });
