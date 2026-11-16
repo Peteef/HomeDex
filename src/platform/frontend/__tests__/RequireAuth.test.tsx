@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { useCurrentUser } from '../features/auth/index.ts';
@@ -6,6 +6,7 @@ import { RequireAuth } from '../RequireAuth.tsx';
 import { fakeApi, signedIn, signedOut, status, withProviders } from './helpers.tsx';
 
 const SESSION = 'GET /api/auth/me';
+const BROCK = { id: 2, username: 'Brock' };
 
 const Secret = () => <p>{useCurrentUser().username}</p>;
 
@@ -38,13 +39,13 @@ describe('RequireAuth', () => {
 
   it('should show the page and give it the user when signed in', async () => {
     // Given
-    fakeApi({ [SESSION]: signedIn() });
+    fakeApi({ [SESSION]: signedIn(BROCK) });
 
     // When
     renderSecret();
 
     // Then
-    expect(await screen.findByText('Misty')).toBeInTheDocument();
+    expect(await screen.findByText('Brock')).toBeInTheDocument();
   });
 
   it('should send the visitor to the login page and remember the requested path when signed out', async () => {
@@ -71,19 +72,18 @@ describe('RequireAuth', () => {
     ).toBeInTheDocument();
   });
 
-  it('should read the session again when Try again is pressed', async () => {
+  it('should show the page when Try again is pressed and the session can be read again', async () => {
     // Given
-    const api = fakeApi({ [SESSION]: status(500) });
+    const server = { reachable: false };
+    fakeApi({ [SESSION]: () => (server.reachable ? signedIn(BROCK) : status(500)) });
     renderSecret();
     const tryAgain = await screen.findByRole('button', { name: 'Try again' });
-    const callsBefore = api.callsTo(SESSION).length;
+    server.reachable = true;
 
     // When
     fireEvent.click(tryAgain);
 
     // Then
-    await waitFor(() => {
-      expect(api.callsTo(SESSION).length).toBeGreaterThan(callsBefore);
-    });
+    expect(await screen.findByText('Brock')).toBeInTheDocument();
   });
 });

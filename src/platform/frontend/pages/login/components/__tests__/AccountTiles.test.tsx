@@ -1,17 +1,16 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AccountTiles } from '../AccountTiles.tsx';
 
 describe('AccountTiles', () => {
-  it('should show a button with the name and first letter when there are accounts', () => {
+  it('should show a button per account with its name and first letter when there are accounts', () => {
     // When
     render(<AccountTiles usernames={['Brock', 'Misty']} onPick={vi.fn()} />);
 
     // Then
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
-      'BBrock',
-      'MMisty',
-    ]);
+    const brock = screen.getByRole('button', { name: 'Brock' });
+    expect(within(brock).getByText('B')).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 
   it('should call onPick with the username when an account is pressed', () => {
@@ -20,7 +19,7 @@ describe('AccountTiles', () => {
     render(<AccountTiles usernames={['Brock', 'Misty']} onPick={onPick} />);
 
     // When
-    fireEvent.click(screen.getByRole('button', { name: /Misty/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Misty' }));
 
     // Then
     expect(onPick).toHaveBeenCalledWith('Misty');

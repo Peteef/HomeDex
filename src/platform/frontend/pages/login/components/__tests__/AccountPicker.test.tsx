@@ -15,7 +15,7 @@ const renderPicker = (props: Partial<AccountPickerProps> = {}) =>
   );
 
 describe('AccountPicker', () => {
-  it('should ask who is there when it is shown', () => {
+  it('should ask who is there when the picker opens', () => {
     // When
     renderPicker();
 
@@ -38,15 +38,22 @@ describe('AccountPicker', () => {
     renderPicker();
 
     // Then
-    expect(screen.getByRole('button', { name: /Brock/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Misty/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Brock' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Misty' })).toBeInTheDocument();
   });
 
-  it('should explain the failure and retry from Try again when loading failed', () => {
+  it('should explain the failure when loading failed', () => {
+    // When
+    renderPicker({ usernames: undefined, failed: true });
+
+    // Then
+    expect(screen.getByRole('alert')).toHaveTextContent("Can't load the Trainers.");
+  });
+
+  it('should call onRetry when Try again is pressed after loading failed', () => {
     // Given
     const onRetry = vi.fn();
     renderPicker({ usernames: undefined, failed: true, onRetry });
-    expect(screen.getByRole('alert')).toHaveTextContent("Can't load the Trainers.");
 
     // When
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));

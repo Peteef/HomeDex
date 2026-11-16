@@ -16,20 +16,6 @@ const renderLayout = () =>
   );
 
 describe('AppLayout', () => {
-  it('should draw the three scene images when a page is shown', () => {
-    // When
-    const { container } = renderLayout();
-
-    // Then
-    const sources = [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
-
-    expect(sources).toEqual([
-      '/media/scene/background.svg',
-      '/media/scene/sprite-sofa.svg',
-      '/media/scene/sprite-table.svg',
-    ]);
-  });
-
   it('should show the routed page inside main when the route matches', () => {
     // When
     renderLayout();

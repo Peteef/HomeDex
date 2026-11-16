@@ -1,30 +1,39 @@
 import { render } from '@testing-library/react';
-import { CircleHelp } from 'lucide-react';
+import { CircleHelp, ShoppingCart } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { Icon } from '../Icon.tsx';
 
 const svgOf = (container: HTMLElement): SVGElement | null => container.querySelector('svg');
 
 describe('Icon', () => {
-  it('should draw an svg when the name is known', () => {
+  it('should draw the icon of the name when the name is known', () => {
+    // Given
+    const expected = render(<ShoppingCart />).container;
+
     // When
     const { container } = render(<Icon name="cart" />);
 
     // Then
-    expect(svgOf(container)).toBeInTheDocument();
-    expect(svgOf(container)?.getAttribute('class')).not.toContain('circle-help');
+    expect(svgOf(container)?.outerHTML).toBe(svgOf(expected)?.outerHTML);
   });
 
   it('should draw the fallback when the name is unknown', () => {
     // Given
-    const fallback = render(<CircleHelp />).container;
+    const expected = render(<CircleHelp />).container;
 
     // When
     const { container } = render(<Icon name="no-such-icon" />);
 
     // Then
-    expect(svgOf(container)?.getAttribute('class')).toBe(svgOf(fallback)?.getAttribute('class'));
-    expect(svgOf(container)?.innerHTML).toBe(svgOf(fallback)?.innerHTML);
+    expect(svgOf(container)?.outerHTML).toBe(svgOf(expected)?.outerHTML);
+  });
+
+  it('should hide the svg from screen readers', () => {
+    // When
+    const { container } = render(<Icon name="cart" />);
+
+    // Then
+    expect(svgOf(container)).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('should pass props on when they are given', () => {

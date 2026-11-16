@@ -10,7 +10,7 @@ vi.mock('../../../modules/index.ts', () => ({
       messages: { manifest: { name: 'Notes', description: 'Quick notes' } },
     },
     { namespace: 'notes', language: 'pl', messages: { manifest: { name: 'Notatki' } } },
-    { namespace: 'notes', language: 'de', messages: { manifest: { name: 'Notizen' } } },
+    { namespace: 'notes', language: 'xx', messages: { manifest: { name: 'Notizen' } } },
     { namespace: 'clock', language: 'en', messages: { list: { title: 'Clock' } } },
   ],
 }));
@@ -33,7 +33,7 @@ describe('MODULE_TILE_TEXTS', () => {
 
   it('should leave out a language when the platform does not support it', () => {
     // When / Then
-    expect(MODULE_TILE_TEXTS.notes).not.toHaveProperty('de');
+    expect(MODULE_TILE_TEXTS.notes).not.toHaveProperty('xx');
   });
 
   it('should leave out a module when its text has no manifest name', () => {
