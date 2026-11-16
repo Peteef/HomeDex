@@ -1,11 +1,10 @@
-import { Suspense } from 'react';
 import { Route, Routes } from 'react-router';
-import { LoadingStatus } from './components/loading-status/LoadingStatus.tsx';
 import { MODULE_PAGES } from './features/modules/index.ts';
 import { HomePage } from './pages/home/HomePage.tsx';
 import { LoginPage } from './pages/login/LoginPage.tsx';
 import { NotFoundPage } from './pages/not-found/NotFoundPage.tsx';
 import { AppLayout } from './AppLayout.tsx';
+import { ModuleBoundary } from './ErrorBoundaries.tsx';
 import { RequireAuth } from './RequireAuth.tsx';
 import { HOME_PATH, LOGIN_PATH } from './routes.ts';
 
@@ -20,9 +19,9 @@ export const App = () => (
             key={id}
             path={`${route}/*`}
             element={
-              <Suspense fallback={<LoadingStatus />}>
+              <ModuleBoundary>
                 <Page />
-              </Suspense>
+              </ModuleBoundary>
             }
           />
         ))}

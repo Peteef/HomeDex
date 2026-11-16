@@ -75,6 +75,7 @@ export default ShoppingList;
 - Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. Colours, radii and fonts come from the theme tokens, never raw values.
 - Call the module's endpoints with the platform's HTTP client from `#platform/frontend`: `getJson`, `postForJson`, `put` and `del`. Paths start after `/api`, so the module's own are `/m/<id>/...` (`getJson('/m/shopping-list/items')`). Writes always send `Content-Type: application/json`, as the backend requires. A failed request throws.
 - Any request that answers 401 ends the session, and the user lands on the login page. A module needs no handling for it.
+- If a module's page crashes or its code cannot be loaded, the platform shows a message with a reload button instead; the rest of HomeDex keeps working.
 
 ## Text
 

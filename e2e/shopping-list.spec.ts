@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { E2E_GREETING, signIn } from './session.ts';
 import { SHOPPING_LIST_PATH } from './shoppingList.ts';
@@ -20,6 +21,31 @@ test.describe('shopping list', () => {
     // Then
     await expect(page).toHaveURL(SHOPPING_LIST_PATH);
     await expect(page.getByRole('heading', { level: 1, name: 'Shopping list' })).toBeVisible();
+  });
+
+  test('should show a message instead of a blank page when the module fails to load', async ({
+    page,
+  }, testInfo) => {
+    // Given
+    await page.route('**/assets/frontend-*.js', (route) => route.abort());
+
+    // When
+    await page.goto(SHOPPING_LIST_PATH);
+
+    // Then
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'This page hit a problem' }),
+    ).toBeVisible();
+
+    await testInfo.attach('crashed module.png', {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: 'image/png',
+    });
+
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations).toEqual([]);
+    await page.getByRole('link', { name: 'Back to the Dex' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: E2E_GREETING })).toBeVisible();
   });
 
   // Checks the frontend and backend agree, against the real API and one shared list. "Clear"

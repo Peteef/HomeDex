@@ -123,6 +123,17 @@ const en = {
     title: 'Page not found',
     message: 'There is nothing at this address.',
   },
+  crashed: {
+    module: {
+      title: 'This page hit a problem',
+      message: 'Something went wrong here. Reload the page, or go back to the Dex.',
+    },
+    app: {
+      title: 'HomeDex hit a problem',
+      message: 'Something went wrong. Reload the page to continue.',
+    },
+    reload: 'Reload',
+  },
   sessionUnavailable: {
     title: "Can't reach HomeDex",
     message: 'Check your connection and try again.',

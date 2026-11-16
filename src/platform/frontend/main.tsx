@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from './App.tsx';
+import { AppBoundary } from './ErrorBoundaries.tsx';
 import { appQueryClient } from './queryClient.ts';
 import './i18n.ts';
 import './index.css';
@@ -15,10 +16,12 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={appQueryClient()}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AppBoundary>
+      <QueryClientProvider client={appQueryClient()}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AppBoundary>
   </StrictMode>,
 );
