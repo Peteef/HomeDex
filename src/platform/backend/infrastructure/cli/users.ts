@@ -219,17 +219,18 @@ const run = async (argv: string[]): Promise<void> => {
   }
 };
 
+// A mistake the user can fix gets one line. util.parseArgs reports bad options as a TypeError
+// with a code.
+const isExpected = (error: unknown): error is Error =>
+  error instanceof UsageError ||
+  error instanceof AccountError ||
+  error instanceof ConfigError ||
+  (error instanceof TypeError && 'code' in error);
+
 try {
   await run(process.argv.slice(2));
 } catch (error) {
-  if (
-    error instanceof UsageError ||
-    error instanceof AccountError ||
-    error instanceof ConfigError
-  ) {
-    console.error(error.message);
-  } else if (error instanceof TypeError && 'code' in error) {
-    // Bad command-line options from util.parseArgs.
+  if (isExpected(error)) {
     console.error(error.message);
   } else {
     console.error(error);
