@@ -13,7 +13,7 @@ A private, Pokémon-themed mission control for a household: a greeting, quick-fi
 
 - `npm run dev`: Vite on 5173 (open this one, also from a phone on the LAN) and the backend on 3000, both reloading. It first runs `scripts/dev-user.ts`, which creates a user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when the database has no accounts.
 - `npm run build` (UI to `dist/web`); `npm start` (production server: API plus built UI).
-- `npm test` (Vitest); `npm run test:e2e` (Playwright: desktop Chrome and Safari, two phone viewports). `npm run test:coverage` adds a coverage report (a report only, no threshold).
+- `npm test` (Vitest); `npm run test:e2e` (Playwright: desktop Chrome and Safari, two phone viewports; Safari and the iPhones run Playwright's WebKit build, close to Safari but not the real browser). `npm run test:coverage` adds a coverage report (a report only, no threshold).
 - `npm run fix`: Prettier and ESLint auto-fix. `npm run verify`: typecheck, lint (boundary rules included), format check, unit tests and build; CI runs the same.
 - `npm run users -- list | create | edit | archive | restore`: the account CLI.
 

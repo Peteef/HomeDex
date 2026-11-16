@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { E2E_ARCHIVED_USER, E2E_USER, FAILED_LOGIN_PROJECT } from './fixtures.ts';
+import { E2E_ARCHIVED_USER, E2E_USER } from './fixtures.ts';
+import { skipUnlessFailedLoginProject } from './session.ts';
 
 const json = { 'Content-Type': 'application/json' };
 
@@ -26,7 +27,7 @@ test.describe('auth', () => {
     });
 
     test('should refuse the login when the password is wrong', async ({ request }, testInfo) => {
-      test.skip(testInfo.project.name !== FAILED_LOGIN_PROJECT, 'Spares the login rate limit');
+      skipUnlessFailedLoginProject(testInfo);
 
       // When
       const response = await request.post('/api/auth/login', {
@@ -39,7 +40,7 @@ test.describe('auth', () => {
     });
 
     test('should refuse the login when the account is archived', async ({ request }, testInfo) => {
-      test.skip(testInfo.project.name !== FAILED_LOGIN_PROJECT, 'Spares the login rate limit');
+      skipUnlessFailedLoginProject(testInfo);
 
       // When
       const response = await request.post('/api/auth/login', {

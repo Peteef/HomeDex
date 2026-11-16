@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { E2E_ARCHIVED_USER, E2E_USER, FAILED_LOGIN_PROJECT } from './fixtures.ts';
-import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY } from './session.ts';
+import { E2E_ARCHIVED_USER, E2E_USER } from './fixtures.ts';
+import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY, skipUnlessFailedLoginProject } from './session.ts';
 
 const enterPassword = async (page: Page, password = E2E_USER.password) => {
   await page.getByLabel('Password').fill(password);
@@ -145,7 +145,7 @@ test.describe('login', () => {
   });
 
   test('should say the password is wrong when it is wrong', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== FAILED_LOGIN_PROJECT, 'Spares the login rate limit');
+    skipUnlessFailedLoginProject(testInfo);
 
     // Given
     await page.goto('/login');

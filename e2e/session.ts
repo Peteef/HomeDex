@@ -1,10 +1,17 @@
-import type { Cookie, Page } from '@playwright/test';
-import { E2E_USER } from './fixtures.ts';
+import { test } from '@playwright/test';
+import type { Cookie, Page, TestInfo } from '@playwright/test';
+import { E2E_USER, PROJECTS } from './fixtures.ts';
 
 export const REMEMBERED_ACCOUNT_KEY = 'homedex.rememberedAccount';
 export const LANGUAGE_KEY = 'homedex.language';
 
 export const E2E_GREETING = `Hello ${E2E_USER.username}! What do you need today?`;
+
+// The server allows 10 failed logins per 15 minutes from one address, shared by every project.
+// A test that fails a login on purpose calls this first, so it runs in one project only.
+export const skipUnlessFailedLoginProject = (testInfo: TestInfo): void => {
+  test.skip(testInfo.project.name !== PROJECTS.iphone13Mini, 'Spares the login rate limit');
+};
 
 interface E2EUser {
   username: string;
