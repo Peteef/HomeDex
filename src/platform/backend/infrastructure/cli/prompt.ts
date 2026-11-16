@@ -6,66 +6,91 @@ const BACKSPACE = '\u007f';
 const EXIT_INTERRUPTED = 130;
 const YES = /^y(es)?$/i;
 
-export const hasTerminal = (): boolean => process.stdin.isTTY;
+// What the prompts need from a terminal; process.stdin and process.stdout fit.
+export interface PromptIo {
+  input: NodeJS.ReadableStream & { isTTY?: boolean; setRawMode?: (mode: boolean) => unknown };
+  output: NodeJS.WritableStream;
+}
 
-export const ask = async (question: string): Promise<string> => {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+export interface TerminalPrompts {
+  hasTerminal: () => boolean;
+  ask: (question: string) => Promise<string>;
+  confirm: (question: string) => Promise<boolean>;
+  askHidden: (question: string) => Promise<string>;
+  readPipedPassword: () => Promise<string>;
+}
 
-  try {
-    return (await rl.question(question)).trim();
-  } finally {
-    rl.close();
-  }
-};
+const REAL_TERMINAL: PromptIo = { input: process.stdin, output: process.stdout };
 
-export const confirm = async (question: string): Promise<boolean> =>
-  YES.test(await ask(`${question} [y/N] `));
+export const terminalPrompts = ({ input, output }: PromptIo = REAL_TERMINAL): TerminalPrompts => {
+  const hasTerminal = (): boolean => input.isTTY === true;
 
-export const askHidden = (question: string): Promise<string> => {
-  process.stdout.write(question);
-  const { stdin } = process;
-  stdin.setRawMode(true);
-  stdin.setEncoding('utf8');
-  stdin.resume();
-  return new Promise((resolve) => {
-    let value = '';
+  const ask = async (question: string): Promise<string> => {
+    const rl = readline.createInterface({ input, output });
 
-    const finish = (): void => {
-      stdin.off('data', onData);
-      stdin.setRawMode(false);
-      stdin.pause();
-      process.stdout.write('\n');
-    };
+    try {
+      return (await rl.question(question)).trim();
+    } finally {
+      rl.close();
+    }
+  };
 
-    const onData = (chunk: string): void => {
-      for (const char of chunk) {
-        if (char === '\r' || char === '\n' || char === CTRL_D) {
-          finish();
-          resolve(value);
-          return;
+  const confirm = async (question: string): Promise<boolean> =>
+    YES.test(await ask(`${question} [y/N] `));
+
+  const askHidden = (question: string): Promise<string> => {
+    output.write(question);
+    input.setRawMode?.(true);
+    input.setEncoding('utf8');
+    input.resume();
+    return new Promise((resolve) => {
+      let value = '';
+
+      const finish = (): void => {
+        input.off('data', onData);
+        input.setRawMode?.(false);
+        input.pause();
+        output.write('\n');
+      };
+
+      const onData = (chunk: string): void => {
+        for (const char of chunk) {
+          if (char === '\r' || char === '\n' || char === CTRL_D) {
+            finish();
+            resolve(value);
+            return;
+          }
+
+          if (char === CTRL_C) {
+            finish();
+            process.exit(EXIT_INTERRUPTED);
+          }
+
+          value = char === BACKSPACE ? value.slice(0, -1) : value + char;
         }
+      };
 
-        if (char === CTRL_C) {
-          finish();
-          process.exit(EXIT_INTERRUPTED);
-        }
+      input.on('data', onData);
+    });
+  };
 
-        value = char === BACKSPACE ? value.slice(0, -1) : value + char;
-      }
-    };
+  const readPipedPassword = async (): Promise<string> => {
+    const chunks: Buffer[] = [];
 
-    stdin.on('data', onData);
-  });
-};
+    for await (const chunk of input) {
+      chunks.push(Buffer.from(chunk));
+    }
 
-export const readPipedPassword = async (): Promise<string> => {
-  const chunks: Buffer[] = [];
+    return Buffer.concat(chunks)
+      .toString('utf8')
+      .replace(/\r?\n$/, '');
+  };
 
-  for await (const chunk of process.stdin) {
-    chunks.push(chunk as Buffer);
-  }
-
-  return Buffer.concat(chunks)
-    .toString('utf8')
-    .replace(/\r?\n$/, '');
+  return {
+    hasTerminal,
+    ask,
+    confirm,
+    askHidden,
+    readPipedPassword,
+  };
 };
