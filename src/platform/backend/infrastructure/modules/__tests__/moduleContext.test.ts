@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTestDatabase } from '../../__tests__/helpers.ts';
 import { currentUser } from '../../http/auth/currentUser.ts';
+import { logger } from '../../logger.ts';
 import { moduleContext } from '../moduleContext.ts';
 
 describe('moduleContext', () => {
@@ -25,19 +26,19 @@ describe('moduleContext', () => {
 
   it('should start every log line with the module id and pass details on when the module logs', () => {
     // Given
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const { logger } = moduleContext('notes', createTestDatabase());
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const error = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+    const moduleLogger = moduleContext('notes', createTestDatabase()).logger;
     const details = { id: 1 };
 
     // When
-    logger.info('started', details);
-    logger.warn('slow', details);
-    logger.error('failed', details);
+    moduleLogger.info('started', details);
+    moduleLogger.warn('slow', details);
+    moduleLogger.error('failed', details);
 
     // Then
-    expect(log).toHaveBeenCalledWith('[notes] started', details);
+    expect(info).toHaveBeenCalledWith('[notes] started', details);
     expect(warn).toHaveBeenCalledWith('[notes] slow', details);
     expect(error).toHaveBeenCalledWith('[notes] failed', details);
   });

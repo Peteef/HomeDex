@@ -24,9 +24,6 @@ describe('tileRepository', () => {
   let ash: number;
   let misty: number;
 
-  const userIdOf = (username: string): number =>
-    (db.prepare('SELECT id FROM users WHERE username = ?').get(username) as { id: number }).id;
-
   const countOf = (table: string): number =>
     (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n;
 
@@ -36,10 +33,8 @@ describe('tileRepository', () => {
   beforeEach(async () => {
     db = createTestDatabase();
     tiles = tileRepository(db);
-    await createTestUser(db, 'ash');
-    await createTestUser(db, 'misty');
-    ash = userIdOf('ash');
-    misty = userIdOf('misty');
+    ash = (await createTestUser(db, 'ash')).id;
+    misty = (await createTestUser(db, 'misty')).id;
   });
 
   describe('insertLink', () => {
@@ -118,6 +113,14 @@ describe('tileRepository', () => {
   });
 
   describe('findForUser', () => {
+    it('should return undefined when the id is unknown', () => {
+      // When
+      const row = tiles.findForUser(999, ash);
+
+      // Then
+      expect(row).toBeUndefined();
+    });
+
     it('should return a shared tile when another user asks for it', () => {
       // Given
       const id = tiles.insertLink(link, ash, NOW);
@@ -184,34 +187,59 @@ describe('tileRepository', () => {
       expect(ids).toEqual([third, first, second]);
     });
 
-    it("should leave out other users' personal tiles and attach each tile's own texts when listing", () => {
+    it("should leave out other users' personal tiles when listing", () => {
       // Given
       const shared = tiles.insertLink(link, ash, NOW);
-
-      const own = tiles.insertLink(
-        { ...link, texts: { en: { title: 'Gym', description: null } }, scope: 'personal' },
-        misty,
-        NOW,
-      );
-
-      tiles.insertLink(
-        { ...link, texts: { en: { title: 'Diary', description: null } }, scope: 'personal' },
-        ash,
-        NOW,
-      );
+      const own = tiles.insertLink({ ...link, scope: 'personal' }, misty, NOW);
+      tiles.insertLink({ ...link, scope: 'personal' }, ash, NOW);
 
       // When
-      const rows = tiles.listForUser(misty);
+      const ids = tiles.listForUser(misty).map((row) => row.id);
 
       // Then
-      expect(rows.map((row) => [row.id, row.texts])).toEqual([
-        [shared, { en: { title: 'Finances', description: null } }],
-        [own, { en: { title: 'Gym', description: null } }],
+      expect(ids).toEqual([shared, own]);
+    });
+
+    it("should attach each tile's own texts when tiles have different texts", () => {
+      // Given
+      tiles.insertLink(link, ash, NOW);
+      tiles.insertLink({ ...link, texts: { en: { title: 'Gym', description: null } } }, ash, NOW);
+
+      // When
+      const texts = tiles.listForUser(ash).map((row) => row.texts);
+
+      // Then
+      expect(texts).toEqual([
+        { en: { title: 'Finances', description: null } },
+        { en: { title: 'Gym', description: null } },
       ]);
+    });
+
+    it('should give a tile empty texts when it has none', () => {
+      // Given
+      tiles.syncModule({ moduleId: 'notes', icon: 'notes' }, NOW);
+
+      // When
+      const [row] = tiles.listForUser(ash);
+
+      // Then
+      expect(row?.texts).toEqual({});
     });
   });
 
   describe('updateLink', () => {
+    it('should change nothing when the tile is not a link', () => {
+      // Given
+      tiles.syncModule({ moduleId: 'notes', icon: 'notes' }, NOW);
+      const before = moduleTile();
+
+      // When
+      tiles.updateLink((before as { id: number }).id, { ...link, icon: 'cart' }, LATER);
+
+      // Then
+      expect(moduleTile()).toEqual(before);
+    });
+
     it('should replace the icon, URL, scope and texts and drop a language that is no longer given', () => {
       // Given
       const id = tiles.insertLink(

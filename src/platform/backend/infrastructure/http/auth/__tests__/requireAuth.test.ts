@@ -26,8 +26,7 @@ describe('requireAuth', () => {
     const db = createTestDatabase();
     clock = { now: Date.UTC(2026, 0, 1) };
     sessions = sessionService(db, { ttlDays: 30, now: () => clock.now });
-    await createTestUser(db, 'ash');
-    userId = (db.prepare('SELECT id FROM users').get() as { id: number }).id;
+    userId = (await createTestUser(db, 'ash')).id;
 
     app = express();
     app.use(cookieParser());
@@ -99,6 +98,6 @@ describe('requireAuth', () => {
     // Then
     const [cookie] = setCookieOf(response);
     expect(cookie).toContain(`hd_session=${token}`);
-    expect(cookie).toContain(`Max-Age=${String(30 * 24 * 60 * 60)}`);
+    expect(cookie).toContain('Max-Age=2592000');
   });
 });

@@ -35,7 +35,7 @@ describe('loginRateLimit', () => {
     expect(response.body).toEqual({ error: 'Too many failed attempts, try again later' });
   });
 
-  it('should not count successful requests when they come between failures', async () => {
+  it('should not count successful requests when they come before a failure', async () => {
     // Given
     const app = appBehind(loginRateLimit({ windowMs: 60_000, maxFailedAttempts: 2 }));
     await request(app).get('/ok');

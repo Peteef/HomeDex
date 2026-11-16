@@ -95,29 +95,47 @@ describe('requestGuard', () => {
   });
 
   it.each(['put', 'patch', 'delete'] as const)(
-    'should guard the request the same way when the method is %s',
+    'should answer 403 when a %s comes from another origin',
     async (method) => {
       // When
-      const foreign = await request(app)
+      const response = await request(app)
         [method]('/x')
         .set('Host', HOST)
         .set('Origin', 'http://evil.example.com')
         .set('Content-Type', 'application/json');
 
-      const notJson = await request(app)
+      // Then
+      expect(response.status).toBe(403);
+    },
+  );
+
+  it.each(['put', 'patch', 'delete'] as const)(
+    'should answer 415 when a same-origin %s is not JSON',
+    async (method) => {
+      // When
+      const response = await request(app)
         [method]('/x')
         .set('Host', HOST)
         .set('Origin', SAME_ORIGIN)
         .set('Content-Type', 'text/plain');
 
-      const sameOriginJson = await request(app)
+      // Then
+      expect(response.status).toBe(415);
+    },
+  );
+
+  it.each(['put', 'patch', 'delete'] as const)(
+    'should let a same-origin JSON %s through',
+    async (method) => {
+      // When
+      const response = await request(app)
         [method]('/x')
         .set('Host', HOST)
         .set('Origin', SAME_ORIGIN)
         .set('Content-Type', 'application/json');
 
       // Then
-      expect([foreign.status, notJson.status, sameOriginJson.status]).toEqual([403, 415, 204]);
+      expect(response.status).toBe(204);
     },
   );
 });

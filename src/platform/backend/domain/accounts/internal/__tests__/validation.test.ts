@@ -3,9 +3,12 @@ import { passwordSchema, usernameSchema, validate } from '../validation.ts';
 
 describe('account validation', () => {
   describe('usernameSchema', () => {
-    it('should accept the name when it uses letters, digits, ".", "_" and "-"', () => {
+    it.each([
+      ['it uses letters, digits, ".", "_" and "-"', 'ash.k_1-x'],
+      ['it is 32 characters long', 'a'.repeat(32)],
+    ])('should accept the name when %s', (_case, username) => {
       // When
-      const result = usernameSchema.safeParse('ash.k_1-x');
+      const result = usernameSchema.safeParse(username);
 
       // Then
       expect(result.success).toBe(true);

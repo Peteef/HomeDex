@@ -119,8 +119,7 @@ describe('sessionCookies', () => {
       // Then
       const cookie = setCookieOf(response);
       expect(cookie).toContain('hd_session=;');
-      const expires = /Expires=([^;]+)/.exec(cookie)?.[1] ?? '';
-      expect(Date.parse(expires)).toBeLessThan(Date.now());
+      expect(cookie).toContain('Expires=Thu, 01 Jan 1970 00:00:00 GMT');
     });
   });
 });

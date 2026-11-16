@@ -89,4 +89,23 @@ describe('domainServices', () => {
     // Then
     expect(list.map((tile) => tile.moduleId)).toEqual(['notes']);
   });
+
+  it('should give the accounts, sessions and tiles the same clock when now is passed', async () => {
+    // Given
+    const { accounts, sessions, tiles } = domainServices(db, {
+      sessionTtlDays: 1,
+      argon2Params: FAST_ARGON2,
+      now: () => 5_000,
+    });
+
+    // When
+    const account = await accounts.create('ash', TEST_PASSWORD);
+    const session = sessions.create(account.id, undefined);
+    tiles.syncModuleTiles([{ moduleId: 'notes', icon: 'notes' }]);
+
+    // Then
+    expect(account.createdAt).toBe(5_000);
+    expect(session.expiresAt).toBe(86_405_000);
+    expect(db.prepare('SELECT created_at FROM tiles').get()).toEqual({ created_at: 5_000 });
+  });
 });

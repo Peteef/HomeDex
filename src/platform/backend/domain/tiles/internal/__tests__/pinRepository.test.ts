@@ -21,8 +21,7 @@ describe('pinRepository', () => {
   beforeEach(async () => {
     db = createTestDatabase();
     pins = pinRepository(db);
-    await createTestUser(db, 'ash');
-    userId = (db.prepare('SELECT id FROM users').get() as { id: number }).id;
+    userId = (await createTestUser(db, 'ash')).id;
 
     tileId = tileRepository(db).insertLink(
       {

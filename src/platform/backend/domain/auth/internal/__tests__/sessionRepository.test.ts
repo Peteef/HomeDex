@@ -7,23 +7,21 @@ import {
 import { sessionRepository } from '../sessionRepository.ts';
 import type { NewSession, SessionRepository } from '../sessionRepository.ts';
 
-const NOW = 10_000;
-const LATER = 20_000;
+const CREATED_AT = 10_000;
+const EXPIRES_AT = 20_000;
 
 describe('sessionRepository', () => {
   let db: Database.Database;
   let sessions: SessionRepository;
-  let userId: number;
+  let ash: number;
 
-  const userIdOf = (username: string): number =>
-    (db.prepare('SELECT id FROM users WHERE username = ?').get(username) as { id: number }).id;
-
-  const sessionFor = (tokenHash: string, owner = userId, expiresAt = LATER): NewSession => ({
-    tokenHash,
-    userId: owner,
-    now: NOW,
-    expiresAt,
+  const session = (overrides: Partial<NewSession> = {}): NewSession => ({
+    tokenHash: 'hash-1',
+    userId: ash,
+    now: CREATED_AT,
+    expiresAt: EXPIRES_AT,
     userAgent: null,
+    ...overrides,
   });
 
   const tokenHashes = (): string[] =>
@@ -36,38 +34,38 @@ describe('sessionRepository', () => {
   beforeEach(async () => {
     db = createTestDatabase();
     sessions = sessionRepository(db);
-    await createTestUser(db, 'ash');
-    userId = userIdOf('ash');
+    ash = (await createTestUser(db, 'ash')).id;
   });
 
-  describe('insert and findActive', () => {
-    it('should return the user and the last use when the session is active', () => {
-      // Given
-      sessions.insert(sessionFor('hash-1'));
-
+  describe('insert', () => {
+    it('should store a session that findActive returns with its user and last use', () => {
       // When
-      const row = sessions.findActive('hash-1', NOW);
+      sessions.insert(session());
 
       // Then
-      expect(row).toEqual({ user_id: userId, username: 'ash', last_seen_at: NOW });
+      expect(sessions.findActive('hash-1', CREATED_AT)).toEqual({
+        user_id: ash,
+        username: 'ash',
+        last_seen_at: CREATED_AT,
+      });
     });
   });
 
   describe('findActive', () => {
     it('should return undefined when the token hash is unknown', () => {
       // When
-      const row = sessions.findActive('unknown', NOW);
+      const row = sessions.findActive('unknown', CREATED_AT);
 
       // Then
       expect(row).toBeUndefined();
     });
 
-    it('should return undefined when the session expires now', () => {
+    it('should return undefined when the session expires at that moment', () => {
       // Given
-      sessions.insert(sessionFor('hash-1'));
+      sessions.insert(session());
 
       // When
-      const row = sessions.findActive('hash-1', LATER);
+      const row = sessions.findActive('hash-1', EXPIRES_AT);
 
       // Then
       expect(row).toBeUndefined();
@@ -75,11 +73,11 @@ describe('sessionRepository', () => {
 
     it('should return undefined when the user is archived', () => {
       // Given
-      sessions.insert(sessionFor('hash-1'));
-      db.prepare('UPDATE users SET archived_at = ? WHERE id = ?').run(NOW, userId);
+      sessions.insert(session());
+      db.prepare('UPDATE users SET archived_at = ? WHERE id = ?').run(CREATED_AT, ash);
 
       // When
-      const row = sessions.findActive('hash-1', NOW);
+      const row = sessions.findActive('hash-1', CREATED_AT);
 
       // Then
       expect(row).toBeUndefined();
@@ -89,7 +87,7 @@ describe('sessionRepository', () => {
   describe('touch', () => {
     it('should move the last use and the expiry when the session is used', () => {
       // Given
-      sessions.insert(sessionFor('hash-1'));
+      sessions.insert(session());
 
       // When
       sessions.touch('hash-1', 15_000, 30_000);
@@ -106,8 +104,8 @@ describe('sessionRepository', () => {
   describe('delete', () => {
     it('should remove only that session when there are others', () => {
       // Given
-      sessions.insert(sessionFor('hash-1'));
-      sessions.insert(sessionFor('hash-2'));
+      sessions.insert(session({ tokenHash: 'hash-1' }));
+      sessions.insert(session({ tokenHash: 'hash-2' }));
 
       // When
       sessions.delete('hash-1');
@@ -120,13 +118,13 @@ describe('sessionRepository', () => {
   describe('deleteForUser', () => {
     it("should remove only that user's sessions when two users are signed in", async () => {
       // Given
-      await createTestUser(db, 'misty');
-      sessions.insert(sessionFor('ash-1'));
-      sessions.insert(sessionFor('ash-2'));
-      sessions.insert(sessionFor('misty-1', userIdOf('misty')));
+      const misty = (await createTestUser(db, 'misty')).id;
+      sessions.insert(session({ tokenHash: 'ash-1' }));
+      sessions.insert(session({ tokenHash: 'ash-2' }));
+      sessions.insert(session({ tokenHash: 'misty-1', userId: misty }));
 
       // When
-      sessions.deleteForUser(userId);
+      sessions.deleteForUser(ash);
 
       // Then
       expect(tokenHashes()).toEqual(['misty-1']);
@@ -136,12 +134,12 @@ describe('sessionRepository', () => {
   describe('deleteExpired', () => {
     it('should remove sessions that expire by now and keep later ones when cleaning up', () => {
       // Given
-      sessions.insert(sessionFor('expired', userId, 5_000));
-      sessions.insert(sessionFor('expires-now', userId, NOW));
-      sessions.insert(sessionFor('active', userId, LATER));
+      sessions.insert(session({ tokenHash: 'expired', expiresAt: 5_000 }));
+      sessions.insert(session({ tokenHash: 'expires-now', expiresAt: CREATED_AT }));
+      sessions.insert(session({ tokenHash: 'active', expiresAt: EXPIRES_AT }));
 
       // When
-      sessions.deleteExpired(NOW);
+      sessions.deleteExpired(CREATED_AT);
 
       // Then
       expect(tokenHashes()).toEqual(['active']);

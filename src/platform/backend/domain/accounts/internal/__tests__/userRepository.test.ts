@@ -1,7 +1,6 @@
 import type Database from 'better-sqlite3';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDatabase } from '../../../../infrastructure/__tests__/helpers.ts';
-import { AccountError } from '../../errors.ts';
 import { userRepository } from '../userRepository.ts';
 import type { UserRepository } from '../userRepository.ts';
 
@@ -40,19 +39,10 @@ describe('userRepository', () => {
     });
 
     it('should rethrow the database error when it is not a taken name', () => {
-      // Given
-      let thrown: unknown;
-
-      // When
-      try {
-        users.insert('ash', null as unknown as string, 1_000);
-      } catch (error) {
-        thrown = error;
-      }
-
-      // Then
-      expect(thrown).toBeInstanceOf(Error);
-      expect(thrown).not.toBeInstanceOf(AccountError);
+      // When / Then
+      expect(() => users.insert('ash', null as unknown as string, 1_000)).toThrow(
+        expect.objectContaining({ code: 'SQLITE_CONSTRAINT_NOTNULL' }),
+      );
     });
   });
 
