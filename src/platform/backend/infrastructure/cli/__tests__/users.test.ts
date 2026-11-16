@@ -11,10 +11,14 @@ const PASSWORD = 'correct-horse-battery';
 describe('users CLI', () => {
   let dataDir: string;
 
-  const run = (args: string[], input = ''): { code: number | null; out: string; err: string } => {
+  const run = (
+    args: string[],
+    input = '',
+    env: Record<string, string> = {},
+  ): { code: number | null; out: string; err: string } => {
     const result = spawnSync('node', [CLI, ...args], {
       cwd: root,
-      env: { ...process.env, DATA_DIR: dataDir },
+      env: { ...process.env, DATA_DIR: dataDir, ...env },
       input,
       encoding: 'utf8',
     });
@@ -159,6 +163,28 @@ describe('users CLI', () => {
       expect(missing.err).toContain('Usage:');
       expect(unknown.code).toBe(1);
       expect(unknown.err).toContain('Unknown command');
+    });
+
+    it('should print one line and exit with 1 when an option is unknown', () => {
+      // When
+      const result = run(['list', '--nope']);
+
+      // Then
+      expect(result.code).toBe(1);
+      expect(result.err).toContain("Unknown option '--nope'");
+      expect(result.err).not.toContain('    at ');
+    });
+  });
+
+  describe('configuration', () => {
+    it('should print one line and exit with 1 when a setting is invalid', () => {
+      // When
+      const result = run(['list'], '', { PORT: 'abc' });
+
+      // Then
+      expect(result.code).toBe(1);
+      expect(result.err).toContain('Invalid configuration: PORT');
+      expect(result.err).not.toContain('    at ');
     });
   });
 });
