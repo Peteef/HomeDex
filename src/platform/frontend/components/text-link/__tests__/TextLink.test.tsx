@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { HomeLink } from '../HomeLink.tsx';
+import { TextLink } from '../TextLink.tsx';
 
-describe('HomeLink', () => {
+describe('TextLink', () => {
   it('should link to the given path with its children as the name', () => {
     // When
     render(
       <MemoryRouter>
-        <HomeLink to="/dex">Back home</HomeLink>
+        <TextLink to="/dex">Back home</TextLink>
       </MemoryRouter>,
     );
 
