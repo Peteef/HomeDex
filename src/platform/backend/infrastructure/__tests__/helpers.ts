@@ -6,7 +6,7 @@ import { createApp } from '../app.ts';
 import type { LoginLimit } from '../http/auth/loginRateLimit.ts';
 import type { LoadedModule } from '../modules/types.ts';
 import { loadConfig } from '../config.ts';
-import type { Argon2Params } from '../../domain/accounts/index.ts';
+import type { Account, Argon2Params } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
 import type { DomainServices } from '../../domain/services.ts';
 import { migratePlatform, openDatabase } from '../storage/index.ts';
@@ -63,9 +63,8 @@ export const createTestApp = (
 export const testServices = (db: Database.Database): DomainServices =>
   domainServices(db, { sessionTtlDays: SESSION_TTL_DAYS, argon2Params: FAST_ARGON2 });
 
-export const createTestUser = async (db: Database.Database, username: string): Promise<void> => {
-  await testServices(db).accounts.create(username, TEST_PASSWORD);
-};
+export const createTestUser = (db: Database.Database, username: string): Promise<Account> =>
+  testServices(db).accounts.create(username, TEST_PASSWORD);
 
 export const postJson = (app: Express, url: string, body?: unknown): request.Test =>
   request(app)
