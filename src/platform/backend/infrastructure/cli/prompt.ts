@@ -7,12 +7,12 @@ const EXIT_INTERRUPTED = 130;
 const YES = /^y(es)?$/i;
 
 // What the prompts need from a terminal; process.stdin and process.stdout fit.
-export interface PromptIo {
-  input: NodeJS.ReadableStream & { isTTY?: boolean; setRawMode?: (mode: boolean) => unknown };
+interface PromptIo {
+  input: NodeJS.ReadableStream & { isTTY?: boolean; setRawMode: (mode: boolean) => unknown };
   output: NodeJS.WritableStream;
 }
 
-export interface TerminalPrompts {
+interface TerminalPrompts {
   hasTerminal: () => boolean;
   ask: (question: string) => Promise<string>;
   confirm: (question: string) => Promise<boolean>;
@@ -20,9 +20,9 @@ export interface TerminalPrompts {
   readPipedPassword: () => Promise<string>;
 }
 
-const REAL_TERMINAL: PromptIo = { input: process.stdin, output: process.stdout };
-
-export const terminalPrompts = ({ input, output }: PromptIo = REAL_TERMINAL): TerminalPrompts => {
+export const terminalPrompts = (
+  { input, output }: PromptIo = { input: process.stdin, output: process.stdout },
+): TerminalPrompts => {
   const hasTerminal = (): boolean => input.isTTY === true;
 
   const ask = async (question: string): Promise<string> => {
@@ -40,7 +40,7 @@ export const terminalPrompts = ({ input, output }: PromptIo = REAL_TERMINAL): Te
 
   const askHidden = (question: string): Promise<string> => {
     output.write(question);
-    input.setRawMode?.(true);
+    input.setRawMode(true);
     input.setEncoding('utf8');
     input.resume();
     return new Promise((resolve) => {
@@ -48,7 +48,7 @@ export const terminalPrompts = ({ input, output }: PromptIo = REAL_TERMINAL): Te
 
       const finish = (): void => {
         input.off('data', onData);
-        input.setRawMode?.(false);
+        input.setRawMode(false);
         input.pause();
         output.write('\n');
       };

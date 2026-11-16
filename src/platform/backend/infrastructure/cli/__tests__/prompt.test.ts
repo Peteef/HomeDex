@@ -71,13 +71,13 @@ describe('terminalPrompts', () => {
     });
 
     it.each([
-      ['y', true],
-      ['Y', true],
-      ['yes', true],
-      ['n', false],
-      ['', false],
-      ['maybe', false],
-    ])('should answer correctly when the reply is "%s"', async (reply, expected) => {
+      [true, 'y'],
+      [true, 'Y'],
+      [true, 'yes'],
+      [false, 'n'],
+      [false, ''],
+      [false, 'maybe'],
+    ])('should be %s when the reply is "%s"', async (expected, reply) => {
       // Given
       const terminal = fakeTerminal();
       const prompts = terminalPrompts(terminal);
@@ -159,20 +159,52 @@ describe('terminalPrompts', () => {
       expect(terminal.setRawMode.mock.calls).toEqual([[true], [false]]);
     });
 
-    it('should exit with 130 and leave raw mode when Ctrl+C is pressed', () => {
+    it('should exit with 130 and leave raw mode when Ctrl+C is pressed', async () => {
       // Given
-      const exit = vi.spyOn(process, 'exit').mockImplementation(() => {
-        throw new Error('exit');
-      });
-
+      const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
       const terminal = fakeTerminal();
       const prompts = terminalPrompts(terminal);
       void prompts.askHidden('Password: ');
 
-      // When / Then
-      expect(() => terminal.input.write('se\u0003')).toThrow('exit');
-      expect(exit).toHaveBeenCalledWith(130);
+      // When
+      terminal.input.write('se\u0003');
+
+      // Then
+      await vi.waitFor(() => {
+        expect(exit).toHaveBeenCalledWith(130);
+      });
+
       expect(terminal.setRawMode).toHaveBeenLastCalledWith(false);
+    });
+  });
+
+  describe('a create session', () => {
+    it('should read the username and then the password twice when they are typed in turn', async () => {
+      // Given
+      const terminal = fakeTerminal();
+      const prompts = terminalPrompts(terminal);
+
+      // When
+      const username = prompts.ask('Username: ');
+      terminal.input.write('ash\n');
+      const typedUsername = await username;
+
+      const password = prompts.askHidden('Password: ');
+      terminal.input.write('secret-pass\r');
+      const typedPassword = await password;
+
+      const repeated = prompts.askHidden('Repeat password: ');
+      terminal.input.write('secret-pass\r');
+      const typedRepeat = await repeated;
+
+      // Then
+      expect([typedUsername, typedPassword, typedRepeat]).toEqual([
+        'ash',
+        'secret-pass',
+        'secret-pass',
+      ]);
+
+      expect(terminal.shown()).not.toContain('secret-pass');
     });
   });
 
