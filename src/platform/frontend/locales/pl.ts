@@ -128,6 +128,17 @@ const pl = {
     title: 'Nie ma takiej strony',
     message: 'Pod tym adresem nic nie ma.',
   },
+  crashed: {
+    module: {
+      title: 'Ta strona napotkała problem',
+      message: 'Coś poszło nie tak. Odśwież stronę albo wróć do Dexu.',
+    },
+    app: {
+      title: 'HomeDex napotkał problem',
+      message: 'Coś poszło nie tak. Odśwież stronę, aby kontynuować.',
+    },
+    reload: 'Odśwież',
+  },
   sessionUnavailable: {
     title: 'Brak połączenia z HomeDex',
     message: 'Sprawdź połączenie i spróbuj ponownie.',

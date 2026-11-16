@@ -1,9 +1,9 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { lazy } from 'react';
 import { Route, Routes } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useCurrentUser } from '../features/auth/index.ts';
-import { accountsList, fakeApi, renderApp, signedIn, signedOut } from './helpers.tsx';
+import { accountsList, fakeApi, ok, renderApp, signedIn, signedOut } from './helpers.tsx';
 
 const NotesPage = () => {
   const user = useCurrentUser();
@@ -16,6 +16,10 @@ const NotesPage = () => {
   );
 };
 
+const BrokenPage = () => {
+  throw new Error('boom');
+};
+
 vi.mock('../features/modules/index.ts', () => ({
   MODULE_PAGES: [
     {
@@ -23,11 +27,20 @@ vi.mock('../features/modules/index.ts', () => ({
       route: '/m/notes',
       Page: lazy(() => Promise.resolve({ default: NotesPage })),
     },
+    {
+      id: 'broken',
+      route: '/m/broken',
+      Page: lazy(() => Promise.resolve({ default: BrokenPage })),
+    },
   ],
   MODULE_TRANSLATIONS: [],
 }));
 
 describe('module routes', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("should show a module's page at its route for the signed-in user", async () => {
     // Given
     fakeApi({ 'GET /api/auth/me': signedIn() });
@@ -77,6 +90,28 @@ describe('module routes', () => {
     // Then
     expect(
       await screen.findByRole('heading', { level: 1, name: "Who's there, Trainer?" }),
+    ).toBeInTheDocument();
+  });
+
+  it("should keep the rest of the app working when a module's page crashes", async () => {
+    // Given
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fakeApi({ 'GET /api/auth/me': signedIn(), 'GET /api/tiles': ok({ tiles: [] }) });
+    renderApp('/m/broken');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'This page hit a problem' }),
+    ).toBeInTheDocument();
+
+    // When
+    fireEvent.click(screen.getByRole('link', { name: 'Back to the Dex' }));
+
+    // Then
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Hello Misty! What do you need today?',
+      }),
     ).toBeInTheDocument();
   });
 });
