@@ -6,8 +6,8 @@ import {
   signedOut,
   status,
   TEST_USER,
-} from '../../../__tests__/helpers.tsx';
-import { fetchAccounts, fetchCurrentUser, login, logout } from '../internal/authApi.ts';
+} from '../../../../__tests__/helpers.tsx';
+import { fetchAccounts, fetchCurrentUser, login, logout } from '../authApi.ts';
 
 describe('auth API', () => {
   describe('fetchCurrentUser', () => {

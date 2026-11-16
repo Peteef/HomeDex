@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { Suspense } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ModuleManifest } from '../../../../shared/manifest/manifestSchema.ts';
-import { modulePages } from '../internal/modulePages.ts';
+import type { ModuleManifest } from '../../../../../shared/manifest/manifestSchema.ts';
+import { modulePages } from '../modulePages.ts';
 
 const manifestOf = (id: string, enabled = true): ModuleManifest => ({
   id,
