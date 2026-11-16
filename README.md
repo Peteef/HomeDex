@@ -145,16 +145,17 @@ npm start
 
 ### Commands
 
-| Command            | What it does                                                                                        |
-| ------------------ | --------------------------------------------------------------------------------------------------- |
-| `npm run dev`      | Development: Vite on port 5173 and the backend on port 3000, both reload on changes                 |
-| `npm run build`    | Builds the UI into `dist/web`                                                                       |
-| `npm start`        | Production server (API plus built UI)                                                               |
-| `npm test`         | Unit tests                                                                                          |
-| `npm run test:e2e` | End-to-end tests against the production build (first run: `npx playwright install webkit chromium`) |
-| `npm run users --` | Accounts CLI (see below)                                                                            |
-| `npm run fix`      | Formats and auto-fixes everything                                                                   |
-| `npm run verify`   | Typecheck, lint, format check, unit tests and build. CI runs the same                               |
+| Command                 | What it does                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Development: Vite on port 5173 and the backend on port 3000, both reload on changes                      |
+| `npm run build`         | Builds the UI into `dist/web`                                                                            |
+| `npm start`             | Production server (API plus built UI)                                                                    |
+| `npm test`              | Unit tests                                                                                               |
+| `npm run test:coverage` | Unit tests with a coverage report in `coverage/` (entry points run as child processes show as uncovered) |
+| `npm run test:e2e`      | End-to-end tests against the production build (first run: `npx playwright install webkit chromium`)      |
+| `npm run users --`      | Accounts CLI (see below)                                                                                 |
+| `npm run fix`           | Formats and auto-fixes everything                                                                        |
+| `npm run verify`        | Typecheck, lint, format check, unit tests and build. CI runs the same                                    |
 
 ### Development test user
 
