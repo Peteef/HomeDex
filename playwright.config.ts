@@ -25,6 +25,7 @@ export default defineConfig({
       use: { ...devices['iPhone 17 Pro'], viewport: { width: 402, height: 874 } },
     },
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: 'desktop-safari', use: { ...devices['Desktop Safari'] } },
   ],
   webServer: {
     command: 'npm run build && node e2e/prepare-data.ts && npm start',

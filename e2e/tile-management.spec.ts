@@ -4,10 +4,10 @@ import { E2E_SECOND_USER } from './fixtures.ts';
 import { LANGUAGE_KEY, signIn } from './session.ts';
 import { SAMPLE_TILES, settled, stubTiles } from './tiles.ts';
 
-const DESKTOP_PROJECT = 'desktop';
+const DESKTOP_PROJECTS = ['desktop', 'desktop-safari'];
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
-const isDesktop = (testInfo: TestInfo): boolean => testInfo.project.name === DESKTOP_PROJECT;
+const isDesktop = (testInfo: TestInfo): boolean => DESKTOP_PROJECTS.includes(testInfo.project.name);
 
 // Every project writes real tiles as the same user against one server, so each run names its own.
 const uniqueName = (name: string, testInfo: TestInfo): string =>

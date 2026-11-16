@@ -13,7 +13,7 @@ A private, Pokémon-themed mission control for a household: a greeting, quick-fi
 
 - `npm run dev`: Vite on 5173 (open this one, also from a phone on the LAN) and the backend on 3000, both reloading. It first runs `scripts/dev-user.ts`, which creates a user from `DEV_USERNAME` and `DEV_PASSWORD` in `.env.development` when the database has no accounts.
 - `npm run build` (UI to `dist/web`); `npm start` (production server: API plus built UI).
-- `npm test` (Vitest); `npm run test:e2e` (Playwright, phone viewports included). `npm run test:coverage` adds a coverage report (a report only, no threshold).
+- `npm test` (Vitest); `npm run test:e2e` (Playwright: desktop Chrome and Safari, two phone viewports). `npm run test:coverage` adds a coverage report (a report only, no threshold).
 - `npm run fix`: Prettier and ESLint auto-fix. `npm run verify`: typecheck, lint (boundary rules included), format check, unit tests and build; CI runs the same.
 - `npm run users -- list | create | edit | archive | restore`: the account CLI.
 
@@ -80,7 +80,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 
 ## UI and text
 
-- Check every UI change with Playwright on desktop and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
+- Check every UI change with Playwright on desktop (Chrome and Safari) and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
 - Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only). Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
 - Pokémon wording: Dex numbers ("No. 001") and "Dex" for the tiles; pinned tiles come first, with no name of their own.
 - All UI text lives in TypeScript locale files (`export default { ... } as const`): `platform/frontend/locales/<language>.ts` (namespace `platform`) and `<module>/frontend/locales/<language>.ts` (namespace = module id). Keys follow folders: one camelCased key per page folder with its components inside, `components.<name>` for generic components, and `common.<kind>` only for text two or more places share with the same meaning.
