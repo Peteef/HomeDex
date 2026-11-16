@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadConfig } from '../config.ts';
 import { rejectDevConfigInProduction } from '../devConfig.ts';
+import { ConfigError } from '../errors.ts';
 
 const production = loadConfig({ NODE_ENV: 'production' });
 const development = loadConfig({});
@@ -11,6 +12,10 @@ describe('dev config', () => {
       'should throw in production when %s is set',
       (name) => {
         // When / Then
+        expect(() => {
+          rejectDevConfigInProduction(production, { [name]: 'x' });
+        }).toThrow(ConfigError);
+
         expect(() => {
           rejectDevConfigInProduction(production, { [name]: 'x' });
         }).toThrow(`${name} are for development only`);

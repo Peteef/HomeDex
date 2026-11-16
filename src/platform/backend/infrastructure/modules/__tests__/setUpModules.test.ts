@@ -1,7 +1,8 @@
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { createTestDatabase } from '../../__tests__/helpers.ts';
+import { ModuleError } from '../errors.ts';
 import { setUpModules } from '../setUpModules.ts';
 
 const fixtures = (name: string): string => path.join(import.meta.dirname, 'fixtures', name);
@@ -12,10 +13,6 @@ const moduleTiles = (db: Database.Database): unknown[] =>
     .all();
 
 describe('setUpModules', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('should return the enabled modules with their tables created', async () => {
     // Given
     const db = createTestDatabase();
@@ -57,22 +54,14 @@ describe('setUpModules', () => {
     ]);
   });
 
-  it('should print the problem and exit with 1 when a module is invalid', async () => {
-    // Given
-    const printError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-
-    const exit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('exited');
-    });
-
+  it('should throw the problem when a module is invalid', async () => {
     // When
     const setUp = setUpModules(createTestDatabase(), fixtures('wrong-id'));
 
     // Then
-    await expect(setUp).rejects.toThrow('exited');
-    expect(exit).toHaveBeenCalledWith(1);
+    await expect(setUp).rejects.toThrow(ModuleError);
 
-    expect(printError).toHaveBeenCalledWith(
+    await expect(setUp).rejects.toThrow(
       'Module "notes" has the id "other"; it must equal its folder name',
     );
   });

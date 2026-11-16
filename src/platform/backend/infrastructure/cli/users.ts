@@ -4,6 +4,7 @@ import { AccountError } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
 import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
+import { ConfigError } from '../errors.ts';
 import { openStorage } from '../storage/index.ts';
 import { ask, askHidden, confirm, hasTerminal, readPipedPassword } from './prompt.ts';
 
@@ -218,13 +219,18 @@ const run = async (argv: string[]): Promise<void> => {
   }
 };
 
+// A mistake the user can fix gets one line. util.parseArgs reports bad options as a TypeError
+// with a code.
+const isExpected = (error: unknown): error is Error =>
+  error instanceof UsageError ||
+  error instanceof AccountError ||
+  error instanceof ConfigError ||
+  (error instanceof TypeError && 'code' in error);
+
 try {
   await run(process.argv.slice(2));
 } catch (error) {
-  if (error instanceof UsageError || error instanceof AccountError) {
-    console.error(error.message);
-  } else if (error instanceof TypeError && 'code' in error) {
-    // Bad command-line options from util.parseArgs.
+  if (isExpected(error)) {
     console.error(error.message);
   } else {
     console.error(error);
