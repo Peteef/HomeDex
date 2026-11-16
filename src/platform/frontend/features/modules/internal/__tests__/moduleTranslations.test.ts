@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ModuleManifest } from '../../../../shared/manifest/manifestSchema.ts';
-import { moduleTranslations } from '../internal/moduleTranslations.ts';
+import type { ModuleManifest } from '../../../../../shared/manifest/manifestSchema.ts';
+import { moduleTranslations } from '../moduleTranslations.ts';
 
 const manifestOf = (id: string, enabled = true): ModuleManifest => ({
   id,
