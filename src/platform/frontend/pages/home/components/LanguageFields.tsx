@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import {
   TILE_DESCRIPTION_MAX_LENGTH,
   TILE_TITLE_MAX_LENGTH,
@@ -37,7 +37,7 @@ export const LanguageFields = ({
       {removable ? (
         <IconButton
           className="absolute top-3 right-3"
-          icon={<X size={20} />}
+          icon={<Trash2 size={20} />}
           label={messages.removeLanguage({ language: code })}
           onClick={onRemove}
         />
