@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
-# node:26-bookworm-slim, pinned to the multi-arch index digest. Update both together.
-ARG NODE_IMAGE=node:26-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68
+# The Node image is pinned to its multi-arch index digest and written out in every FROM line,
+# because Dependabot reads only literal FROM lines. It updates all three together.
 
 # The built UI is the same on every platform, so this stage runs natively on the build machine
 # instead of under emulation.
-FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS web-build
+FROM --platform=$BUILDPLATFORM node:26-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS web-build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
@@ -16,12 +16,12 @@ RUN npm run build
 
 # --ignore-scripts: better-sqlite3 ships prebuilt binaries for linux x64 and arm64, so nothing
 # needs compiling, and the husky `prepare` script is a dev-only tool.
-FROM ${NODE_IMAGE} AS production-deps
+FROM node:26-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS production-deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 
-FROM ${NODE_IMAGE} AS runtime
+FROM node:26-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS runtime
 ENV NODE_ENV=production \
     DATA_DIR=/data \
     PORT=3000
