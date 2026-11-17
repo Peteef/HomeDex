@@ -199,7 +199,7 @@ A module is a folder in `src/modules/` with its own pages, API and data. The pla
 
 ### Workflow and CI
 
-Every change is a pull request from a branch; nothing is pushed to `master` directly. Before opening one, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, the end-to-end tests, a secret scan and a Docker build with a smoke test on every pull request. It also publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, which is deleted when the pull request closes (unless it is the only tagged image, which GHCR does not allow).
+Every change is a pull request from a branch; nothing is pushed to `master` directly. Before opening one, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, the end-to-end tests, a secret scan and a Docker build with a smoke test on every pull request. It also publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, which is deleted when the pull request closes.
 
 Every merge to `master` gets a version: CI tags it `v<version>`, publishes the image as `<version>` and moves `latest` to the newest. The version bump comes from the pull request's label, and a pull request has exactly one (adding another replaces it):
 
