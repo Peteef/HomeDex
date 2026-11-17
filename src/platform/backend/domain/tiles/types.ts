@@ -1,30 +1,15 @@
-import type { Language } from '../../../shared/i18n/languages.ts';
+import type { TileScope } from '../../../shared/tiles/tileTypes.ts';
 
-export type TileKind = 'link' | 'module';
-export const TILE_SCOPES = ['shared', 'personal'] as const;
+export { TILE_SCOPES } from '../../../shared/tiles/tileTypes.ts';
+export type {
+  Tile,
+  TileKind,
+  TileScope,
+  TileText,
+  TileTexts,
+} from '../../../shared/tiles/tileTypes.ts';
 
-export type TileScope = (typeof TILE_SCOPES)[number];
 export type TileErrorCode = 'invalid' | 'not_found' | 'forbidden';
-
-export interface TileText {
-  title: string;
-  description: string | null;
-}
-
-export type TileTexts = Partial<Record<Language, TileText>>;
-
-export interface Tile {
-  id: number;
-  dexNo: number;
-  kind: TileKind;
-  texts: TileTexts;
-  icon: string;
-  url: string | null;
-  moduleId: string | null;
-  scope: TileScope;
-  pinned: boolean;
-  editable: boolean;
-}
 
 export interface EnabledModule {
   moduleId: string;
