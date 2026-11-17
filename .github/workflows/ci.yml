@@ -149,6 +149,12 @@ jobs:
             git tag "$TAG" "$GITHUB_SHA"
             git push origin "$TAG"
           fi
+      - id: highlights
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          config-name: release-highlights.yml
+          dry-run: true
+          commitish: ${{ github.sha }}
       - uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
           version: ${{ steps.next.outputs.version }}
@@ -156,6 +162,7 @@ jobs:
           commitish: ${{ github.sha }}
           publish: ${{ steps.next.outputs.release }}
           name: ${{ steps.next.outputs.release != 'true' && 'Next release' || '' }}
+          header: "${{ steps.highlights.outputs.body }}\n\n"
 
   publish:
     name: publish

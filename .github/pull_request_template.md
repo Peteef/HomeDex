@@ -1,5 +1,9 @@
 ## What changed and why
 
+## Release notes
+
+<!-- Only for release:minor and release:major: what this release brings to the people using HomeDex, in plain words, not code. It opens the GitHub Release. Leave empty otherwise. -->
+
 ## How it was tested
 
 ## Done means (CLAUDE.md)

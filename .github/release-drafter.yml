@@ -1,17 +1,32 @@
-# Used by the `release` job in ci.yml. The categories match the release:* labels that set the
-# version bump of a merge (the highest one wins). Minor and major bumps publish a GitHub Release
-# with every pull request since the last one; patch bumps only update the "Next release" draft.
+# Used by the `release` job in ci.yml. Minor and major bumps publish a GitHub Release with every
+# pull request since the last one; patch bumps only update the "Next release" draft. The release
+# opens with the "Release notes" of its minor and major pull requests (release-highlights.yml).
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 change-template: '- $TITLE (#$NUMBER)'
 change-title-escapes: '\<*_&'
 no-changes-template: '- No pull requests'
 template: |
-  ## What's changed
-
   $CHANGES
 
+  **Full changelog**: [$PREVIOUS_TAG...$RESOLVED_TAG](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG)
+
+# Drops the "[Model name] " or "[Dependabot]: " that starts every pull request title.
+replacers:
+  - target: change-title
+    search: '/^\[[^\]]+\]:?\s*/'
+    replace: ''
+
 categories:
+  - title: 'Features'
+    when:
+      labels: ['release:minor', 'release:major']
+  - title: 'Fixes and changes'
+  - title: 'Dependencies'
+    collapse-after: 0
+    when:
+      label: 'dependencies'
+  # The labels that set the version bump of a merge; the highest one wins.
   - type: version-resolver
     semver-increment: major
     when:
