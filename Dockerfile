@@ -10,8 +10,11 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY index.html vite.config.ts tsconfig.json ./
+COPY scripts/app-version.ts ./scripts/
 COPY public ./public
 COPY src ./src
+# The version the UI shows, set by CI. Without it the build has no git history, so it is 0.0.0-dev.
+ARG APP_VERSION
 RUN npm run build
 
 # --ignore-scripts: better-sqlite3 ships prebuilt binaries for linux x64 and arm64, so nothing

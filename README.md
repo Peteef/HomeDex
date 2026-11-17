@@ -1,6 +1,6 @@
 # HomeDex
 
-[![Version](https://img.shields.io/badge/version-coming%20soon-lightgrey)](#running-homedex)
+[![Version](https://img.shields.io/github/v/release/Peteef/HomeDex?label=version)](https://github.com/Peteef/HomeDex/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/Peteef/HomeDex/ci.yml?branch=master&event=push&label=CI)](https://github.com/Peteef/HomeDex/actions/workflows/ci.yml?query=branch%3Amaster)
 ![Node.js 26](https://img.shields.io/badge/Node.js-26-5FA04E?logo=nodedotjs&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
@@ -11,8 +11,6 @@
 HomeDex is a self-hosted web app that gathers a household's everyday tools in one place. Each person signs in to a home screen of tiles: saved links that open any page on the web, and modules, small apps built into HomeDex. Frequently used tiles are pinned to the top, and quick-find opens any of them in a few keystrokes, on a computer or a phone.
 
 HomeDex is a personal project, built for my own household and run on the home network, never on the public internet.
-
-> **Status:** close to v1.0.0. Everything below works today, but release images are not published yet (see [Running HomeDex](#running-homedex)).
 
 ## Features
 
@@ -27,8 +25,6 @@ HomeDex is a personal project, built for my own household and run on the home ne
 ## Running HomeDex
 
 HomeDex runs as one Docker container that serves both the app and its API. Its data lives in a `data/` folder next to it. You need [Docker](https://docs.docker.com/get-docker/) with Docker Compose.
-
-> **Before the first release:** the `latest` image does not exist yet, so `docker compose pull` fails. Until then, either [build from source](#building-from-source) or run the preview image of an open pull request by setting `HOMEDEX_VERSION=pr-<number>` in `.env`.
 
 ### Install
 
@@ -97,7 +93,7 @@ To restore, run `docker compose down`, replace `data/` with a copy, and run `doc
 
 ### Building from source
 
-Until release images exist, or to run your own changes, build the image from a clone:
+To run your own changes, build the image from a clone:
 
 ```bash
 git clone https://github.com/Peteef/HomeDex.git
@@ -204,6 +200,16 @@ A module is a folder in `src/modules/` with its own pages, API and data. The pla
 ### Workflow and CI
 
 Every change is a pull request from a branch; nothing is pushed to `master` directly. Before opening one, `npm run fix` and then `npm run verify` must pass. CI runs `verify`, the end-to-end tests, a secret scan and a Docker build with a smoke test on every pull request. It also publishes a preview image, `ghcr.io/peteef/homedex:pr-<number>`, which is deleted when the pull request closes (unless it is the only tagged image, which GHCR does not allow).
+
+Every merge to `master` is released: CI tags it `v<version>`, writes a GitHub Release listing the merged pull requests, and publishes the image as `<version>` and `latest`. The version bump comes from the pull request's label, and a pull request has exactly one (adding another replaces it):
+
+| Label           | From 1.4.0 | Added                                      |
+| --------------- | ---------- | ------------------------------------------ |
+| `release:patch` | 1.4.1      | by default                                 |
+| `release:minor` | 1.5.0      | by default on `epic/` branches, or by hand |
+| `release:major` | 2.0.0      | only by hand                               |
+
+An `epic/` branch builds up a bigger feature from its own pull requests and is merged to `master` as one release. The app knows its version: the release, `pr-<number>` for a preview, or `<last release>-dev` (such as `1.4.1-dev`) for any other build.
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
 

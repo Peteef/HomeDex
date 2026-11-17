@@ -4,7 +4,6 @@ on:
   pull_request:
   push:
     branches: [master]
-    tags: ['v*']
 
 permissions:
   contents: read
@@ -15,9 +14,12 @@ env:
   # pin, so it is bumped by hand, like the Playwright image.
   BINFMT_IMAGE: docker.io/tonistiigi/binfmt:qemu-v10.2.3@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
 
+# A pull request cancels its outdated runs. Master runs queue instead, so merges are released in
+# order. GitHub keeps one queued run per group: a newer merge replaces a queued one, and its release
+# then includes both.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -96,7 +98,8 @@ jobs:
           tags: homedex:ci
           cache-from: type=gha
       - run: tests/docker/smoke.sh homedex:ci
-      # Fills the cache the publish jobs push from, so they push the smoke-tested amd64 layers.
+      # Fills the cache the publish jobs push from, so they push the smoke-tested amd64 layers. Only
+      # the built UI differs, by the APP_VERSION it is given.
       - name: Build amd64 and arm64
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -106,12 +109,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Every merge to master is a release: a v<version> tag and a GitHub Release. The version comes
+  # from the release:* labels of the pull requests merged since the last one
+  # (.github/release-drafter.yml).
+  release:
+    name: release
+    if: github.event_name == 'push'
+    needs: [verify, e2e, secrets, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: read
+    outputs:
+      version: ${{ steps.release.outputs.resolved_version }}
+    steps:
+      - id: release
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          publish: true
+          # The commit this run tested, not the branch head, which may already be a newer merge.
+          commitish: ${{ github.sha }}
+
   publish:
     name: publish
-    # Paused until releases come with git tags and version bumping; re-enable with
-    # `if: github.event_name == 'push'`.
-    if: false
-    needs: [verify, e2e, secrets, docker]
+    needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -128,16 +150,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # master: latest and sha-<short>. A v1.2.3 tag: 1.2.3 only, so a tag never moves latest.
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE }}
           flavor: latest=false
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=v${{ needs.release.outputs.version }}
+            type=raw,value=latest
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -145,6 +165,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: APP_VERSION=${{ needs.release.outputs.version }}
           cache-from: type=gha
 
   # Pull request images are previews, tagged pr-<number> and deleted when the pull request
@@ -185,4 +206,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: APP_VERSION=pr-${{ github.event.pull_request.number }}
           cache-from: type=gha

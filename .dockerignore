@@ -26,6 +26,8 @@ test-results/
 
 # Tests and tooling the image does not run (scripts/ holds the development test user)
 scripts/
+# Read by vite.config.ts in the UI build stage only.
+!scripts/app-version.ts
 **/__tests__/
 e2e/
 tests/

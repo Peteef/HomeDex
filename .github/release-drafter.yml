@@ -1,0 +1,32 @@
+# Every merge to master is released (the `release` job in ci.yml). Its version comes from the
+# release:* label of each pull request merged since the last release; the highest one wins.
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+no-changes-template: '- No pull requests'
+template: |
+  ## What's changed
+
+  $CHANGES
+
+categories:
+  - type: version-resolver
+    semver-increment: major
+    when:
+      label: 'release:major'
+  - type: version-resolver
+    semver-increment: minor
+    when:
+      label: 'release:minor'
+  - type: version-resolver
+    semver-increment: patch
+
+# Run only when a pull request opens (release-labels.yml), so a label changed by hand stays.
+# release:major is never added automatically.
+autolabeler:
+  - labels: ['release:minor']
+    branch:
+      - '/^epic\/.+/'
+  - labels: ['release:patch']
+    fallback: true
