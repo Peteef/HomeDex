@@ -6,7 +6,7 @@ import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
 import { ConfigError } from '../errors.ts';
 import { openStorage } from '../storage/index.ts';
-import { ask, askHidden, confirm, hasTerminal, readPipedPassword } from './prompt.ts';
+import { terminalPrompts } from './prompt.ts';
 
 const USAGE = `Usage: npm run users -- <command> [options]
 
@@ -32,6 +32,8 @@ const options = {
   yes: { type: 'boolean' },
   all: { type: 'boolean' },
 } as const;
+
+const { ask, askHidden, confirm, hasTerminal, readPipedPassword } = terminalPrompts();
 
 const formatDate = (timestamp: number): string =>
   new Date(timestamp).toLocaleDateString(DATE_LOCALE);
