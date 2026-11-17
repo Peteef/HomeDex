@@ -10,4 +10,12 @@ describe('LoadingStatus', () => {
     // Then
     expect(screen.getByRole('status')).toHaveTextContent('Loading…');
   });
+
+  it('should be visible, not only for screen readers', () => {
+    // When
+    render(<LoadingStatus />);
+
+    // Then
+    expect(screen.getByRole('status')).not.toHaveClass('sr-only');
+  });
 });

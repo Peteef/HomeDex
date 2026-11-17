@@ -29,6 +29,7 @@
   --animate-float: float 7s ease-in-out infinite;
   --animate-rise: rise 0.2s ease-out;
   --animate-pop: pop 0.25s ease-out;
+  --animate-appear: appear 0.2s ease-out 0.4s backwards;
 
   @keyframes float {
     0%,
@@ -53,6 +54,12 @@
     from {
       opacity: 0;
       transform: translateY(1.5rem);
+    }
+  }
+
+  @keyframes appear {
+    from {
+      opacity: 0;
     }
   }
 }
