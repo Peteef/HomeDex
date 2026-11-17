@@ -3,19 +3,18 @@
 ## Release notes
 
 <!--
-Only for release:minor and release:major; leave it empty otherwise. It opens the GitHub Release.
-Write for the people using HomeDex, in English and plain words: a ### heading, a sentence or two,
-then bullets. No code, file names or PR numbers. Say what to do before or after updating, if
-anything (pin a tile, sign in again, back up data/ before a major). For example:
+Only for release:minor and release:major; leave it empty otherwise. It is the public description
+of the GitHub Release, for anyone using HomeDex: plain English, no code, file names or PR numbers.
+Format and checklist: docs/releases.md. Skeleton:
 
-### Shared shopping list
+### <Name of the feature>
 
-The household now has one shopping list everyone can add to, from the phone in the shop or the PC.
+<One or two sentences: what HomeDex can do now.>
 
-- Tick items off as they go into the basket; ticked items clear with one tap.
-- Everyone sees the same list, so nobody buys the milk twice.
+- <Something you can do now.>
 
-Pin the new **Shopping list** tile to keep it at the top of your Dex.
+**Before updating:** <only when needed>
+**After updating:** <only when needed>
 -->
 
 ## How it was tested

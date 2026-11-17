@@ -1,11 +1,11 @@
 name: Release labels
 
 # Every pull request into master carries one release:* label, which sets its version bump
-# (.github/release-drafter.yml). Dependabot sets its own (dependabot.yml) and gets a read-only token.
+# (docs/releases.md). Dependabot sets its own (dependabot.yml) and gets a read-only token.
 on:
   pull_request:
     branches: [master]
-    types: [opened, reopened, labeled]
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -46,3 +46,30 @@ jobs:
             for (const name of others) {
               await github.rest.issues.removeLabel({ ...context.repo, issue_number: context.issue.number, name });
             }
+
+  # A minor or major pull request opens a GitHub Release with its Release notes, so it cannot be
+  # merged without them. Runs on every change to the labels or the description, after the default
+  # label, whose change starts no new run, so the labels are read fresh.
+  release-notes:
+    name: release-notes
+    needs: default-label
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$NUMBER/labels" --jq '[.[].name]')
+          node scripts/check-release-notes.ts "$labels" "$BODY"

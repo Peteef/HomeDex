@@ -25,7 +25,7 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
 - One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
 - `dependencies` holds only what the server imports at run time; libraries that only the browser bundle uses are `devDependencies`, so the image stays small.
-- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Every merge to `master` is versioned: CI tags `v<version>` and publishes `<version>` and `latest`. Minor and major bumps also publish a GitHub Release with everything since the last one, gathered meanwhile in a "Next release" draft. Pull requests publish `pr-<number>`, deleted on close.
+- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Every merge to `master` gets its own version: CI tags `v<version>`, publishes `<version>` and moves `latest` to the newest. Minor and major bumps also publish a GitHub Release with everything since the last one (`docs/releases.md`). Pull requests publish `pr-<number>`, deleted on close.
 - Versions: the UI reads its own from `lib/version`, set at build time by `scripts/app-version.ts`: the release, `pr-<number>` for previews, otherwise `<last version>-dev`.
 
 ## Structure
@@ -106,7 +106,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ci/` or `epic/`. An `epic/` branch builds up a bigger feature: its PRs target it, `master` is merged into it regularly, and its own PR into `master` lists them.
 - Commit messages and PR titles: `[<model name>] Imperative summary`, about 70 characters. Merges are squash merges, so the PR title becomes the commit on `master`.
 - Anything posted on GitHub (descriptions, comments, review replies) starts with `**🤖 [<model name>]**` on its own line, then a blank line.
-- Every PR into `master` has one `release:*` label, which sets the version bump of its merge. New PRs get `release:minor` on `epic/` branches and `release:patch` otherwise; label a bigger feature `release:minor` yourself. `release:major` only on the owner's request. A minor or major PR fills its `## Release notes` section (PR template), which opens the GitHub Release: what the release brings to the household in plain words, under a `###` heading, with no code or PR numbers, plus anything to do before or after updating.
+- Every PR into `master` has one `release:*` label, which sets the version bump of its merge. New PRs get `release:minor` on `epic/` branches and `release:patch` otherwise; change it when it does not fit, such as `release:minor` for a change worth showing. `release:major` only on the owner's request. A minor or major PR fills its `## Release notes` section, the public description of the release: follow `docs/releases.md`.
 - One cohesive purpose per PR, with a short description of what changed, why and how it was tested. Split very large PRs. Use a draft PR for unfinished work. Address every review comment by fixing it or explaining why not.
 
 ## Working practices
@@ -114,4 +114,4 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - When this file does not cover something, follow the codebase's conventions. Ask the owner only as a last resort; never guess. Do not build beyond what was asked.
 - Planning docs (PRDs, plans) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo module guide.
 - **Done means, before a PR:** `npm run fix` then `npm run verify` pass; new behaviour has tests and no check was weakened; UI changes are checked on desktop and at both phone widths; the diff has no secrets, personal data or local paths; names follow the rules above.
-- Keep docs current in the same PR: this file, `README.md`, `src/modules/README.md`. Keep this file short, with no rules that lint or tooling already enforce.
+- Keep docs current in the same PR: this file, `README.md`, `src/modules/README.md`, `docs/releases.md`. Keep this file short, with no rules that lint or tooling already enforce.

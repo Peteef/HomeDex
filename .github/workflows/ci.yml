@@ -14,11 +14,10 @@ env:
   # pin, so it is bumped by hand, like the Playwright image.
   BINFMT_IMAGE: docker.io/tonistiigi/binfmt:qemu-v10.2.3@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
 
-# A pull request cancels its outdated runs. Master runs queue instead, so merges are versioned in
-# order. GitHub keeps one queued run per group: a newer merge replaces a queued one, and its version
-# then covers both.
+# A pull request cancels its outdated runs. Every merge to master gets a run of its own that nothing
+# cancels or replaces, so every merge is tested and published under its own version.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -109,21 +108,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Every merge to master gets a version: the last v<version> tag bumped by the release:* labels of
-  # the pull requests merged since it, tagged on the merge. Minor and major bumps also publish a
-  # GitHub Release listing every pull request since the last one; until then, they gather in a
-  # "Next release" draft (.github/release-drafter.yml).
-  release:
-    name: release
+  # Every merge to master gets a version: the version of the merge before it, bumped by its pull
+  # request's release:* label (scripts/next-version.ts). Runs of several merges can overlap, so each
+  # run versions every merge since the last version tag, and all runs agree on every version.
+  version:
+    name: version
     if: github.event_name == 'push'
-    needs: [verify, e2e, secrets, docker]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
     outputs:
       version: ${{ steps.next.outputs.version }}
+      release: ${{ steps.next.outputs.release }}
+      merges: ${{ steps.next.outputs.merges }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -133,45 +132,111 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --ignore-scripts
-      # Looked up from the parent, so a re-run finds the same tag even after this merge is tagged.
-      - id: last
-        run: echo "tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD^)" >> "$GITHUB_OUTPUT"
-      - id: changes
-        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
-        with:
-          dry-run: true
-          from: refs/tags/${{ steps.last.outputs.tag }}
-          commitish: ${{ github.sha }}
+      # The last tag is looked up from the parent, so a re-run gets the same versions after this
+      # merge is tagged. Before the first tag, versions start with the merge that added versioning.
+      # A merge's pull request is the one merged as that commit: an open epic/ pull request that
+      # merged master also lists it.
+      - id: merges
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(git tag --list 'v[0-9]*' --merged HEAD^ --sort=-v:refname | sed -n 1p)
+          first=$(git log --format=%H --diff-filter=A -- scripts/next-version.ts | tail -n 1)
+          {
+            echo "last=$last"
+            echo -n 'merges='
+            git log --first-parent --reverse --format=%H "${last:-$first^}..$GITHUB_SHA" |
+              while read -r sha; do
+                gh api "repos/$GITHUB_REPOSITORY/commits/$sha/pulls" \
+                  --jq "{sha: \"$sha\", labels: [.[] | select(.merge_commit_sha == \"$sha\") | .labels[].name]}"
+              done |
+              jq -sc .
+          } >> "$GITHUB_OUTPUT"
       - id: next
         env:
-          LAST_TAG: ${{ steps.last.outputs.tag }}
-          LABELS: ${{ steps.changes.outputs.labels }}
-        run: node scripts/next-version.ts "$LAST_TAG" "$LABELS" >> "$GITHUB_OUTPUT"
-      - env:
-          TAG: v${{ steps.next.outputs.version }}
+          LAST_TAG: ${{ steps.merges.outputs.last }}
+          MERGES: ${{ steps.merges.outputs.merges }}
+        run: node scripts/next-version.ts "$LAST_TAG" "$MERGES" >> "$GITHUB_OUTPUT"
+
+  # Tags the merges and publishes the GitHub Release of a minor or major one, listing every pull
+  # request since the last release; patches gather meanwhile in a "Next release" draft
+  # (.github/release-drafter.yml). One run at a time, but GitHub keeps only one waiting run per
+  # group and a newer one replaces it, so each run also catches up on what a replaced one left.
+  release:
+    name: release
+    needs: [version, verify, e2e, secrets, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      # Only the newest minor or major merge of a catch-up gets a release; an older one's notes join
+      # it. A run that finishes after a newer merge was tagged leaves the draft to the newer run.
+      - id: plan
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MERGES: ${{ needs.version.outputs.merges }}
+          VERSION: ${{ needs.version.outputs.version }}
+          RELEASE: ${{ needs.version.outputs.release }}
         run: |
-          if ! git rev-parse --quiet --verify "refs/tags/$TAG" > /dev/null; then
-            git tag "$TAG" "$GITHUB_SHA"
-            git push origin "$TAG"
+          jq -r '.[] | "\(.sha) v\(.version)"' <<< "$MERGES" |
+            while read -r sha tag; do
+              if ! git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
+                git tag "$tag" "$sha"
+                git push origin "$tag"
+              elif [ "$(git rev-list -n 1 "$tag")" != "$sha" ]; then
+                echo "::error::$tag already exists on another commit"
+                exit 1
+              fi
+            done
+
+          release=$(jq -r 'map(select(.release)) | last | select(.) | "\(.sha) \(.version)"' <<< "$MERGES")
+
+          if [ -n "$release" ] && ! gh release view "v${release#* }" > /dev/null 2>&1; then
+            echo "release_sha=${release% *}" >> "$GITHUB_OUTPUT"
+            echo "release_version=${release#* }" >> "$GITHUB_OUTPUT"
+          fi
+
+          newest=$(git tag --list 'v[0-9]*' --sort=-v:refname | sed -n 1p)
+
+          if [ "$newest" = "v$VERSION" ] && [ "$RELEASE" != true ]; then
+            echo "draft=true" >> "$GITHUB_OUTPUT"
           fi
       - id: highlights
+        if: steps.plan.outputs.release_sha
         uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
           config-name: release-highlights.yml
           dry-run: true
-          commitish: ${{ github.sha }}
-      - uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+          commitish: ${{ steps.plan.outputs.release_sha }}
+      - if: steps.plan.outputs.release_sha
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
-          version: ${{ steps.next.outputs.version }}
+          version: ${{ steps.plan.outputs.release_version }}
+          commitish: ${{ steps.plan.outputs.release_sha }}
+          publish: true
+          header: "${{ steps.highlights.outputs.body }}\n\n"
+      - if: steps.plan.outputs.draft
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          version: ${{ needs.version.outputs.version }}
           # The commit this run tested, not the branch head, which may already be a newer merge.
           commitish: ${{ github.sha }}
-          publish: ${{ steps.next.outputs.release }}
-          name: ${{ steps.next.outputs.release != 'true' && 'Next release' || '' }}
-          header: "${{ steps.highlights.outputs.body }}\n\n"
+          name: Next release
 
   publish:
     name: publish
-    needs: release
+    needs: [version, verify, e2e, secrets, docker]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -193,9 +258,7 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           flavor: latest=false
-          tags: |
-            type=semver,pattern={{version}},value=v${{ needs.release.outputs.version }}
-            type=raw,value=latest
+          tags: type=semver,pattern={{version}},value=v${{ needs.version.outputs.version }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -203,8 +266,38 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: APP_VERSION=${{ needs.release.outputs.version }}
+          build-args: APP_VERSION=${{ needs.version.outputs.version }}
           cache-from: type=gha
+
+  # latest follows master: a run moves it only while its merge is still the newest one, so a slower
+  # run of an older merge never moves it back. When the newest merge fails on master, latest waits
+  # for the next merge that passes.
+  latest:
+    name: latest
+    needs: [version, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: latest
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - id: master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/master" --jq .sha)" >> "$GITHUB_OUTPUT"
+      - if: steps.master.outputs.sha == github.sha
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - if: steps.master.outputs.sha == github.sha
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE:$VERSION"
 
   # Pull request images are previews, tagged pr-<number> and deleted when the pull request
   # closes (cleanup-preview.yml). Pull requests from forks and Dependabot get a read-only token.

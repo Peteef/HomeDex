@@ -1,6 +1,7 @@
 # Used by the `release` job in ci.yml. Minor and major bumps publish a GitHub Release with every
 # pull request since the last one; patch bumps only update the "Next release" draft. The release
 # opens with the "Release notes" of its minor and major pull requests (release-highlights.yml).
+# The format is described in docs/releases.md.
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 change-template: '- $TITLE (#$NUMBER)'
@@ -22,6 +23,7 @@ categories:
     when:
       labels: ['release:minor', 'release:major']
   - title: 'Fixes and changes'
+    collapse-after: 10
   - title: 'Dependencies'
     collapse-after: 0
     when:
