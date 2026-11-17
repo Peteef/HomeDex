@@ -1,0 +1,48 @@
+name: Release labels
+
+# Every pull request into master carries one release:* label, which sets its version bump
+# (.github/release-drafter.yml). Dependabot sets its own (dependabot.yml) and gets a read-only token.
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  default-label:
+    name: default-label
+    if: >-
+      contains(fromJSON('["opened", "reopened"]'), github.event.action) &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+
+  # Adding a release label replaces the other ones, so choosing a bump is a single click.
+  one-label:
+    name: one-label
+    if: >-
+      github.event.action == 'labeled' &&
+      startsWith(github.event.label.name, 'release:') &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const added = context.payload.label.name;
+            const others = context.payload.pull_request.labels
+              .map(({ name }) => name)
+              .filter((name) => name.startsWith('release:') && name !== added);
+
+            for (const name of others) {
+              await github.rest.issues.removeLabel({ ...context.repo, issue_number: context.issue.number, name });
+            }

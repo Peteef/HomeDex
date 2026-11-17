@@ -212,7 +212,7 @@ export const domainRules = [
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth', 'modules', 'tiles'];
-const FRONTEND_LIBS = ['http', 'i18n', 'search'];
+const FRONTEND_LIBS = ['http', 'i18n', 'search', 'version'];
 
 const SKELETON = [
   '**/App.tsx',

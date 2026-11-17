@@ -25,7 +25,8 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
 - One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
 - `dependencies` holds only what the server imports at run time; libraries that only the browser bundle uses are `devDependencies`, so the image stays small.
-- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Pull requests publish `pr-<number>`, deleted on close. Release publishing (`latest`, `sha-<short>`, versions) is in CI but paused with `if: false` until releases get git tags and version bumping.
+- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Every merge to `master` is a release: CI tags `v<version>`, creates a GitHub Release and publishes `<version>` and `latest`. Pull requests publish `pr-<number>`, deleted on close.
+- Versions: the UI reads its own from `lib/version`, set at build time by `scripts/app-version.ts`: the release, `pr-<number>` for previews, otherwise `<last release>-dev`.
 
 ## Structure
 
@@ -102,9 +103,10 @@ assets/                art, loaded at runtime from ASSETS_DIR
 ## Git and pull requests
 
 - Every change is a pull request from a branch. Never commit or push to `master`, and never merge unless the owner asks. The owner reviews and merges; agents use the owner's account, so approval is the owner's review plus the merge. Required checks: `verify`, `e2e`, `secrets`, `docker`.
-- Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/` or `ci/`.
+- Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ci/` or `epic/`. An `epic/` branch builds up a bigger feature: its PRs target it, `master` is merged into it regularly, and its own PR into `master` lists them.
 - Commit messages and PR titles: `[<model name>] Imperative summary`, about 70 characters. Merges are squash merges, so the PR title becomes the commit on `master`.
 - Anything posted on GitHub (descriptions, comments, review replies) starts with `**🤖 [<model name>]**` on its own line, then a blank line.
+- Every PR into `master` has one `release:*` label, which sets the version bump of its merge. New PRs get `release:minor` on `epic/` branches and `release:patch` otherwise; label a bigger feature `release:minor` yourself. `release:major` only on the owner's request.
 - One cohesive purpose per PR, with a short description of what changed, why and how it was tested. Split very large PRs. Use a draft PR for unfinished work. Address every review comment by fixing it or explaining why not.
 
 ## Working practices
