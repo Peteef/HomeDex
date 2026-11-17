@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { E2E_DATA_DIR } from './e2e/fixtures.ts';
+import { E2E_DATA_DIR, PROJECTS } from './e2e/fixtures.ts';
 
 const port = 3100;
 
@@ -17,14 +17,15 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'iphone-13-mini',
+      name: PROJECTS.iphone13Mini,
       use: { ...devices['iPhone 13 Mini'], viewport: { width: 375, height: 812 } },
     },
     {
-      name: 'iphone-17-pro',
+      name: PROJECTS.iphone17Pro,
       use: { ...devices['iPhone 17 Pro'], viewport: { width: 402, height: 874 } },
     },
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: PROJECTS.desktopChrome, use: { ...devices['Desktop Chrome'] } },
+    { name: PROJECTS.desktopSafari, use: { ...devices['Desktop Safari'] } },
   ],
   webServer: {
     command: 'npm run build && node e2e/prepare-data.ts && npm start',

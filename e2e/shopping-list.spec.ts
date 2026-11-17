@@ -1,9 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { PROJECTS } from './fixtures.ts';
 import { E2E_GREETING, signIn } from './session.ts';
 import { SHOPPING_LIST_PATH } from './shoppingList.ts';
 
-const REAL_API_PROJECT = 'desktop';
+const REAL_API_PROJECT = PROJECTS.desktopChrome;
 
 test.describe('shopping list', () => {
   test.beforeEach(async ({ page }) => {
