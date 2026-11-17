@@ -12,10 +12,9 @@ import type { Item } from '../../features/items/index.ts';
 import { useText } from '../../locales/index.ts';
 import { AddItemForm } from './components/AddItemForm.tsx';
 import type { ItemInput } from './components/AddItemForm.tsx';
-import { ItemRow } from './components/ItemRow.tsx';
+import { ItemList } from './components/ItemList.tsx';
 
 const HOME_PATH = '/';
-const HEADING_CLASSES = 'text-dex-ink-muted text-xs font-extrabold tracking-[0.2em] uppercase';
 const MESSAGE_CLASSES = 'text-dex-ink-muted py-4 text-center text-base font-bold';
 
 export const ListPage = () => {
@@ -30,69 +29,28 @@ export const ListPage = () => {
     addItem.mutate(item, { onSuccess: onAdded });
   };
 
-  const renderRows = (rows: Item[]) => (
-    <ul className="flex flex-col gap-2">
-      {rows.map((item) => (
-        <ItemRow
-          key={item.id}
-          text={item.text}
-          amount={item.amount}
-          addedBy={item.addedBy}
-          checked={item.checked}
-          onToggle={() => {
-            toggleCheck.mutate({ id: item.id, checked: !item.checked });
-          }}
-          onDelete={() => {
-            deleteItem.mutate(item.id);
-          }}
-        />
-      ))}
-    </ul>
-  );
+  const toggle = (item: Item): void => {
+    toggleCheck.mutate({ id: item.id, checked: !item.checked });
+  };
 
-  const renderList = (list: Item[]) => {
-    const toBuy = list.filter((item) => !item.checked);
-    const inCart = list.filter((item) => item.checked);
+  const remove = (item: Item): void => {
+    deleteItem.mutate(item.id);
+  };
 
-    return (
-      <>
-        <section className="flex flex-col gap-2" aria-labelledby="to-buy">
-          <h2 id="to-buy" className={HEADING_CLASSES}>
-            {text.toBuy}
-          </h2>
-          {toBuy.length === 0 ? (
-            <p role="status" className={MESSAGE_CLASSES}>
-              {text.empty}
-            </p>
-          ) : (
-            renderRows(toBuy)
-          )}
-        </section>
-        {inCart.length === 0 ? null : (
-          <section className="flex flex-col gap-2" aria-labelledby="in-cart">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="in-cart" className={HEADING_CLASSES}>
-                {text.inCart}
-              </h2>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  clearCheckedItems.mutate();
-                }}
-              >
-                {text.clear}
-              </Button>
-            </div>
-            {renderRows(inCart)}
-          </section>
-        )}
-      </>
-    );
+  const clearChecked = (): void => {
+    clearCheckedItems.mutate();
   };
 
   const renderContent = () => {
     if (items.data !== undefined) {
-      return renderList(items.data);
+      return (
+        <ItemList
+          items={items.data}
+          onToggle={toggle}
+          onDelete={remove}
+          onClearChecked={clearChecked}
+        />
+      );
     }
 
     if (items.isError) {
