@@ -4,6 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingStatus } from './components/loading-status/LoadingStatus.tsx';
 import { Panel } from './components/panel/Panel.tsx';
 import { CrashedPage } from './pages/crashed/CrashedPage.tsx';
+import { PageFrame } from './PageFrame.tsx';
 
 interface BoundaryProps {
   children: ReactNode;
@@ -29,13 +30,13 @@ export const ModuleBoundary = ({ children }: BoundaryProps) => (
   </ErrorBoundary>
 );
 
-// The last resort around the whole app. It sits outside the layout, so it centres itself.
+// The last resort around the whole app. It sits outside the layout, so it brings its own frame.
 export const AppBoundary = ({ children }: BoundaryProps) => (
   <ErrorBoundary
     fallback={
-      <main className="safe-area flex min-h-dvh items-center justify-center">
+      <PageFrame>
         <CrashedPage scope="app" onReload={reload} />
-      </main>
+      </PageFrame>
     }
   >
     {children}
