@@ -1,4 +1,5 @@
 import type { Storage } from '#platform/backend';
+import { z } from 'zod';
 import { invalidItem, itemNotFound } from './errors.ts';
 import { itemRepository } from './internal/itemRepository.ts';
 import type { Item, NewItem } from './types.ts';
@@ -15,28 +16,28 @@ export interface ItemsService {
   clearChecked(): void;
 }
 
-const requireText = (text: string): string => {
-  const trimmed = text.trim();
+const newItemSchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(1, 'The item text is empty')
+    .max(TEXT_MAX_LENGTH, `The item text is longer than ${String(TEXT_MAX_LENGTH)} characters`),
+  amount: z
+    .string()
+    .trim()
+    .max(AMOUNT_MAX_LENGTH, `The amount is longer than ${String(AMOUNT_MAX_LENGTH)} characters`)
+    .transform((amount) => (amount === '' ? null : amount))
+    .default(null),
+});
 
-  if (trimmed === '') {
-    throw invalidItem('The item text is empty');
+const validate = (item: NewItem): z.infer<typeof newItemSchema> => {
+  const result = newItemSchema.safeParse(item);
+
+  if (!result.success) {
+    throw invalidItem(result.error.issues[0]?.message ?? 'Invalid item');
   }
 
-  if (trimmed.length > TEXT_MAX_LENGTH) {
-    throw invalidItem(`The item text is longer than ${String(TEXT_MAX_LENGTH)} characters`);
-  }
-
-  return trimmed;
-};
-
-const optionalAmount = (amount = ''): string | null => {
-  const trimmed = amount.trim();
-
-  if (trimmed.length > AMOUNT_MAX_LENGTH) {
-    throw invalidItem(`The amount is longer than ${String(AMOUNT_MAX_LENGTH)} characters`);
-  }
-
-  return trimmed === '' ? null : trimmed;
+  return result.data;
 };
 
 export const itemsService = (db: Storage): ItemsService => {
@@ -44,20 +45,15 @@ export const itemsService = (db: Storage): ItemsService => {
 
   const list = (): Item[] => items.list();
 
-  const add = (addedBy: string, { text, amount }: NewItem): Item => {
-    const id = items.insert({
-      text: requireText(text),
-      amount: optionalAmount(amount),
-      addedBy,
-    });
+  const add = (addedBy: string, item: NewItem): Item => {
+    const id = items.insert({ ...validate(item), addedBy });
+    const created = items.find(id);
 
-    const item = items.find(id);
-
-    if (item === undefined) {
+    if (created === undefined) {
       throw itemNotFound(id);
     }
 
-    return item;
+    return created;
   };
 
   const setChecked = (id: number, checked: boolean): void => {
