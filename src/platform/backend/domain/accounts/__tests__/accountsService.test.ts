@@ -25,13 +25,16 @@ describe('accounts service', () => {
   let db: Database.Database;
   let accounts: AccountsService;
   let sessions: SessionService;
+  let clock: { now: number };
 
   beforeEach(() => {
     db = createTestDatabase();
     sessions = sessionService(db, { ttlDays: 1 });
+    clock = { now: Date.UTC(2026, 0, 1) };
 
     accounts = accountsService(db, {
       argon2Params: FAST_ARGON2,
+      now: () => clock.now,
       revokeSessions: (userId) => {
         sessions.revokeAllFor(userId);
       },
@@ -243,6 +246,20 @@ describe('accounts service', () => {
       // Then
       expect(await accounts.authenticate('ash', TEST_PASSWORD)).toBeNull();
       expect(sessions.resolve(session.token)).toBeNull();
+    });
+
+    it('should keep the first archive time when the account is already archived', async () => {
+      // Given
+      await accounts.create('ash', TEST_PASSWORD);
+      clock.now = 1_000;
+      accounts.archive('ash');
+      clock.now = 2_000;
+
+      // When
+      const archived = accounts.archive('ash');
+
+      // Then
+      expect(archived.archivedAt).toBe(1_000);
     });
 
     it('should report an unknown user when the name is missing', async () => {

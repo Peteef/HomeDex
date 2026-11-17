@@ -113,6 +113,10 @@ export const accountsService = (
   const archive = (username: string): Account => {
     const user = requireUser(username);
 
+    if (user.archived_at !== null) {
+      return toAccount(user);
+    }
+
     db.transaction(() => {
       users.setArchivedAt(user.id, now());
       revokeSessions(user.id);
