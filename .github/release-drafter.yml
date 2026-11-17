@@ -1,5 +1,6 @@
-# Every merge to master is released (the `release` job in ci.yml). Its version comes from the
-# release:* label of each pull request merged since the last release; the highest one wins.
+# Used by the `release` job in ci.yml. The categories match the release:* labels that set the
+# version bump of a merge (the highest one wins). Minor and major bumps publish a GitHub Release
+# with every pull request since the last one; patch bumps only update the "Next release" draft.
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 change-template: '- $TITLE (#$NUMBER)'
@@ -19,8 +20,6 @@ categories:
     semver-increment: minor
     when:
       label: 'release:minor'
-  - type: version-resolver
-    semver-increment: patch
 
 # Run only when a pull request opens (release-labels.yml), so a label changed by hand stays.
 # release:major is never added automatically.
