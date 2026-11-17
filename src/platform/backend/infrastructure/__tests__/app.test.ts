@@ -86,6 +86,8 @@ describe('app', () => {
     beforeAll(() => {
       webDir = fs.mkdtempSync(path.join(os.tmpdir(), 'homedex-web-'));
       fs.writeFileSync(path.join(webDir, 'index.html'), '<title>fake app</title>');
+      fs.mkdirSync(path.join(webDir, 'assets'));
+      fs.writeFileSync(path.join(webDir, 'assets', 'app-abc123.js'), "console.log('fake');");
     });
 
     afterAll(() => {
@@ -122,6 +124,42 @@ describe('app', () => {
 
       // Then
       expect(response.text).toContain('fake app');
+    });
+
+    it('should let browsers keep a hashed asset for a year', async () => {
+      // Given
+      const production = productionApp();
+
+      // When
+      const response = await request(production).get('/assets/app-abc123.js');
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+    });
+
+    it('should answer 404 for a hashed asset that does not exist', async () => {
+      // Given
+      const production = productionApp();
+
+      // When
+      const response = await request(production).get('/assets/gone-000000.js');
+
+      // Then
+      expect(response.status).toBe(404);
+      expect(response.text).not.toContain('fake app');
+    });
+
+    it('should not tell browsers to keep index.html', async () => {
+      // Given
+      const production = productionApp();
+
+      // When
+      const response = await request(production).get('/');
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.headers['cache-control']).not.toContain('immutable');
     });
   });
 
