@@ -5,7 +5,7 @@ import { ConfigError } from './errors.ts';
 import { logger } from './logger.ts';
 import { ModuleError } from './modules/errors.ts';
 import { setUpModules } from './modules/setUpModules.ts';
-import { openStorage } from './storage/index.ts';
+import { MigrationError, openStorage } from './storage/index.ts';
 
 const WEB_BUILD_DIR = 'dist/web';
 const MODULES_DIR = 'src/modules';
@@ -50,7 +50,7 @@ const start = async (): Promise<void> => {
 // A mistake the person running HomeDex can fix gets one line; anything else is a bug and keeps
 // its stack trace.
 const isExpected = (error: unknown): error is Error =>
-  error instanceof ConfigError || error instanceof ModuleError;
+  error instanceof ConfigError || error instanceof ModuleError || error instanceof MigrationError;
 
 const reportFailure = (error: unknown): void => {
   if (isExpected(error)) {

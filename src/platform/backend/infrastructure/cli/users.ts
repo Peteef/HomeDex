@@ -5,7 +5,7 @@ import { domainServices } from '../../domain/services.ts';
 import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
 import { ConfigError } from '../errors.ts';
-import { openStorage } from '../storage/index.ts';
+import { MigrationError, openStorage } from '../storage/index.ts';
 import { terminalPrompts } from './prompt.ts';
 
 const USAGE = `Usage: npm run users -- <command> [options]
@@ -232,6 +232,7 @@ const isExpected = (error: unknown): error is Error =>
   error instanceof UsageError ||
   error instanceof AccountError ||
   error instanceof ConfigError ||
+  error instanceof MigrationError ||
   (error instanceof TypeError && 'code' in error);
 
 try {

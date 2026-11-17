@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const root = path.resolve(import.meta.dirname, '../../../../../..');
@@ -184,6 +185,29 @@ describe('users CLI', () => {
       // Then
       expect(result.code).toBe(1);
       expect(result.err).toContain('Invalid configuration: PORT');
+      expect(result.err).not.toContain('    at ');
+    });
+  });
+
+  describe('storage', () => {
+    it('should print one line and exit with 1 when an applied migration was edited', () => {
+      // Given
+      run(['list']);
+      const db = new Database(path.join(dataDir, 'homedex.db'));
+
+      db.prepare(
+        "UPDATE schema_migrations SET checksum = 'edited' WHERE scope = 'platform' AND version = 1",
+      ).run();
+
+      db.close();
+
+      // When
+      const result = run(['list']);
+
+      // Then
+      expect(result.code).toBe(1);
+      expect(result.err).toContain('001_users.sql');
+      expect(result.err).toContain('was changed after it was applied');
       expect(result.err).not.toContain('    at ');
     });
   });
