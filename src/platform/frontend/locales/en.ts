@@ -9,6 +9,9 @@ const en = {
     dialog: {
       close: 'Close',
     },
+    footer: {
+      credit: 'HomeDex {{version}} · Developed by Peteef · 2026',
+    },
     languageSelect: {
       label: 'Language',
     },

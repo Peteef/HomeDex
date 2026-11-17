@@ -14,6 +14,9 @@ const pl = {
     dialog: {
       close: 'Zamknij',
     },
+    footer: {
+      credit: 'HomeDex {{version}} · Rozwijany przez Peteef · 2026',
+    },
     languageSelect: {
       label: 'Język',
     },
