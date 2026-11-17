@@ -1,47 +1,49 @@
 name: Cleanup preview image
 
+# A pull request's preview image (pr-<number>, ci.yml) is deleted when it closes. Each run deletes
+# the previews of every closed pull request, not only its own, so a run that failed or was replaced
+# by a newer one leaves nothing behind for long. Runs can also be started by hand.
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+# Two runs that read and delete the package's versions at the same time fail on versions the other
+# one already deleted.
+concurrency:
+  group: ghcr-cleanup
+  cancel-in-progress: false
 
 jobs:
   cleanup-preview:
     name: cleanup-preview
     if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'dependabot[bot]'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       packages: write
+      pull-requests: read
     steps:
-      # GHCR refuses to delete the last tagged version of a package. While no release images are
-      # published, a closing pull request's preview can be the only tagged image; it then stays
-      # until another tagged image exists.
-      - name: Check for other tagged images
-        id: other-tags
+      - id: open
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-          PREVIEW_TAG: pr-${{ github.event.pull_request.number }}
-        run: |
-          count=$(gh api --paginate "/users/$OWNER/packages/container/homedex/versions" \
-            --jq ".[] | .metadata.container.tags | select(length > 0 and . != [\"$PREVIEW_TAG\"]) | 1" \
-            | wc -l)
-
-          echo "Other tagged images: $count"
-          echo "found=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        run: >-
+          echo "previews=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000
+          --json number --jq 'map("pr-\(.number)") | join(",")')" >> "$GITHUB_OUTPUT"
       # The action deletes a multi-arch image together with its platform images, which GitHub's
       # own delete-package-versions action does not know about.
-      - name: Delete pr-${{ github.event.pull_request.number }}
-        if: steps.other-tags.outputs.found == 'true'
+      - name: Delete the previews of closed pull requests
         uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
         with:
           package: homedex
-          delete-tags: pr-${{ github.event.pull_request.number }}
+          delete-tags: pr-*
+          exclude-tags: ${{ steps.open.outputs.previews }}
       # Each push to a pull request moves its pr-<number> tag and leaves the previous build
       # untagged. The age limit keeps the step away from an image that is being pushed right now.
       - name: Delete untagged images
