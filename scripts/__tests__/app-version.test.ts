@@ -17,7 +17,7 @@ describe('appVersion', () => {
     expect(git).not.toHaveBeenCalled();
   });
 
-  it('should mark the last release tag as dev when APP_VERSION is not set', () => {
+  it('should mark the last version tag as dev when APP_VERSION is not set', () => {
     // Given
     git.mockReturnValue('v1.4.1\n');
 
@@ -42,7 +42,7 @@ describe('appVersion', () => {
     expect(appVersion({ APP_VERSION: '' })).toBe('2.0.0-dev');
   });
 
-  it('should fall back to 0.0.0-dev when git finds no release tag', () => {
+  it('should fall back to 0.0.0-dev when git finds no version tag', () => {
     // Given
     git.mockImplementation(() => {
       throw new Error('fatal: No names found, cannot describe anything.');

@@ -25,8 +25,8 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
 - One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
 - `dependencies` holds only what the server imports at run time; libraries that only the browser bundle uses are `devDependencies`, so the image stays small.
-- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Every merge to `master` is a release: CI tags `v<version>`, creates a GitHub Release and publishes `<version>` and `latest`. Pull requests publish `pr-<number>`, deleted on close.
-- Versions: the UI reads its own from `lib/version`, set at build time by `scripts/app-version.ts`: the release, `pr-<number>` for previews, otherwise `<last release>-dev`.
+- Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Every merge to `master` is versioned: CI tags `v<version>` and publishes `<version>` and `latest`. Minor and major bumps also publish a GitHub Release with everything since the last one, gathered meanwhile in a "Next release" draft. Pull requests publish `pr-<number>`, deleted on close.
+- Versions: the UI reads its own from `lib/version`, set at build time by `scripts/app-version.ts`: the release, `pr-<number>` for previews, otherwise `<last version>-dev`.
 
 ## Structure
 

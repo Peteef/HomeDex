@@ -11,9 +11,9 @@ permissions:
 env:
   IMAGE: ghcr.io/peteef/homedex
 
-# A pull request cancels its outdated runs. Master runs queue instead, so merges are released in
-# order. GitHub keeps one queued run per group: a newer merge replaces a queued one, and its release
-# then includes both.
+# A pull request cancels its outdated runs. Master runs queue instead, so merges are versioned in
+# order. GitHub keeps one queued run per group: a newer merge replaces a queued one, and its version
+# then covers both.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -104,27 +104,58 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Every merge to master is a release: a v<version> tag and a GitHub Release. The version comes
-  # from the release:* labels of the pull requests merged since the last one
-  # (.github/release-drafter.yml).
+  # Every merge to master gets a version: the last v<version> tag bumped by the release:* labels of
+  # the pull requests merged since it, tagged on the merge. Minor and major bumps also publish a
+  # GitHub Release listing every pull request since the last one; until then, they gather in a
+  # "Next release" draft (.github/release-drafter.yml).
   release:
     name: release
     if: github.event_name == 'push'
     needs: [verify, e2e, secrets, docker]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: read
     outputs:
-      version: ${{ steps.release.outputs.resolved_version }}
+      version: ${{ steps.next.outputs.version }}
     steps:
-      - id: release
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Looked up from the parent, so a re-run finds the same tag even after this merge is tagged.
+      - id: last
+        run: echo "tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD^)" >> "$GITHUB_OUTPUT"
+      - id: changes
         uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
-          publish: true
+          dry-run: true
+          from: refs/tags/${{ steps.last.outputs.tag }}
+          commitish: ${{ github.sha }}
+      - id: next
+        env:
+          LAST_TAG: ${{ steps.last.outputs.tag }}
+          LABELS: ${{ steps.changes.outputs.labels }}
+        run: node scripts/next-version.ts "$LAST_TAG" "$LABELS" >> "$GITHUB_OUTPUT"
+      - env:
+          TAG: v${{ steps.next.outputs.version }}
+        run: |
+          if ! git rev-parse --quiet --verify "refs/tags/$TAG" > /dev/null; then
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "$TAG"
+          fi
+      - uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          version: ${{ steps.next.outputs.version }}
           # The commit this run tested, not the branch head, which may already be a newer merge.
           commitish: ${{ github.sha }}
+          publish: ${{ steps.next.outputs.release }}
+          name: ${{ steps.next.outputs.release != 'true' && 'Next release' || '' }}
 
   publish:
     name: publish
