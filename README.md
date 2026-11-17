@@ -192,7 +192,7 @@ src/
   modules/     one folder per module, each with its own UI, API and data
 e2e/           end-to-end tests
 tests/         tests of the repository itself (lint boundary rules, the module contract)
-assets/        placeholder art, loaded at runtime from ASSETS_DIR
+assets/        background art, loaded at runtime from ASSETS_DIR
 ```
 
 Unit tests sit in `__tests__/` folders next to the code they test.

@@ -47,7 +47,7 @@ describe('App', () => {
       await renderAt('/login');
 
       // Then
-      expect(document.querySelector('img[src="/media/scene/background.svg"]')).toBeInTheDocument();
+      expect(document.querySelector('img[src="/media/scene/background.webp"]')).toBeInTheDocument();
     });
 
     it('should go home when the link on a placeholder is followed', async () => {

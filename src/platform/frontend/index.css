@@ -26,18 +26,15 @@
   --radius-panel: 1.5rem;
   --shadow-panel: 0 10px 40px rgb(43 33 24 / 0.25);
 
-  --animate-float: float 7s ease-in-out infinite;
+  --animate-pan: pan 60s linear infinite alternate;
   --animate-rise: rise 0.2s ease-out;
   --animate-pop: pop 0.25s ease-out;
   --animate-appear: appear 0.2s ease-out 0.4s backwards;
 
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-6px);
+  /* Slides a layer wider than the screen from its left edge to its right edge. */
+  @keyframes pan {
+    to {
+      transform: translateX(calc(100vw - 100%));
     }
   }
 
@@ -91,6 +88,18 @@ html,
 body,
 #root {
   min-height: 100dvh;
+}
+
+/*
+ * iOS 26 gives a home screen app with a translucent status bar a viewport one status bar too
+ * short while the page is shorter than the screen, and draws nothing in the strip left below
+ * (WebKit bug 301108). A page as tall as the screen gets the full viewport. The 100lvh cap stops
+ * extra scrolling where there is no top inset.
+ */
+@media (display-mode: standalone) {
+  html {
+    min-height: min(100lvh, calc(100% + env(safe-area-inset-top)));
+  }
 }
 
 body {

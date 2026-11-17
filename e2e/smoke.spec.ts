@@ -12,7 +12,7 @@ test.describe('smoke', () => {
 
       // Then
       await expect(page.getByRole('heading', { name: "Who's there, Trainer?" })).toBeVisible();
-      await expect(page.locator('img[src="/media/scene/background.svg"]')).toHaveCount(1);
+      await expect(page.locator('img[src="/media/scene/background.webp"]')).toHaveCount(1);
     });
 
     test('should not scroll sideways when the home page opens', async ({ page }) => {
