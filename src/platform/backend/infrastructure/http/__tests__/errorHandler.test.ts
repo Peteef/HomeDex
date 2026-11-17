@@ -52,6 +52,28 @@ describe('apiErrorHandler', () => {
     expect(response.body).toEqual({ error: 'Invalid request body' });
   });
 
+  it('should answer 413 when the request body is too large', async () => {
+    // Given
+    const app = express();
+    app.use(express.json());
+
+    app.post('/echo', (_req, res) => {
+      res.end();
+    });
+
+    app.use(apiErrorHandler);
+
+    // When
+    const response = await request(app)
+      .post('/echo')
+      .set('Content-Type', 'application/json')
+      .send(JSON.stringify({ text: 'x'.repeat(200_000) }));
+
+    // Then
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({ error: 'Invalid request body' });
+  });
+
   it('should pass the error on to Express when the response has already started', () => {
     // Given
     const error = new Error('too late');
