@@ -1,26 +1,6 @@
-import type { Language } from '../../lib/i18n/index.ts';
+import type { TileScope, TileTexts } from '../../../shared/tiles/tileTypes.ts';
 
-export interface TileText {
-  title: string;
-  description: string | null;
-}
-
-export type TileTexts = Partial<Record<Language, TileText>>;
-
-export type TileScope = 'shared' | 'personal';
-
-export interface Tile {
-  id: number;
-  dexNo: number;
-  kind: 'link' | 'module';
-  texts: TileTexts;
-  icon: string;
-  url: string | null;
-  moduleId: string | null;
-  scope: TileScope;
-  pinned: boolean;
-  editable: boolean;
-}
+export type { Tile, TileScope, TileText, TileTexts } from '../../../shared/tiles/tileTypes.ts';
 
 export interface PinChange {
   id: number;
