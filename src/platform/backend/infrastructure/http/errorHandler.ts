@@ -2,10 +2,10 @@ import type { ErrorRequestHandler } from 'express';
 import { logger } from '../logger.ts';
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from '../../../shared/http/status.ts';
 
-const INVALID_JSON_RESPONSE = { error: 'Invalid request body' };
+const INVALID_BODY_RESPONSE = { error: 'Invalid request body' };
 const INTERNAL_ERROR_RESPONSE = { error: 'Internal error' };
 
-const isClientError = (error: unknown): boolean =>
+const isClientError = (error: unknown): error is { status: number } =>
   typeof error === 'object' &&
   error !== null &&
   'status' in error &&
@@ -21,7 +21,7 @@ export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => 
   }
 
   if (isClientError(error)) {
-    res.status(BAD_REQUEST).json(INVALID_JSON_RESPONSE);
+    res.status(error.status).json(INVALID_BODY_RESPONSE);
     return;
   }
 
