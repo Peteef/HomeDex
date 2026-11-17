@@ -209,7 +209,7 @@ Every merge to `master` gets a version: CI tags it `v<version>` and publishes th
 | `release:minor` | 1.5.0      | by default on `epic/` branches, or by hand |
 | `release:major` | 2.0.0      | only by hand                               |
 
-Minor and major versions are also published as a [GitHub Release](https://github.com/Peteef/HomeDex/releases) listing every pull request since the previous one, patches included. Until then, a draft named "Next release" collects them. An `epic/` branch builds up a bigger feature from its own pull requests and is merged to `master` as one version. The app knows its version: the release, `pr-<number>` for a preview, or `<last version>-dev` (such as `1.4.1-dev`) for any other build.
+Minor and major versions are also published as a [GitHub Release](https://github.com/Peteef/HomeDex/releases). It opens with the "Release notes" section of the minor or major pull request, a plain-words summary of what changed, followed by every pull request since the previous release, patches included: features, fixes and changes, and dependencies. Until then, a draft named "Next release" collects them. An `epic/` branch builds up a bigger feature from its own pull requests and is merged to `master` as one version. The app knows its version: the release, `pr-<number>` for a preview, or `<last version>-dev` (such as `1.4.1-dev`) for any other build.
 
 Working rules for AI agents are in [CLAUDE.md](CLAUDE.md).
 

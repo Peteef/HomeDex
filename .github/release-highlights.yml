@@ -1,0 +1,19 @@
+# The opening of a GitHub Release (the `release` job in ci.yml): the "Release notes" section of each
+# minor and major pull request's description, which explains the change to the people using HomeDex.
+template: |
+  $CHANGES
+change-template: "$BODY\n"
+no-changes-template: ''
+
+replacers:
+  - target: change-body
+    section: '## Release notes'
+    not-found: empty
+  - target: change-body
+    search: '/<!--.*?-->/gs'
+    replace: ''
+
+categories:
+  - type: pre-include
+    when:
+      labels: ['release:minor', 'release:major']
