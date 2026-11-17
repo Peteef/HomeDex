@@ -18,6 +18,9 @@ import type { Storage } from './storage/index.ts';
 import { NOT_FOUND } from '../../shared/http/status.ts';
 
 const INDEX_FILE = 'index.html';
+const HASHED_ASSETS_PATH = '/assets';
+const HASHED_ASSETS_DIR = 'assets';
+const ONE_YEAR = '1y';
 const API_NOT_FOUND_RESPONSE = { error: 'Not found' };
 
 export interface AppOptions {
@@ -97,6 +100,17 @@ export const createApp = ({
   app.use(MEDIA_PATH, express.static(assetsDir, { fallthrough: false }));
 
   if (config.NODE_ENV === 'production') {
+    // Vite names these files after their content, so a name never gets new content: browsers may
+    // keep them. A missing one is a 404, not the app's index.html.
+    app.use(
+      HASHED_ASSETS_PATH,
+      express.static(path.join(webDir, HASHED_ASSETS_DIR), {
+        immutable: true,
+        maxAge: ONE_YEAR,
+        fallthrough: false,
+      }),
+    );
+
     app.use(express.static(webDir));
 
     app.use((_req, res) => {
