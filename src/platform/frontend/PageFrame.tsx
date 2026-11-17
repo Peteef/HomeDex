@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Footer } from './components/footer/Footer.tsx';
-import { APP_VERSION_LABEL } from './lib/version/index.ts';
+import { APP_VERSION } from './lib/version/index.ts';
 
 interface PageFrameProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ export const PageFrame = ({ children }: PageFrameProps) => (
   <div className="safe-area grid min-h-dvh grid-rows-[1fr_auto_1fr]">
     <main className="row-start-2 flex justify-center">{children}</main>
     <div className="row-start-3 flex items-end justify-center pt-3">
-      <Footer version={APP_VERSION_LABEL} />
+      <Footer version={APP_VERSION} />
     </div>
   </div>
 );

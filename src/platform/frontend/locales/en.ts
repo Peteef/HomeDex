@@ -10,7 +10,7 @@ const en = {
       close: 'Close',
     },
     footer: {
-      credit: 'HomeDex {{version}} · Developed by Peteef · 2026',
+      credit: 'HomeDex v{{version}} · Developed by Peteef · 2026',
     },
     languageSelect: {
       label: 'Language',
