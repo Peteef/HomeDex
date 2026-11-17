@@ -214,20 +214,20 @@ jobs:
           fi
       - id: highlights
         if: steps.plan.outputs.release_sha
-        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
         with:
           config-name: release-highlights.yml
           dry-run: true
           commitish: ${{ steps.plan.outputs.release_sha }}
       - if: steps.plan.outputs.release_sha
-        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
         with:
           version: ${{ steps.plan.outputs.release_version }}
           commitish: ${{ steps.plan.outputs.release_sha }}
           publish: true
           header: "${{ steps.highlights.outputs.body }}\n\n"
       - if: steps.plan.outputs.draft
-        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
         with:
           version: ${{ needs.version.outputs.version }}
           # The commit this run tested, not the branch head, which may already be a newer merge.
