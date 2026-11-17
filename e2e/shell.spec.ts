@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
 import { LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
@@ -33,6 +33,24 @@ const openEditTile = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: 'Edit Finances' }).focus();
   await page.keyboard.press('Enter');
   await settled(page.getByRole('dialog', { name: 'Edit tile' }));
+};
+
+// Keeps the tiles request waiting until the returned function is called; the answer then comes
+// from whatever handles the request next (the stub, when there is one).
+const holdTiles = async (page: Page): Promise<() => void> => {
+  let release = (): void => undefined;
+
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  const answerOnceReleased = async (route: Route): Promise<void> => {
+    await released;
+    await route.fallback();
+  };
+
+  await page.route('**/api/tiles', answerOnceReleased);
+  return release;
 };
 
 const SCREENS: Screen[] = [
@@ -228,6 +246,47 @@ test.describe('shell', () => {
       await page
         .context()
         .route(`${LINK_HOST}/**`, (route) => route.fulfill({ body: 'linked file' }));
+    });
+
+    test('should show a loading text while the tiles are on their way', async ({
+      page,
+    }, testInfo) => {
+      // Given
+      const releaseTiles = await holdTiles(page);
+
+      // When
+      await page.goto('/');
+
+      // Then
+      const status = page.getByRole('status');
+      await expect(status).toHaveText('Loading…');
+      await settled(status);
+      await expect(status).toHaveCSS('opacity', '1');
+      const screenshot = await page.screenshot({ fullPage: true });
+      await testInfo.attach('home loading.png', { body: screenshot, contentType: 'image/png' });
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(results.violations).toEqual([]);
+      releaseTiles();
+      await expect(tiles(page)).toHaveText([/clock/, /Finances/, /Shopping/, /Weight log/]);
+      await expect(status).toBeHidden();
+    });
+
+    test('should show the loading text at once when reduced motion is requested', async ({
+      page,
+    }) => {
+      // Given
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      const releaseTiles = await holdTiles(page);
+
+      // When
+      await page.goto('/');
+
+      // Then
+      const status = page.getByRole('status');
+      await expect(status).toHaveText('Loading…');
+      await expect(status).toHaveCSS('animation-name', 'none');
+      await expect(status).toHaveCSS('opacity', '1');
+      releaseTiles();
     });
 
     test('should show a pinned tile first and put it back when it is unpinned', async ({
