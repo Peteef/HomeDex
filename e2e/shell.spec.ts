@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import type { Page, Route } from '@playwright/test';
+import type { Page, Route, TestInfo } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
 import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
 import { LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
@@ -124,7 +124,9 @@ interface Manifest {
   icons: { src: string; type: string }[];
 }
 
-const SPRITE = 'img[src="/media/scene/sprite-sofa.svg"]';
+const SCENE = 'img[src="/media/scene/background.webp"]';
+
+const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile === true;
 
 test.describe('shell', () => {
   for (const screen of SCREENS) {
@@ -207,7 +209,7 @@ test.describe('shell', () => {
 
         // Then
         await testInfo.attach(`${screen.name}.png`, { body: screenshot, contentType: 'image/png' });
-        await expect(page.locator('img[src^="/media/scene/"]')).toHaveCount(3);
+        await expect(page.locator('img[src^="/media/scene/"]')).toHaveCount(1);
       });
     });
   }
@@ -412,29 +414,52 @@ test.describe('shell', () => {
   });
 
   test.describe('motion', () => {
-    test('should float the sprites when motion is allowed', async ({ page }) => {
+    test('should pan the scene across a phone screen when motion is allowed', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!isPhone(testInfo), 'Only touch devices pan');
+
+      // Given
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.goto('/');
+      await expect(page.locator(SCENE)).toHaveJSProperty('complete', true);
+      const box = () => page.locator(SCENE).evaluate((element) => element.getBoundingClientRect());
+      const start = await box();
+
+      // When / Then
+      expect(start.width).toBeGreaterThan(page.viewportSize()?.width ?? Infinity);
+
+      // A short window catches a pan too slow to notice, not only one that never starts.
+      await expect
+        .poll(async () => (await box()).left, { timeout: 2000 })
+        .toBeLessThan(start.left - 10);
+    });
+
+    test('should keep the scene still on a desktop', async ({ page }, testInfo) => {
+      test.skip(isPhone(testInfo), 'Touch devices pan');
+
       // Given
       await page.emulateMedia({ reducedMotion: 'no-preference' });
       await page.goto('/');
 
       // When
       const animation = await page
-        .locator(SPRITE)
-        .evaluate((el) => getComputedStyle(el).animationName);
+        .locator(SCENE)
+        .evaluate((element) => getComputedStyle(element).animationName);
 
       // Then
-      expect(animation).toBe('float');
+      expect(animation).toBe('none');
     });
 
-    test('should keep the sprites still when reduced motion is requested', async ({ page }) => {
+    test('should keep the scene still when reduced motion is requested', async ({ page }) => {
       // Given
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto('/');
 
       // When
       const animation = await page
-        .locator(SPRITE)
-        .evaluate((el) => getComputedStyle(el).animationName);
+        .locator(SCENE)
+        .evaluate((element) => getComputedStyle(element).animationName);
 
       // Then
       expect(animation).toBe('none');
@@ -481,6 +506,18 @@ test.describe('shell', () => {
         'content',
         /viewport-fit=cover/,
       );
+    });
+
+    test('should let the scene show through the status bar on an iPhone home screen app', async ({
+      page,
+    }) => {
+      // When
+      await page.goto('/');
+
+      // Then
+      await expect(
+        page.locator('meta[name="apple-mobile-web-app-status-bar-style"]'),
+      ).toHaveAttribute('content', 'black-translucent');
     });
   });
 
