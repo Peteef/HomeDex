@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { openStorage } from '../storage/index.ts';
 
 const MAIN = path.resolve(import.meta.dirname, '../main.ts');
 
@@ -44,6 +45,26 @@ describe('main', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('DEV_USERNAME');
     expect(result.stderr).toContain('development only');
+    expect(result.stderr).not.toContain('    at ');
+  });
+
+  it('should print one line and exit with 1 when an applied migration was edited', () => {
+    // Given
+    const db = openStorage(workDir);
+
+    db.prepare(
+      "UPDATE schema_migrations SET checksum = 'edited' WHERE scope = 'platform' AND version = 1",
+    ).run();
+
+    db.close();
+
+    // When
+    const result = run({});
+
+    // Then
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('001_users.sql');
+    expect(result.stderr).toContain('was changed after it was applied');
     expect(result.stderr).not.toContain('    at ');
   });
 });

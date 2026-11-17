@@ -194,7 +194,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 
 - Migrations are `backend/migrations/NNN_name.sql` (`001_items.sql`, `002_...`). They run at startup, in order, once each, tracked under the module's id.
 - Every table name starts with the id in snake_case plus `_`: module `shopping-list` creates `shopping_list_items`.
-- Until the owner says the app is live, edit migrations in place and reset the data folder. After that, only add new ones.
+- A merged migration is final: never edit it, add a new one. The server refuses to start when an applied migration's file has changed.
 - Removing or disabling a module leaves its tables and data. Deleting data is a separate, deliberate step.
 
 ## Rules

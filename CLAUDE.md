@@ -54,7 +54,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - `infrastructure/`: Express plumbing, storage and migrations, the module loader, config, logger, CLI, `app.ts`, `main.ts`.
 - Factories are named after what they build (`accountsService()`), define small single-purpose functions and end with `return { create, list }` of function references.
 - Expected failures are `Error` subclasses (`AccountError`), caught at the edge (route, CLI, `main.ts`). Optional input is `field?: T`; a stored value that can be empty is `T | null`.
-- All SQL lives in repositories. Migrations are committed. Until the owner says the app is live, migrations are edited in place and the data folder is reset; after that, only new migrations.
+- All SQL lives in repositories. Migrations are committed and final once merged: never edit one, add a new one. The server refuses to start when an applied migration's file has changed.
 
 ### Frontend (`src/platform/frontend/`)
 
