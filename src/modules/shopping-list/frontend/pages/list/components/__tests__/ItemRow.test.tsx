@@ -2,17 +2,21 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
 import { ItemRow } from '../ItemRow.tsx';
-import type { ItemRowProps } from '../ItemRow.tsx';
+import type { Item } from '../../../../features/items/index.ts';
 
-const renderRow = (overrides: Partial<ItemRowProps> = {}) => {
-  const props: ItemRowProps = {
-    text: 'Milk',
-    amount: '2 l',
-    addedBy: 'Misty',
-    checked: false,
+const MILK: Item = {
+  id: 1,
+  text: 'Milk',
+  amount: '2 l',
+  addedBy: 'Misty',
+  checked: false,
+};
+
+const renderRow = (changes: Partial<Item> = {}) => {
+  const props = {
+    item: { ...MILK, ...changes },
     onToggle: vi.fn(),
     onDelete: vi.fn(),
-    ...overrides,
   };
 
   render(
@@ -60,7 +64,7 @@ describe('ItemRow', () => {
     fireEvent.click(screen.getByText('Added by Misty'));
 
     // Then
-    expect(onToggle).toHaveBeenCalledOnce();
+    expect(onToggle).toHaveBeenCalledWith(MILK);
   });
 
   it('should ask to delete the item', () => {
@@ -71,7 +75,7 @@ describe('ItemRow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete Milk' }));
 
     // Then
-    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledWith(MILK);
     expect(onToggle).not.toHaveBeenCalled();
   });
 

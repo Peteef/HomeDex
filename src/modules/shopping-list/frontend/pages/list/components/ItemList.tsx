@@ -19,19 +19,7 @@ export const ItemList = ({ items, onToggle, onDelete, onClearChecked }: ItemList
   const inCart = items.filter((item) => item.checked);
 
   const row = (item: Item) => (
-    <ItemRow
-      key={item.id}
-      text={item.text}
-      amount={item.amount}
-      addedBy={item.addedBy}
-      checked={item.checked}
-      onToggle={() => {
-        onToggle(item);
-      }}
-      onDelete={() => {
-        onDelete(item);
-      }}
-    />
+    <ItemRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
   );
 
   return (
