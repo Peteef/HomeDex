@@ -19,7 +19,7 @@ Commands:
   archive <username> [--yes]           Block an account from logging in, keeping its data
   restore <username>                   Let an archived account log in again
 
-Without options, create and edit ask for the values. Passwords can also be piped through stdin.`;
+Without options, create and edit ask for the values. Prefer the prompt or a pipe through stdin over --password, which stays in the shell history.`;
 
 const EXIT_FAILURE = 1;
 const DATE_LOCALE = 'sv-SE';
@@ -171,6 +171,20 @@ const archive = async (
   console.log(`Archived account "${account.username}".`);
 };
 
+const list = (accounts: AccountsService, flags: { all?: boolean | undefined }): void => {
+  printAccounts(accounts.list({ includeArchived: flags.all ?? false }));
+};
+
+const restore = (accounts: AccountsService, positional: string[]): void => {
+  const [target] = positional;
+
+  if (!target) {
+    throw new UsageError('restore needs a username');
+  }
+
+  console.log(`Restored account "${accounts.restore(target).username}".`);
+};
+
 const run = async (argv: string[]): Promise<void> => {
   const {
     values,
@@ -190,7 +204,7 @@ const run = async (argv: string[]): Promise<void> => {
 
     switch (command) {
       case 'list':
-        printAccounts(accounts.list({ includeArchived: values.all ?? false }));
+        list(accounts, values);
         break;
       case 'create':
         await create(accounts, positional, values);
@@ -201,18 +215,9 @@ const run = async (argv: string[]): Promise<void> => {
       case 'archive':
         await archive(accounts, positional, values);
         break;
-
-      case 'restore': {
-        const [target] = positional;
-
-        if (!target) {
-          throw new UsageError('restore needs a username');
-        }
-
-        console.log(`Restored account "${accounts.restore(target).username}".`);
+      case 'restore':
+        restore(accounts, positional);
         break;
-      }
-
       default:
         throw new UsageError(`Unknown command "${command}"\n\n${USAGE}`);
     }

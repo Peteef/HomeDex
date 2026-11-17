@@ -170,15 +170,17 @@ DEV_PASSWORD=<password>
 
 ### Accounts CLI
 
-Without options, the CLI asks for the values (the password is hidden). Options and a piped password make it scriptable:
+Without options, the CLI asks for the values (the password is hidden):
 
 ```bash
 npm run users -- create
 npm run users -- list
-npm run users -- edit <username> --password <new password>
+npm run users -- edit <username>
 npm run users -- archive <username>
 npm run users -- restore <username>
 ```
+
+For scripts, pipe the password in (`printf '%s' "$PASSWORD" | npm run users -- create <username>`). The `--password` option also works, but the password then stays in the shell history, so avoid it outside throwaway setups.
 
 Archiving blocks an account from signing in and signs it out everywhere, but keeps its data. `restore` undoes it, and `list --all` includes archived accounts. Changing a password signs out all of that user's devices. Passwords need at least 8 characters.
 
