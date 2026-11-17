@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { appVersion } from './scripts/app-version.ts';
 import { DEFAULT_PORT } from './src/platform/backend/infrastructure/config.ts';
 import { API_PATH, MEDIA_PATH } from './src/platform/backend/infrastructure/constants.ts';
 
@@ -12,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const backend = `http://localhost:${PORT}`;
   return {
     plugins: [react(), tailwindcss()],
+    define: { __APP_VERSION__: JSON.stringify(appVersion()) },
     build: { outDir: WEB_BUILD_DIR, emptyOutDir: true },
     server: {
       host: true, // reachable from phones on the local network

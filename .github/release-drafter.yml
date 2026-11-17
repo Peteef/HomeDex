@@ -1,0 +1,48 @@
+# Used by the `release` job in ci.yml. Minor and major bumps publish a GitHub Release with every
+# pull request since the last one; patch bumps only update the "Next release" draft. The release
+# opens with the "Release notes" of its minor and major pull requests (release-highlights.yml).
+# The format is described in docs/releases.md.
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+no-changes-template: '- No pull requests'
+template: |
+  $CHANGES
+
+  **Full changelog**: [$PREVIOUS_TAG...$RESOLVED_TAG](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG)
+
+# Drops the "[Model name] " or "[Dependabot]: " that starts every pull request title.
+replacers:
+  - target: change-title
+    search: '/^\[[^\]]+\]:?\s*/'
+    replace: ''
+
+categories:
+  - title: 'Features'
+    when:
+      labels: ['release:minor', 'release:major']
+  - title: 'Fixes and changes'
+    collapse-after: 10
+  - title: 'Dependencies'
+    collapse-after: 0
+    when:
+      label: 'dependencies'
+  # The labels that set the version bump of a merge; the highest one wins.
+  - type: version-resolver
+    semver-increment: major
+    when:
+      label: 'release:major'
+  - type: version-resolver
+    semver-increment: minor
+    when:
+      label: 'release:minor'
+
+# Run only when a pull request opens (release-labels.yml), so a label changed by hand stays.
+# release:major is never added automatically.
+autolabeler:
+  - labels: ['release:minor']
+    branch:
+      - '/^epic\/.+/'
+  - labels: ['release:patch']
+    fallback: true
