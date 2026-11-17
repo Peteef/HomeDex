@@ -24,6 +24,7 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 - TypeScript strict with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and the Docker image. The backend runs `.ts` directly through Node's type stripping, with no build step: use `import type`, `.ts` extensions on relative imports, and no enums or namespaces.
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
 - One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
+- `dependencies` holds only what the server imports at run time; libraries that only the browser bundle uses are `devDependencies`, so the image stays small.
 - Packaging: one Docker image (API plus built UI) for amd64 and arm64, `ghcr.io/peteef/homedex`. Pull requests publish `pr-<number>`, deleted on close. Release publishing (`latest`, `sha-<short>`, versions) is in CI but paused with `if: false` until releases get git tags and version bumping.
 
 ## Structure
