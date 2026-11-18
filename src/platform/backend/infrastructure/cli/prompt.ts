@@ -12,7 +12,7 @@ interface PromptIo {
   output: NodeJS.WritableStream;
 }
 
-interface TerminalPrompts {
+export interface TerminalPrompts {
   hasTerminal: () => boolean;
   ask: (question: string) => Promise<string>;
   confirm: (question: string) => Promise<boolean>;
