@@ -3,15 +3,15 @@
 @theme {
   --color-dex-red: #c8202f;
   --color-dex-red-deep: #b01c29;
-  --color-dex-red-text: #b01c29;
+  --color-dex-red-text: #9a1824;
   --color-dex-blue: #4da3ff;
   --color-dex-ink: #2b2118;
   --color-dex-ink-muted: #5c4a38;
   --color-dex-paper: #fff8ee;
   --color-dex-surface: #ffffff;
   --color-dex-line: #d8c3a5;
-  --color-dex-field-border: #8c7355;
-  --color-dex-glass: rgb(255 248 238 / 0.88);
+  --color-dex-field-border: #7b654a;
+  --color-dex-glass: rgb(255 248 238 / 0.78);
   --color-dex-card: rgb(255 255 255 / 0.9);
   --color-dex-rim: rgb(255 255 255 / 0.75);
   --color-dex-shade: #2b2118;
@@ -70,14 +70,14 @@
  * Tokens left out keep their day value.
  */
 :root[data-time-of-day='night'] {
-  --color-dex-red-text: #ff8a80;
+  --color-dex-red-text: #ffb1aa;
   --color-dex-ink: #f6eddc;
-  --color-dex-ink-muted: #cbbfac;
+  --color-dex-ink-muted: #cfc3b2;
   --color-dex-paper: #1c2340;
   --color-dex-surface: #2c3554;
   --color-dex-line: #434c74;
-  --color-dex-field-border: #8690ba;
-  --color-dex-glass: rgb(24 30 56 / 0.86);
+  --color-dex-field-border: #97a0c4;
+  --color-dex-glass: rgb(24 30 56 / 0.78);
   --color-dex-card: rgb(42 51 86 / 0.9);
   --color-dex-rim: rgb(255 228 184 / 0.2);
   --color-dex-shade: #05070f;

@@ -171,3 +171,13 @@ describe.each([
     expect(ratio).toBeGreaterThanOrEqual(MIN_BORDER_CONTRAST);
   });
 });
+
+describe('panel glass', () => {
+  const opacity = (palette: Palette): string | undefined =>
+    /\/ ([\d.]+)\)/.exec(tokenValue(palette, 'dex-glass'))?.[1];
+
+  it('should be as see-through by night as by day', () => {
+    // When / Then
+    expect(opacity(NIGHT)).toBe(opacity(DAY));
+  });
+});
