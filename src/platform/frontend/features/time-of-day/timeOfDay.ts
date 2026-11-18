@@ -1,35 +1,28 @@
-import type { PartOfDay, TimeOfDay } from './types.ts';
+import type { Theme } from '../../lib/theme/index.ts';
+import type { PartOfDay } from './types.ts';
 
-const DAY_STARTS_AT = 7;
-const NIGHT_STARTS_AT = 21;
+// Periods by start hour, from midnight on; each one lasts until the next starts.
+type Schedule<T> = readonly [{ from: 0; value: T }, ...{ from: number; value: T }[]];
 
-const MORNING_STARTS_AT = 5;
-const AFTERNOON_STARTS_AT = 12;
-const EVENING_STARTS_AT = 18;
-const LATE_NIGHT_STARTS_AT = 23;
+const THEME_SCHEDULE: Schedule<Theme> = [
+  { from: 0, value: 'night' },
+  { from: 7, value: 'day' },
+  { from: 21, value: 'night' },
+];
 
-const TIME_OF_DAY_ATTRIBUTE = 'data-time-of-day';
+const PART_OF_DAY_SCHEDULE: Schedule<PartOfDay> = [
+  { from: 0, value: 'night' },
+  { from: 7, value: 'morning' },
+  { from: 12, value: 'afternoon' },
+  { from: 19, value: 'evening' },
+  { from: 23, value: 'night' },
+];
 
-export const timeOfDayAt = (date: Date): TimeOfDay => {
+const valueAt = <T>([midnight, ...later]: Schedule<T>, date: Date): T => {
   const hour = date.getHours();
-  return hour >= DAY_STARTS_AT && hour < NIGHT_STARTS_AT ? 'day' : 'night';
+  return later.findLast(({ from }) => from <= hour)?.value ?? midnight.value;
 };
 
-export const partOfDayAt = (date: Date): PartOfDay => {
-  const hour = date.getHours();
+export const themeAt = (date: Date): Theme => valueAt(THEME_SCHEDULE, date);
 
-  if (hour < MORNING_STARTS_AT || hour >= LATE_NIGHT_STARTS_AT) {
-    return 'night';
-  }
-
-  if (hour < AFTERNOON_STARTS_AT) {
-    return 'morning';
-  }
-
-  return hour < EVENING_STARTS_AT ? 'afternoon' : 'evening';
-};
-
-// The night colours in index.css hang off this attribute on the root element.
-export const applyTimeOfDay = (timeOfDay: TimeOfDay): void => {
-  document.documentElement.setAttribute(TIME_OF_DAY_ATTRIBUTE, timeOfDay);
-};
+export const partOfDayAt = (date: Date): PartOfDay => valueAt(PART_OF_DAY_SCHEDULE, date);

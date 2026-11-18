@@ -1,4 +1,8 @@
+// Production builds compile import.meta.env.DEV to false, so the code behind it drops out.
+const IS_DEV_BUILD = import.meta.env.DEV;
+
 const PARAM_PREFIX = 'dev-';
+const RESET_PARAM = 'dev-reset';
 const STORAGE_PREFIX = 'homedex.dev.';
 
 type DevParamParser<T> = (raw: string) => T | null;
@@ -31,10 +35,25 @@ const forget = (name: string): void => {
   }, undefined);
 };
 
-const fromUrl = (name: string): string | null =>
-  new URLSearchParams(window.location.search).get(paramName(name));
+const forgetAll = (): void => {
+  withStorage((storage) => {
+    const keys = Object.keys(storage).filter((key) => key.startsWith(STORAGE_PREFIX));
+
+    for (const key of keys) {
+      storage.removeItem(key);
+    }
+  }, undefined);
+};
+
+const urlParams = (): URLSearchParams => new URLSearchParams(window.location.search);
+
+const fromUrl = (name: string): string | null => urlParams().get(paramName(name));
 
 const resolve = <T>(name: string, parse: DevParamParser<T>): T | null => {
+  if (urlParams().has(RESET_PARAM)) {
+    forgetAll();
+  }
+
   const urlValue = fromUrl(name);
 
   if (urlValue === '') {
@@ -60,11 +79,10 @@ const resolve = <T>(name: string, parse: DevParamParser<T>): T | null => {
   return value;
 };
 
-// Production builds compile import.meta.env.DEV to false, so every parameter is null there and
-// the rest drops out of the bundle. A value is read once per page load: an in-app navigation
-// drops it from the URL, and the tab's session storage carries it to the next page load.
+// A value is read once per page load: an in-app navigation drops it from the URL, and the tab's
+// session storage carries it to the next page load.
 export const devParam = <T>(name: string, parse: DevParamParser<T>): (() => T | null) => {
-  if (!import.meta.env.DEV) {
+  if (!IS_DEV_BUILD) {
     return () => null;
   }
 

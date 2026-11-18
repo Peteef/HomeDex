@@ -64,7 +64,7 @@ describe('App', () => {
         document.querySelector('img[src="/media/scene/day/background.webp"]'),
       ).toBeInTheDocument();
 
-      expect(document.documentElement).toHaveAttribute('data-time-of-day', 'day');
+      expect(document.documentElement).toHaveAttribute('data-theme', 'day');
     });
 
     it('should draw the night scene and use the night colours by night', async () => {
@@ -79,7 +79,7 @@ describe('App', () => {
         document.querySelector('img[src="/media/scene/night/background.webp"]'),
       ).toBeInTheDocument();
 
-      expect(document.documentElement).toHaveAttribute('data-time-of-day', 'night');
+      expect(document.documentElement).toHaveAttribute('data-theme', 'night');
     });
 
     it('should go home when the link on a placeholder is followed', async () => {

@@ -38,7 +38,7 @@ test.describe('time of day', () => {
     ).toBeVisible();
 
     await expect(scene(page)).toHaveAttribute('src', DAY_SCENE);
-    await expect(page.locator('html')).toHaveAttribute('data-time-of-day', 'day');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'day');
   });
 
   test('should show the night scene and a late greeting after eleven at night', async ({
@@ -53,7 +53,7 @@ test.describe('time of day', () => {
     // Then
     await expect(greeting(page, `Still up, ${E2E_USER.username}? What do you need?`)).toBeVisible();
     await expect(scene(page)).toHaveAttribute('src', NIGHT_SCENE);
-    await expect(page.locator('html')).toHaveAttribute('data-time-of-day', 'night');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'night');
   });
 
   test('should ignore the dev hour in the production build', async ({ page }) => {
@@ -85,7 +85,7 @@ test.describe('time of day', () => {
 
     // Then
     await expect(scene(page)).toHaveAttribute('src', NIGHT_SCENE);
-    await expect(page.locator('html')).toHaveAttribute('data-time-of-day', 'night');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'night');
     expect(await panelBackground(page)).not.toBe(dayPanel);
   });
 });

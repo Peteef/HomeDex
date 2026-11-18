@@ -41,7 +41,16 @@ const colourTokens = (css: string): Palette =>
   );
 
 const DAY = colourTokens(block('@theme'));
-const NIGHT = new Map([...DAY, ...colourTokens(block(":root[data-time-of-day='night']"))]);
+
+// Every theme block in index.css, so a new theme is checked without touching this test.
+const OTHER_THEMES = [...CSS.matchAll(/:root\[data-theme='([\w-]+)'\]/g)].map(
+  ([selector, name]): [string, Palette] => [
+    name ?? '',
+    new Map([...DAY, ...colourTokens(block(selector))]),
+  ],
+);
+
+const THEMES: [string, Palette][] = [['day', DAY], ...OTHER_THEMES];
 
 const tokenValue = (palette: Palette, name: string): string => {
   const value = palette.get(name);
@@ -78,10 +87,7 @@ const BLACK: Rgb = [0, 0, 0];
 const WHITE: Rgb = [255, 255, 255];
 const PANEL_TEXT = ['dex-ink', 'dex-ink-muted', 'dex-red-text'];
 
-describe.each([
-  ['day', DAY],
-  ['night', NIGHT],
-] as const)('%s theme tokens', (_theme, palette) => {
+describe.each(THEMES)('%s theme tokens', (_theme, palette) => {
   describe.each([
     ['dark', BLACK],
     ['bright', WHITE],
@@ -172,12 +178,19 @@ describe.each([
   });
 });
 
+describe('themes', () => {
+  it('should find every theme in the stylesheet', () => {
+    // When / Then
+    expect(THEMES.map(([name]) => name)).toEqual(['day', 'night']);
+  });
+});
+
 describe('panel glass', () => {
   const opacity = (palette: Palette): string | undefined =>
     /\/ ([\d.]+)\)/.exec(tokenValue(palette, 'dex-glass'))?.[1];
 
-  it('should be as see-through by night as by day', () => {
+  it.each(OTHER_THEMES)('should be as see-through in the %s theme as by day', (_name, palette) => {
     // When / Then
-    expect(opacity(NIGHT)).toBe(opacity(DAY));
+    expect(opacity(palette)).toBe(opacity(DAY));
   });
 });

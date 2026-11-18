@@ -167,11 +167,11 @@ DEV_PASSWORD=<password>
 
 ### Dev parameters
 
-During `npm run dev`, URL parameters starting with `dev-` override parts of the app, so you can check them without waiting for the real state. A value stays for the browser tab until you set the parameter empty (`?dev-hour=`) or close the tab, and the browser console says which ones are on. Production builds ignore them.
+During `npm run dev`, URL parameters starting with `dev-` override parts of the app, so you can check them without waiting for the real state. A value stays for the browser tab until you set the parameter empty (`?dev-hour=`), reset all of them with `?dev-reset`, or close the tab. The browser console says which ones are on. Production builds ignore them.
 
-| Parameter        | What it does                                                                                   |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| `?dev-hour=0…23` | Acts as if it were that full hour: the day or night scene and colours, and the greeting follow |
+| Parameter        | What it does                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `?dev-hour=0…23` | Acts as if it were that full hour: the theme (scene and colours) and the greeting follow |
 
 For example, open http://localhost:5173/?dev-hour=22 to see the night theme.
 

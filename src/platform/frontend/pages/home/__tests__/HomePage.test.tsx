@@ -69,10 +69,10 @@ const fakeFinePointer = () => {
 
 describe('HomePage', () => {
   it.each([
-    [6, 'Good morning, Misty! What do you need today?'],
+    [8, 'Good morning, Misty! What do you need today?'],
     [13, 'Good afternoon, Misty! What do you need today?'],
-    [19, 'Good evening, Misty! What do you need tonight?'],
-    [23, 'Still up, Misty? What do you need?'],
+    [20, 'Good evening, Misty! What do you need tonight?'],
+    [2, 'Still up, Misty? What do you need?'],
   ])('should greet the user for the part of the day at %i:00', async (hour, greeting) => {
     // Given
     fixClockAt(hour);

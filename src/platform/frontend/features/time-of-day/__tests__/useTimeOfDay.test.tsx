@@ -28,7 +28,7 @@ describe('useTimeOfDay', () => {
     const { result } = renderHook(() => useTimeOfDay());
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'day', partOfDay: 'morning' });
+    expect(result.current).toEqual({ theme: 'day', partOfDay: 'morning' });
   });
 
   it('should switch to night when the clock reaches nine in the evening', () => {
@@ -42,7 +42,7 @@ describe('useTimeOfDay', () => {
     });
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'night', partOfDay: 'evening' });
+    expect(result.current).toEqual({ theme: 'night', partOfDay: 'evening' });
   });
 
   it('should keep checking at every full hour', () => {
@@ -58,7 +58,7 @@ describe('useTimeOfDay', () => {
     }
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'day', partOfDay: 'morning' });
+    expect(result.current).toEqual({ theme: 'day', partOfDay: 'morning' });
   });
 
   it('should check the time again when the app comes back to the foreground', () => {
@@ -74,7 +74,7 @@ describe('useTimeOfDay', () => {
     });
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'day', partOfDay: 'morning' });
+    expect(result.current).toEqual({ theme: 'day', partOfDay: 'morning' });
   });
 
   it('should keep the time while the app is in the background', () => {
@@ -89,7 +89,7 @@ describe('useTimeOfDay', () => {
     });
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'night', partOfDay: 'evening' });
+    expect(result.current).toEqual({ theme: 'night', partOfDay: 'evening' });
   });
 
   it('should follow the dev hour when it is set', async () => {
@@ -104,7 +104,7 @@ describe('useTimeOfDay', () => {
     const { result } = renderHook(() => useFreshTimeOfDay());
 
     // Then
-    expect(result.current).toEqual({ timeOfDay: 'night', partOfDay: 'night' });
+    expect(result.current).toEqual({ theme: 'night', partOfDay: 'night' });
   });
 
   it('should stop checking when it is unmounted', () => {

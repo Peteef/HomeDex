@@ -43,6 +43,6 @@ describe('AppLayout', () => {
 
     // Then
     expect(sceneSources()).toEqual(['/media/scene/night/background.webp']);
-    expect(document.documentElement).toHaveAttribute('data-time-of-day', 'night');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'night');
   });
 });

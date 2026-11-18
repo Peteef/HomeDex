@@ -148,13 +148,56 @@ describe('devParam', () => {
     expect(level()).toBe(3);
   });
 
-  it('should return nothing in a production build', () => {
+  it('should forget every stored value when the URL asks for a reset', () => {
     // Given
-    vi.stubEnv('DEV', false);
+    openAt('/?dev-level=3&dev-size=7');
+    devParam('level', parseNumber)();
+    devParam('size', parseNumber)();
+    openAt('/?dev-reset');
+
+    // When
+    const values = [devParam('level', parseNumber)(), devParam('size', parseNumber)()];
+
+    // Then
+    expect(values).toEqual([null, null]);
+    openAt('/');
+    expect(devParam('level', parseNumber)()).toBeNull();
+  });
+
+  it('should keep a value set in the same URL as the reset', () => {
+    // Given
     openAt('/?dev-level=3');
+    devParam('level', parseNumber)();
+    openAt('/?dev-reset&dev-level=5');
 
     // When
     const level = devParam('level', parseNumber);
+
+    // Then
+    expect(level()).toBe(5);
+  });
+
+  it('should leave other stored values alone when the URL asks for a reset', () => {
+    // Given
+    sessionStorage.setItem('homedex.other', 'kept');
+    openAt('/?dev-reset');
+
+    // When
+    devParam('level', parseNumber)();
+
+    // Then
+    expect(sessionStorage.getItem('homedex.other')).toBe('kept');
+  });
+
+  it('should return nothing in a production build', async () => {
+    // Given
+    vi.stubEnv('DEV', false);
+    vi.resetModules();
+    const { devParam: productionDevParam } = await import('../devParams.ts');
+    openAt('/?dev-level=3');
+
+    // When
+    const level = productionDevParam('level', parseNumber);
 
     // Then
     expect(level()).toBeNull();

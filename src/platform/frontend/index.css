@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 
+/* The day theme, the default. Other themes override these tokens in their blocks below. */
 @theme {
   --color-dex-red: #c8202f;
   --color-dex-red-deep: #b01c29;
@@ -65,11 +66,8 @@
   }
 }
 
-/*
- * The night palette, taken from the night scene: midnight-blue glass and warm lamp-light text.
- * Tokens left out keep their day value.
- */
-:root[data-time-of-day='night'] {
+/* The night theme. Tokens left out keep their day value. */
+:root[data-theme='night'] {
   --color-dex-red-text: #ffb1aa;
   --color-dex-ink: #f6eddc;
   --color-dex-ink-muted: #cfc3b2;

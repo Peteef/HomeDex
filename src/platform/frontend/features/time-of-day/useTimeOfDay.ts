@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { currentTime } from './internal/clock.ts';
-import { partOfDayAt, timeOfDayAt } from './timeOfDay.ts';
+import { partOfDayAt, themeAt } from './timeOfDay.ts';
 
 const untilNextHour = (date: Date): number => {
   const nextHour = new Date(date);
@@ -34,7 +34,7 @@ export const useTimeOfDay = () => {
   }, [now]);
 
   return {
-    timeOfDay: timeOfDayAt(now),
+    theme: themeAt(now),
     partOfDay: partOfDayAt(now),
   };
 };
