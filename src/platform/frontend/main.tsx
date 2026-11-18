@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from './App.tsx';
 import { AppBoundary } from './ErrorBoundaries.tsx';
-import { applyTimeOfDay, timeOfDayAt } from './features/time-of-day/index.ts';
+import { applyTimeOfDay, currentTime, timeOfDayAt } from './features/time-of-day/index.ts';
 import { appQueryClient } from './queryClient.ts';
 import './i18n.ts';
 import './index.css';
@@ -16,7 +16,7 @@ if (!root) {
 }
 
 // Before the first render, so a night visit never flashes the day colours.
-applyTimeOfDay(timeOfDayAt(new Date()));
+applyTimeOfDay(timeOfDayAt(currentTime()));
 
 createRoot(root).render(
   <StrictMode>

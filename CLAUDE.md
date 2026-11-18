@@ -64,6 +64,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - `features/<name>/` (logic of one area: hooks, data access, state) and `lib/<name>/` (generic utilities, such as the `http` API client) are used only through their `index.ts`, with private files in `internal/`. Add a new one to `FRONTEND_FEATURES` or `FRONTEND_LIBS` in `eslint.config.js`.
 - The app skeleton sits at the base (`App.tsx`, `AppLayout.tsx`, `RequireAuth.tsx`, `routes.ts`, ...). A 401 from any request ends the session and the guard sends the user to the login page, so data hooks don't handle it.
 - UI that belongs to one module stays in that module.
+- Development-only overrides are dev parameters (`?dev-<name>=`): declare one with `devParam()` from `lib/dev-params` next to the code that reads it, and list it in the README.
 
 ## Code style
 

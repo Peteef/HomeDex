@@ -15,6 +15,7 @@ describe('useTimeOfDay', () => {
   });
 
   afterEach(() => {
+    window.history.replaceState(null, '', '/');
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -89,6 +90,21 @@ describe('useTimeOfDay', () => {
 
     // Then
     expect(result.current).toEqual({ timeOfDay: 'night', partOfDay: 'evening' });
+  });
+
+  it('should follow the dev hour when it is set', async () => {
+    // Given
+    vi.setSystemTime(new Date(2026, 5, 1, 10, 30));
+    vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    window.history.replaceState(null, '', '/?dev-hour=23');
+    vi.resetModules();
+    const { useTimeOfDay: useFreshTimeOfDay } = await import('../useTimeOfDay.ts');
+
+    // When
+    const { result } = renderHook(() => useFreshTimeOfDay());
+
+    // Then
+    expect(result.current).toEqual({ timeOfDay: 'night', partOfDay: 'night' });
   });
 
   it('should stop checking when it is unmounted', () => {

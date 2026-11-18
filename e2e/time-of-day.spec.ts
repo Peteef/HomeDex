@@ -56,6 +56,21 @@ test.describe('time of day', () => {
     await expect(page.locator('html')).toHaveAttribute('data-time-of-day', 'night');
   });
 
+  test('should ignore the dev hour in the production build', async ({ page }) => {
+    // Given
+    await page.clock.setFixedTime(new Date(2026, 5, 1, 10, 0));
+
+    // When
+    await page.goto('/?dev-hour=22');
+
+    // Then
+    await expect(
+      greeting(page, `Good morning, ${E2E_USER.username}! What do you need today?`),
+    ).toBeVisible();
+
+    await expect(scene(page)).toHaveAttribute('src', DAY_SCENE);
+  });
+
   test('should switch to the night scene and colours when nine in the evening comes', async ({
     page,
   }) => {

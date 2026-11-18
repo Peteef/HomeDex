@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { currentTime } from './internal/clock.ts';
 import { partOfDayAt, timeOfDayAt } from './timeOfDay.ts';
 
 const untilNextHour = (date: Date): number => {
@@ -10,11 +11,11 @@ const untilNextHour = (date: Date): number => {
 // Every boundary is on a full hour, so checking at each full hour is enough. A phone pauses
 // timers while the app is in the background, so it checks again when the app comes back.
 export const useTimeOfDay = () => {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(currentTime);
 
   useEffect(() => {
     const refresh = () => {
-      setNow(new Date());
+      setNow(currentTime());
     };
 
     const refreshWhenVisible = () => {

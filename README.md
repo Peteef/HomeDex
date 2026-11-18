@@ -165,6 +165,16 @@ DEV_PASSWORD=<password>
 
 `npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Only `npm run dev` reads this file. The server refuses to start in production when any variable starting with `DEV_` is set.
 
+### Dev parameters
+
+During `npm run dev`, URL parameters starting with `dev-` override parts of the app, so you can check them without waiting for the real state. A value stays for the browser tab until you set the parameter empty (`?dev-hour=`) or close the tab, and the browser console says which ones are on. Production builds ignore them.
+
+| Parameter        | What it does                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `?dev-hour=0…23` | Acts as if it were that full hour: the day or night scene and colours, and the greeting follow |
+
+For example, open http://localhost:5173/?dev-hour=22 to see the night theme.
+
 ### Accounts CLI
 
 Without options, the CLI asks for the values (the password is hidden):

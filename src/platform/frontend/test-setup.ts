@@ -26,4 +26,5 @@ afterEach(async () => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
   localStorage.clear();
+  sessionStorage.clear();
 });
