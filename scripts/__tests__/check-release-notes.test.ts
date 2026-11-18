@@ -82,6 +82,29 @@ describe('check-release-notes', () => {
     expect(result.errors).toContain('must start with a ### heading');
   });
 
+  it('should fail when the pull request carries two release labels', () => {
+    // When
+    const result = runScript(
+      '["dependencies", "release:minor", "release:patch"]',
+      body('### Shared shopping list'),
+    );
+
+    // Then
+    expect(result.status).toBe(1);
+
+    expect(result.errors).toContain(
+      'keep one release:* label and remove the others: release:minor, release:patch',
+    );
+  });
+
+  it('should pass when the release label comes with other labels', () => {
+    // When
+    const result = runScript('["dependencies", "release:patch"]', body(''));
+
+    // Then
+    expect(result.status).toBe(0);
+  });
+
   it('should fail with the usage when an argument is missing', () => {
     // When
     const result = runScript('["release:minor"]');

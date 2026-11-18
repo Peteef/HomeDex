@@ -4,7 +4,7 @@ Every merge to `master` gets a version and an image. Minor and major versions ar
 
 ## How a merge is versioned
 
-Each pull request into `master` carries exactly one `release:*` label. New pull requests get a default; change it by hand whenever it does not fit, on any branch type. Adding a label removes the other one.
+Each pull request into `master` carries exactly one `release:*` label. New pull requests without one get a default; change it by hand whenever it does not fit, on any branch type. Adding a label removes the other one, and the `release-notes` check fails while two are left.
 
 | Label           | Default on                         | From 1.4.0 | GitHub Release                     |
 | --------------- | ---------------------------------- | ---------- | ---------------------------------- |

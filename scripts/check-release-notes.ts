@@ -3,11 +3,13 @@ import { z } from 'zod';
 // The release-notes check in release-labels.yml: a release:minor or release:major pull request
 // opens a GitHub Release with its "## Release notes" section, so that section must be filled and
 // start with a ### heading (docs/releases.md). Comments are ignored, as in release-highlights.yml.
+// It also fails when a pull request carries more than one release:* label.
 const USAGE =
   'Usage: node scripts/check-release-notes.ts <labels as a JSON array> <pull request body>';
 
 const EXIT_FAILURE = 1;
 
+const RELEASE_LABEL_PREFIX = 'release:';
 const RELEASE_LABELS = ['release:minor', 'release:major'];
 const SECTION_HEADING = '## Release notes';
 const NOTES_HEADING = /^### \S/;
@@ -37,6 +39,11 @@ const run = (): void => {
   }
 
   const labels = labelsSchema.parse(JSON.parse(labelsJson));
+  const releaseLabels = labels.filter((label) => label.startsWith(RELEASE_LABEL_PREFIX));
+
+  if (releaseLabels.length > 1) {
+    throw new Error(`keep one release:* label and remove the others: ${releaseLabels.join(', ')}`);
+  }
 
   if (!labels.some((label) => RELEASE_LABELS.includes(label))) {
     console.log('Not a minor or major release: no release notes needed.');
