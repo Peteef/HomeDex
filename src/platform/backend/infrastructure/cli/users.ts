@@ -2,11 +2,12 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { AccountError } from '../../domain/accounts/index.ts';
 import { domainServices } from '../../domain/services.ts';
-import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { loadConfig, loadEnvFile } from '../config.ts';
 import { ConfigError } from '../errors.ts';
 import { MigrationError, openStorage } from '../storage/index.ts';
+import { UsageError } from './errors.ts';
 import { terminalPrompts } from './prompt.ts';
+import { userCommands } from './userCommands.ts';
 
 const USAGE = `Usage: npm run users -- <command> [options]
 
@@ -22,9 +23,6 @@ Commands:
 Without options, create and edit ask for the values. Prefer the prompt or a pipe through stdin over --password, which stays in the shell history.`;
 
 const EXIT_FAILURE = 1;
-const DATE_LOCALE = 'sv-SE';
-
-class UsageError extends Error {}
 
 const options = {
   username: { type: 'string' },
@@ -32,158 +30,6 @@ const options = {
   yes: { type: 'boolean' },
   all: { type: 'boolean' },
 } as const;
-
-const { ask, askHidden, confirm, hasTerminal, readPipedPassword } = terminalPrompts();
-
-const formatDate = (timestamp: number): string =>
-  new Date(timestamp).toLocaleDateString(DATE_LOCALE);
-
-const printAccounts = (accounts: Account[]): void => {
-  if (accounts.length === 0) {
-    console.log('No accounts yet. Create one with: npm run users -- create');
-    return;
-  }
-
-  for (const account of accounts) {
-    const status = account.archivedAt === null ? '' : '  (archived)';
-    console.log(`${account.username}  created ${formatDate(account.createdAt)}${status}`);
-  }
-};
-
-const readNewPassword = async (flag: string | undefined, label: string): Promise<string> => {
-  if (flag !== undefined) {
-    return flag;
-  }
-
-  if (!hasTerminal()) {
-    return readPipedPassword();
-  }
-
-  const password = await askHidden(`${label}: `);
-
-  if (password === '') {
-    return password;
-  }
-
-  if ((await askHidden('Repeat password: ')) !== password) {
-    throw new UsageError('The passwords do not match');
-  }
-
-  return password;
-};
-
-const requireTerminal = (missing: string): never => {
-  throw new UsageError(`Missing ${missing}, and there is no terminal to ask for it`);
-};
-
-const create = async (
-  accounts: AccountsService,
-  positional: string[],
-  flags: { username?: string | undefined; password?: string | undefined },
-): Promise<void> => {
-  const username =
-    flags.username ??
-    positional[0] ??
-    (hasTerminal() ? await ask('Username: ') : requireTerminal('username'));
-
-  const password = await readNewPassword(flags.password, 'Password');
-  const account = await accounts.create(username, password);
-  console.log(`Created account "${account.username}".`);
-};
-
-const edit = async (
-  accounts: AccountsService,
-  positional: string[],
-  flags: { username?: string | undefined; password?: string | undefined },
-): Promise<void> => {
-  const [target] = positional;
-
-  if (!target) {
-    throw new UsageError('edit needs a username');
-  }
-
-  let { username, password } = flags;
-
-  if (username === undefined && password === undefined) {
-    if (!hasTerminal()) {
-      throw new UsageError('Nothing to change: pass --username and/or --password');
-    }
-
-    const answer = await ask(`New username (empty keeps "${target}"): `);
-
-    if (answer !== '') {
-      username = answer;
-    }
-
-    const newPassword = await readNewPassword(
-      undefined,
-      'New password (empty keeps the current one)',
-    );
-
-    if (newPassword !== '') {
-      password = newPassword;
-    }
-  }
-
-  if (username === undefined && password === undefined) {
-    console.log('Nothing changed.');
-    return;
-  }
-
-  const changes = {
-    ...(username !== undefined && { username }),
-    ...(password !== undefined && { password }),
-  };
-
-  const account = await accounts.edit(target, changes);
-  console.log(`Updated account "${account.username}".`);
-
-  if (password !== undefined) {
-    console.log("All of this user's devices were signed out.");
-  }
-};
-
-const archive = async (
-  accounts: AccountsService,
-  positional: string[],
-  flags: { yes?: boolean | undefined },
-): Promise<void> => {
-  const [target] = positional;
-
-  if (!target) {
-    throw new UsageError('archive needs a username');
-  }
-
-  if (!flags.yes) {
-    if (!hasTerminal()) {
-      throw new UsageError('Pass --yes to archive without a terminal');
-    }
-
-    const question = `Archive "${target}"? They will be signed out and unable to log in.`;
-
-    if (!(await confirm(question))) {
-      console.log('Cancelled.');
-      return;
-    }
-  }
-
-  const account = accounts.archive(target);
-  console.log(`Archived account "${account.username}".`);
-};
-
-const list = (accounts: AccountsService, flags: { all?: boolean | undefined }): void => {
-  printAccounts(accounts.list({ includeArchived: flags.all ?? false }));
-};
-
-const restore = (accounts: AccountsService, positional: string[]): void => {
-  const [target] = positional;
-
-  if (!target) {
-    throw new UsageError('restore needs a username');
-  }
-
-  console.log(`Restored account "${accounts.restore(target).username}".`);
-};
 
 const run = async (argv: string[]): Promise<void> => {
   const {
@@ -201,22 +47,23 @@ const run = async (argv: string[]): Promise<void> => {
 
   try {
     const { accounts } = domainServices(db, { sessionTtlDays: config.SESSION_TTL_DAYS });
+    const { list, create, edit, archive, restore } = userCommands(accounts, terminalPrompts());
 
     switch (command) {
       case 'list':
-        list(accounts, values);
+        list(values);
         break;
       case 'create':
-        await create(accounts, positional, values);
+        await create(positional, values);
         break;
       case 'edit':
-        await edit(accounts, positional, values);
+        await edit(positional, values);
         break;
       case 'archive':
-        await archive(accounts, positional, values);
+        await archive(positional, values);
         break;
       case 'restore':
-        restore(accounts, positional);
+        restore(positional);
         break;
       default:
         throw new UsageError(`Unknown command "${command}"\n\n${USAGE}`);
