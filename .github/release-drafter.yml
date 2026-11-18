@@ -7,7 +7,11 @@ tag-template: 'v$RESOLVED_VERSION'
 change-template: '- $TITLE (#$NUMBER)'
 change-title-escapes: '\<*_&'
 no-changes-template: '- No pull requests'
+# The blank lines before $CHANGES separate it from the Release notes, which the release job passes as
+# `header`: release-drafter trims that input and joins it to the template as it is.
 template: |
+
+
   $CHANGES
 
   **Full changelog**: [$PREVIOUS_TAG...$RESOLVED_TAG](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG)

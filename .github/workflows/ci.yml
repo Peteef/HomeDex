@@ -225,7 +225,8 @@ jobs:
           version: ${{ steps.plan.outputs.release_version }}
           commitish: ${{ steps.plan.outputs.release_sha }}
           publish: true
-          header: "${{ steps.highlights.outputs.body }}\n\n"
+          # Trimmed by release-drafter, so the template in release-drafter.yml adds the blank line.
+          header: ${{ steps.highlights.outputs.body }}
       - if: steps.plan.outputs.draft
         uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
         with:
