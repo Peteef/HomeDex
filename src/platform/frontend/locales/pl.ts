@@ -54,7 +54,12 @@ const pl = {
     },
   },
   home: {
-    greeting: 'Cześć, {{username}}! Czego dziś potrzebujesz?',
+    greeting: {
+      morning: 'Dzień dobry, {{username}}! Czego dziś potrzebujesz?',
+      afternoon: 'Dzień dobry, {{username}}! Czego dziś potrzebujesz?',
+      evening: 'Dobry wieczór, {{username}}! Czego dziś potrzebujesz?',
+      night: 'Jeszcze nie śpisz, {{username}}? Czego potrzebujesz?',
+    },
     signOut: 'Wyloguj się',
     search: {
       label: 'Znajdź kafelek',

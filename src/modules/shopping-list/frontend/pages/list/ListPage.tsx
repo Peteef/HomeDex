@@ -56,7 +56,7 @@ export const ListPage = () => {
     if (items.isError) {
       return (
         <div className="flex flex-col items-start gap-3">
-          <p role="alert" className="text-dex-red-deep text-base font-bold">
+          <p role="alert" className="text-dex-red-text text-base font-bold">
             {text.loadFailed}
           </p>
           <Button

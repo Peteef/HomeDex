@@ -72,7 +72,7 @@ describe('app', () => {
 
     it('should serve art from the assets folder at /media', async () => {
       // When
-      const response = await request(app).get('/media/scene/background.webp');
+      const response = await request(app).get('/media/scene/day/background.webp');
 
       // Then
       expect(response.status).toBe(200);

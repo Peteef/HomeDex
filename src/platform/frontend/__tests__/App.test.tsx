@@ -1,8 +1,17 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { accountsList, fakeApi, ok, renderApp, signedIn, signedOut, status } from './helpers.tsx';
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  accountsList,
+  fakeApi,
+  fixClockAt,
+  ok,
+  renderApp,
+  signedIn,
+  signedOut,
+  status,
+} from './helpers.tsx';
 
-const GREETING = 'Hello Misty! What do you need today?';
+const GREETING = 'Good morning, Misty! What do you need today?';
 
 const renderAt = async (path: string) => {
   fakeApi({ 'GET /api/auth/me': signedIn(), 'GET /api/tiles': ok({ tiles: [] }) });
@@ -11,6 +20,10 @@ const renderAt = async (path: string) => {
 };
 
 describe('App', () => {
+  beforeEach(() => {
+    fixClockAt(10);
+  });
+
   describe('routes', () => {
     it('should greet the user by name on the home screen at /', async () => {
       // When
@@ -42,12 +55,31 @@ describe('App', () => {
       expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
     });
 
-    it('should draw the scene behind every screen', async () => {
+    it('should draw the day scene behind every screen by day', async () => {
       // When
       await renderAt('/login');
 
       // Then
-      expect(document.querySelector('img[src="/media/scene/background.webp"]')).toBeInTheDocument();
+      expect(
+        document.querySelector('img[src="/media/scene/day/background.webp"]'),
+      ).toBeInTheDocument();
+
+      expect(document.documentElement).toHaveAttribute('data-time-of-day', 'day');
+    });
+
+    it('should draw the night scene and use the night colours by night', async () => {
+      // Given
+      fixClockAt(22);
+
+      // When
+      await renderAt('/login');
+
+      // Then
+      expect(
+        document.querySelector('img[src="/media/scene/night/background.webp"]'),
+      ).toBeInTheDocument();
+
+      expect(document.documentElement).toHaveAttribute('data-time-of-day', 'night');
     });
 
     it('should go home when the link on a placeholder is followed', async () => {

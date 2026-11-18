@@ -5,7 +5,15 @@ import { E2E_USER, PROJECTS } from './fixtures.ts';
 export const REMEMBERED_ACCOUNT_KEY = 'homedex.rememberedAccount';
 export const LANGUAGE_KEY = 'homedex.language';
 
-export const E2E_GREETING = `Hello ${E2E_USER.username}! What do you need today?`;
+// The scene, its colours and the home greeting follow the clock, so tests fix the time of day.
+export const MORNING = new Date(2026, 5, 1, 10);
+export const LATE_EVENING = new Date(2026, 5, 1, 22);
+
+export const fixClock = async (page: Page, at: Date = MORNING): Promise<void> => {
+  await page.clock.setFixedTime(at);
+};
+
+export const E2E_GREETING = `Good morning, ${E2E_USER.username}! What do you need today?`;
 
 // The server allows 10 failed logins per 15 minutes from one address, shared by every project.
 // A test that fails a login on purpose calls this first, so it runs in one project only.

@@ -24,7 +24,7 @@ export const IconPicker = ({ value, onChange }: IconPickerProps) => {
           onChange(icon);
         }}
       />
-      <span className="border-dex-line text-dex-ink peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink flex size-11 items-center justify-center rounded-full border bg-white peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2">
+      <span className="border-dex-line text-dex-ink peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink bg-dex-surface flex size-11 items-center justify-center rounded-full border peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2">
         <Icon name={icon} size={20} aria-hidden />
       </span>
       <span className="sr-only">{messages.icons[icon]}</span>

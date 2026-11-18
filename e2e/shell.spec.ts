@@ -2,7 +2,15 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page, Route, TestInfo } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
-import { E2E_GREETING, LANGUAGE_KEY, REMEMBERED_ACCOUNT_KEY, signIn } from './session.ts';
+import {
+  E2E_GREETING,
+  fixClock,
+  LANGUAGE_KEY,
+  LATE_EVENING,
+  MORNING,
+  REMEMBERED_ACCOUNT_KEY,
+  signIn,
+} from './session.ts';
 import { LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
 import type { E2ETile } from './tiles.ts';
 import { SAMPLE_ITEMS, SHOPPING_LIST_PATH, stubItems } from './shoppingList.ts';
@@ -53,7 +61,29 @@ const holdTiles = async (page: Page): Promise<() => void> => {
   return release;
 };
 
-const SCREENS: Screen[] = [
+interface TimeOfDay {
+  name: 'day' | 'night';
+  at: Date;
+  greeting: string;
+  polishGreeting: string;
+}
+
+const TIMES_OF_DAY: TimeOfDay[] = [
+  {
+    name: 'day',
+    at: MORNING,
+    greeting: E2E_GREETING,
+    polishGreeting: `Dzień dobry, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
+  },
+  {
+    name: 'night',
+    at: LATE_EVENING,
+    greeting: `Good evening, ${E2E_USER.username}! What do you need tonight?`,
+    polishGreeting: `Dobry wieczór, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
+  },
+];
+
+const screensAt = ({ greeting, polishGreeting }: TimeOfDay): Screen[] => [
   { name: 'login', path: '/login', heading: "Who's there, Trainer?", signedIn: false },
   {
     name: 'password',
@@ -62,12 +92,12 @@ const SCREENS: Screen[] = [
     signedIn: false,
     remembered: E2E_USER.username,
   },
-  { name: 'home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: SAMPLE_TILES },
-  { name: 'empty home', path: '/', heading: E2E_GREETING, signedIn: true, tiles: [] },
+  { name: 'home', path: '/', heading: greeting, signedIn: true, tiles: SAMPLE_TILES },
+  { name: 'empty home', path: '/', heading: greeting, signedIn: true, tiles: [] },
   {
     name: 'add tile dialog',
     path: '/',
-    heading: E2E_GREETING,
+    heading: greeting,
     signedIn: true,
     tiles: SAMPLE_TILES,
     open: openAddTile,
@@ -75,7 +105,7 @@ const SCREENS: Screen[] = [
   {
     name: 'edit tile dialog',
     path: '/',
-    heading: E2E_GREETING,
+    heading: greeting,
     signedIn: true,
     tiles: SAMPLE_TILES,
     open: openEditTile,
@@ -91,7 +121,7 @@ const SCREENS: Screen[] = [
   {
     name: 'home in Polish',
     path: '/',
-    heading: `Cześć, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
+    heading: polishGreeting,
     signedIn: true,
     language: 'pl',
     tiles: SAMPLE_TILES,
@@ -124,94 +154,122 @@ interface Manifest {
   icons: { src: string; type: string }[];
 }
 
-const SCENE = 'img[src="/media/scene/background.webp"]';
+const SCENE = 'img[src="/media/scene/day/background.webp"]';
 
 const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile === true;
 
-test.describe('shell', () => {
-  for (const screen of SCREENS) {
-    test.describe(`${screen.name} screen`, () => {
-      test.beforeEach(async ({ page }) => {
-        if (screen.signedIn) {
-          await signIn(page);
-        }
+const prepareScreen = async (page: Page, time: TimeOfDay, screen: Screen): Promise<void> => {
+  await fixClock(page, time.at);
 
-        if (screen.tiles) {
-          await stubTiles(page, screen.tiles);
-        }
+  if (screen.signedIn) {
+    await signIn(page);
+  }
 
-        if (screen.items) {
-          await stubItems(page, screen.items);
-        }
+  if (screen.tiles) {
+    await stubTiles(page, screen.tiles);
+  }
 
-        if (screen.remembered) {
-          await page.addInitScript(
-            ({ key, username }) => {
-              localStorage.setItem(key, username);
-            },
-            { key: REMEMBERED_ACCOUNT_KEY, username: screen.remembered },
-          );
-        }
+  if (screen.items) {
+    await stubItems(page, screen.items);
+  }
 
-        if (screen.language) {
-          await page.addInitScript(
-            ({ key, language }) => {
-              localStorage.setItem(key, language);
-            },
-            { key: LANGUAGE_KEY, language: screen.language },
-          );
-        }
+  if (screen.remembered) {
+    await page.addInitScript(
+      ({ key, username }) => {
+        localStorage.setItem(key, username);
+      },
+      { key: REMEMBERED_ACCOUNT_KEY, username: screen.remembered },
+    );
+  }
 
-        await page.goto(screen.path);
-        await expect(page.getByRole('heading', { level: 1, name: screen.heading })).toBeVisible();
-        await screen.open?.(page);
-      });
+  if (screen.language) {
+    await page.addInitScript(
+      ({ key, language }) => {
+        localStorage.setItem(key, language);
+      },
+      { key: LANGUAGE_KEY, language: screen.language },
+    );
+  }
 
-      test('should have no accessibility or colour contrast violations', async ({ page }) => {
-        // When
-        const results = await new AxeBuilder({ page }).analyze();
+  await page.goto(screen.path);
+  await expect(page.getByRole('heading', { level: 1, name: screen.heading })).toBeVisible();
+  await screen.open?.(page);
+};
 
-        // Then
-        expect(results.violations).toEqual([]);
-      });
-
-      test('should not scroll sideways', async ({ page }) => {
-        // When
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
-
-        // Then
-        expect(overflow).toBe(0);
-      });
-
-      test('should make every control at least 44 pt large', async ({ page }) => {
-        // When
-        const small = await page.evaluate((min) => {
-          const controls = document.querySelectorAll('a, button, input, select, textarea');
-          return [...controls]
-            .map((element) => ({
-              name: element.outerHTML.slice(0, 80),
-              box: element.getBoundingClientRect(),
-            }))
-            .filter(({ box }) => box.width > 1 && box.height > 1)
-            .filter(({ box }) => box.width < min || box.height < min)
-            .map(({ name }) => name);
-        }, MIN_TOUCH_TARGET);
-
-        // Then
-        expect(small).toEqual([]);
-      });
-
-      test('should show the screen over the scene', async ({ page }, testInfo) => {
-        // When
-        const screenshot = await page.screenshot({ fullPage: true });
-
-        // Then
-        await testInfo.attach(`${screen.name}.png`, { body: screenshot, contentType: 'image/png' });
-        await expect(page.locator('img[src^="/media/scene/"]')).toHaveCount(1);
-      });
+// The layout does not change between day and night, so only the colours are checked twice.
+const describeScreen = (time: TimeOfDay, screen: Screen): void => {
+  test.describe(`${screen.name} screen by ${time.name}`, () => {
+    test.beforeEach(async ({ page }) => {
+      await prepareScreen(page, time, screen);
     });
+
+    test('should have no accessibility or colour contrast violations', async ({ page }) => {
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
+    });
+
+    test('should show the screen over the scene of the time of day', async ({ page }, testInfo) => {
+      // When
+      const screenshot = await page.screenshot({ fullPage: true });
+
+      // Then
+      await testInfo.attach(`${screen.name} by ${time.name}.png`, {
+        body: screenshot,
+        contentType: 'image/png',
+      });
+
+      await expect(page.locator('img[src^="/media/scene/"]')).toHaveAttribute(
+        'src',
+        `/media/scene/${time.name}/background.webp`,
+      );
+    });
+
+    if (time.name === 'night') {
+      return;
+    }
+
+    test('should not scroll sideways', async ({ page }) => {
+      // When
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+
+      // Then
+      expect(overflow).toBe(0);
+    });
+
+    test('should make every control at least 44 pt large', async ({ page }) => {
+      // When
+      const small = await page.evaluate((min) => {
+        const controls = document.querySelectorAll('a, button, input, select, textarea');
+        return [...controls]
+          .map((element) => ({
+            name: element.outerHTML.slice(0, 80),
+            box: element.getBoundingClientRect(),
+          }))
+          .filter(({ box }) => box.width > 1 && box.height > 1)
+          .filter(({ box }) => box.width < min || box.height < min)
+          .map(({ name }) => name);
+      }, MIN_TOUCH_TARGET);
+
+      // Then
+      expect(small).toEqual([]);
+    });
+  });
+};
+
+test.describe('shell', () => {
+  test.beforeEach(async ({ page }) => {
+    await fixClock(page);
+  });
+
+  for (const time of TIMES_OF_DAY) {
+    for (const screen of screensAt(time)) {
+      describeScreen(time, screen);
+    }
   }
 
   test.describe('layout', () => {

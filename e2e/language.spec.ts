@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { E2E_USER } from './fixtures.ts';
-import { LANGUAGE_KEY } from './session.ts';
+import { fixClock, LANGUAGE_KEY } from './session.ts';
 
 const ENGLISH_HEADING = "Who's there, Trainer?";
 const POLISH_HEADING = 'Który Trener tym razem?';
@@ -59,6 +59,7 @@ test.describe('language', () => {
 
   test('should switch the language and keep it after a reload and a sign-in', async ({ page }) => {
     // Given
+    await fixClock(page);
     await page.goto('/login');
     await expect(loginHeading(page, ENGLISH_HEADING)).toBeVisible();
 
@@ -76,7 +77,7 @@ test.describe('language', () => {
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: `Cześć, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
+        name: `Dzień dobry, ${E2E_USER.username}! Czego dziś potrzebujesz?`,
       }),
     ).toBeVisible();
   });

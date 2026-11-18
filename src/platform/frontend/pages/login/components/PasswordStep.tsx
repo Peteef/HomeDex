@@ -86,7 +86,7 @@ export const PasswordStep = ({
           {...(error && { error: errors[error] })}
         />
         {failure ? (
-          <p role="alert" className="text-dex-red-deep text-base font-bold">
+          <p role="alert" className="text-dex-red-text text-base font-bold">
             {failure}
           </p>
         ) : null}

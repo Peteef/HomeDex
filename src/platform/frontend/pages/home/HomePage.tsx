@@ -10,6 +10,7 @@ import { Wordmark } from '../../components/wordmark/Wordmark.tsx';
 import { useCurrentUser, useLogout } from '../../features/auth/index.ts';
 import { displayText, sortTiles, useTiles, useTogglePin } from '../../features/tiles/index.ts';
 import type { Tile } from '../../features/tiles/index.ts';
+import { useTimeOfDay } from '../../features/time-of-day/index.ts';
 import { useLanguage, useText } from '../../lib/i18n/index.ts';
 import type { Language } from '../../lib/i18n/index.ts';
 import { modulePath } from '../../routes.ts';
@@ -42,6 +43,7 @@ const toEntry = (tile: Tile, language: Language): TileEntry => {
 
 export const HomePage = () => {
   const text = useText('home');
+  const { partOfDay } = useTimeOfDay();
   const { username } = useCurrentUser();
   const { language, languages, change } = useLanguage();
   const logout = useLogout();
@@ -114,7 +116,7 @@ export const HomePage = () => {
           />
         </div>
       </div>
-      <h1 className="text-3xl font-extrabold">{text.greeting({ username })}</h1>
+      <h1 className="text-3xl font-extrabold">{text.greeting[partOfDay]({ username })}</h1>
       <TextInput
         ref={searchRef}
         label={text.search.label}

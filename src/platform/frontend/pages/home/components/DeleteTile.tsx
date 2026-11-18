@@ -28,7 +28,7 @@ export const DeleteTile = ({ title, deleting, onDelete }: DeleteTileProps) => {
   }
 
   return (
-    <div className="border-dex-line flex flex-col gap-3 rounded-2xl border bg-white/60 p-3">
+    <div className="border-dex-line bg-dex-surface/60 flex flex-col gap-3 rounded-2xl border p-3">
       <p className="text-base font-bold">{messages.question({ title })}</p>
       <div className="flex gap-2">
         <Button

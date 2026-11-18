@@ -3,7 +3,15 @@ import { lazy } from 'react';
 import { Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useCurrentUser } from '../features/auth/index.ts';
-import { accountsList, fakeApi, ok, renderApp, signedIn, signedOut } from './helpers.tsx';
+import {
+  accountsList,
+  fakeApi,
+  fixClockAt,
+  ok,
+  renderApp,
+  signedIn,
+  signedOut,
+} from './helpers.tsx';
 
 const NotesPage = () => {
   const user = useCurrentUser();
@@ -95,6 +103,7 @@ describe('module routes', () => {
 
   it("should keep the rest of the app working when a module's page crashes", async () => {
     // Given
+    fixClockAt(10);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     fakeApi({ 'GET /api/auth/me': signedIn(), 'GET /api/tiles': ok({ tiles: [] }) });
     renderApp('/m/broken');
@@ -110,7 +119,7 @@ describe('module routes', () => {
     expect(
       await screen.findByRole('heading', {
         level: 1,
-        name: 'Hello Misty! What do you need today?',
+        name: 'Good morning, Misty! What do you need today?',
       }),
     ).toBeInTheDocument();
   });

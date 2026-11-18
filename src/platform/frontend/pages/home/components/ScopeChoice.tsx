@@ -29,7 +29,7 @@ export const ScopeChoice = ({ value, locked, onChange }: ScopeChoiceProps) => {
           onChange(scope);
         }}
       />
-      <span className="border-dex-field-border text-dex-ink peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink flex min-h-11 items-center justify-center rounded-full border bg-white px-4 text-base font-bold peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2">
+      <span className="border-dex-field-border text-dex-ink peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink bg-dex-surface flex min-h-11 items-center justify-center rounded-full border px-4 text-base font-bold peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2">
         {messages[scope]}
       </span>
     </label>

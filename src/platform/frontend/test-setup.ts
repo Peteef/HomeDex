@@ -24,5 +24,6 @@ afterEach(async () => {
   cleanup();
   await i18next.changeLanguage('en');
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   localStorage.clear();
 });
