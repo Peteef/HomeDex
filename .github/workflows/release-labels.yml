@@ -11,6 +11,8 @@ permissions:
   contents: read
 
 jobs:
+  # `gh pr create --label` adds its label after the pull request opens, so the labels are read
+  # fresh instead of from the event: a label added here starts no run of one-label to remove it.
   default-label:
     name: default-label
     if: >-
@@ -21,7 +23,19 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: release-drafter/release-drafter/autolabeler@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const issue = { ...context.repo, issue_number: context.issue.number };
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue(issue);
+
+            if (labels.some(({ name }) => name.startsWith('release:'))) {
+              core.info('The pull request already has a release label.');
+              return;
+            }
+
+            const epic = /^epic\/.+/.test(context.payload.pull_request.head.ref);
+            await github.rest.issues.addLabels({ ...issue, labels: [epic ? 'release:minor' : 'release:patch'] });
 
   # Adding a release label replaces the other ones, so choosing a bump is a single click.
   one-label:
@@ -48,11 +62,12 @@ jobs:
             }
 
   # A minor or major pull request opens a GitHub Release with its Release notes, so it cannot be
-  # merged without them. Runs on every change to the labels or the description, after the default
-  # label, whose change starts no new run, so the labels are read fresh.
+  # merged without them. Also fails when two release labels are left. Runs on every change to the
+  # labels or the description, after the label jobs, whose changes start no new run, so the labels
+  # are read fresh.
   release-notes:
     name: release-notes
-    needs: default-label
+    needs: [default-label, one-label]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

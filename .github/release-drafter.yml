@@ -37,12 +37,3 @@ categories:
     semver-increment: minor
     when:
       label: 'release:minor'
-
-# Run only when a pull request opens (release-labels.yml), so a label changed by hand stays.
-# release:major is never added automatically.
-autolabeler:
-  - labels: ['release:minor']
-    branch:
-      - '/^epic\/.+/'
-  - labels: ['release:patch']
-    fallback: true
