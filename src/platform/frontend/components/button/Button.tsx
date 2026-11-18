@@ -10,7 +10,7 @@ export interface ButtonProps extends ComponentProps<'button'> {
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'bg-dex-red hover:bg-dex-red-deep text-base font-bold text-white',
   secondary:
-    'border-dex-field-border text-dex-ink border bg-white/90 text-base font-bold hover:bg-white',
+    'border-dex-field-border text-dex-ink border bg-dex-surface/90 text-base font-bold hover:bg-dex-surface',
   quiet: 'text-dex-ink-muted hover:text-dex-ink text-sm font-semibold underline underline-offset-4',
 };
 

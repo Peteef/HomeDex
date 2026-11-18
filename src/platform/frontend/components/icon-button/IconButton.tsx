@@ -21,7 +21,9 @@ export const IconButton = ({
     aria-pressed={pressed}
     className={classNames(
       'focus-visible:outline-dex-ink border-dex-line inline-flex size-11 items-center justify-center rounded-full border transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
-      pressed ? 'bg-dex-red border-dex-red text-white' : 'text-dex-ink bg-white/90 hover:bg-white',
+      pressed
+        ? 'bg-dex-red border-dex-red text-white'
+        : 'text-dex-ink bg-dex-surface/90 hover:bg-dex-surface',
       className,
     )}
     {...rest}

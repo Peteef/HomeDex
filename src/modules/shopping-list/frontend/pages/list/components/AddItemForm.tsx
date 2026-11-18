@@ -73,7 +73,7 @@ export const AddItemForm = ({ adding, failed, onAdd }: AddItemFormProps) => {
         </Button>
       </div>
       {failed ? (
-        <p role="alert" className="text-dex-red-deep px-5 text-sm font-bold">
+        <p role="alert" className="text-dex-red-text px-5 text-sm font-bold">
           {text.failed}
         </p>
       ) : null}

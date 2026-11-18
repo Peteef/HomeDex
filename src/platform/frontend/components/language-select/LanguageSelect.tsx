@@ -31,7 +31,7 @@ export const LanguageSelect = <Code extends string>({
   };
 
   return (
-    <div className="border-dex-line text-dex-ink has-focus-visible:outline-dex-ink relative inline-flex h-11 items-center gap-1.5 rounded-full border bg-white/90 px-3 text-sm font-extrabold uppercase transition-colors hover:bg-white has-focus-visible:outline-3 has-focus-visible:outline-offset-2">
+    <div className="border-dex-line text-dex-ink has-focus-visible:outline-dex-ink bg-dex-surface/90 hover:bg-dex-surface relative inline-flex h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-extrabold uppercase transition-colors has-focus-visible:outline-3 has-focus-visible:outline-offset-2">
       <Globe size={20} aria-hidden />
       <span aria-hidden>{value}</span>
       <select

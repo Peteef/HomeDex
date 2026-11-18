@@ -9,7 +9,7 @@ export interface AccountTilesProps {
 const CREATE_ACCOUNT_COMMAND = 'npm run users -- create';
 
 const TILE_CLASSES =
-  'border-dex-line bg-dex-card hover:bg-white focus-visible:outline-dex-ink flex w-full flex-col items-center gap-2 rounded-2xl border p-4 transition-colors focus-visible:outline-3 focus-visible:outline-offset-2';
+  'border-dex-line bg-dex-card hover:bg-dex-surface focus-visible:outline-dex-ink flex w-full flex-col items-center gap-2 rounded-2xl border p-4 transition-colors focus-visible:outline-3 focus-visible:outline-offset-2';
 
 export const AccountTiles = ({ usernames, onPick }: AccountTilesProps) =>
   usernames.length === 0 ? (

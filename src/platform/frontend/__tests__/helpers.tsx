@@ -9,6 +9,12 @@ import { appQueryClient } from '../queryClient.ts';
 
 export const TEST_USER = { id: 1, username: 'Misty' };
 
+// The scene and the home greeting follow the clock. Only Date is faked, so timers still run.
+export const fixClockAt = (hour: number, minute = 0): void => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 5, 1, hour, minute));
+};
+
 export interface FakeResponse {
   status: number;
   body?: unknown;

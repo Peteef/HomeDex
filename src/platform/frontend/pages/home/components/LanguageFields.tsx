@@ -29,7 +29,7 @@ export const LanguageFields = ({
   const code = text.language.toUpperCase();
 
   return (
-    <fieldset className="border-dex-line relative flex flex-col gap-3 rounded-2xl border bg-white/60 p-3">
+    <fieldset className="border-dex-line bg-dex-surface/60 relative flex flex-col gap-3 rounded-2xl border p-3">
       <legend className="sr-only">{`${flag} ${code}`}</legend>
       <p aria-hidden className="flex min-h-11 items-center px-2 text-sm font-extrabold">
         {`${flag} ${code}`}

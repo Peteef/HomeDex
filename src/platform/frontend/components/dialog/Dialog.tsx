@@ -72,7 +72,7 @@ export const Dialog = ({ open, title, onClose, children }: DialogProps) => {
       aria-labelledby={titleId}
       tabIndex={-1}
       onCancel={cancel}
-      className="bg-dex-paper text-dex-ink shadow-panel backdrop:bg-dex-ink/50 rounded-t-panel border-t-dex-red motion-safe:animate-rise sm:rounded-panel inset-x-0 top-auto bottom-0 m-0 max-h-[90dvh] w-full max-w-none overflow-y-auto overscroll-contain border-t-6 p-0 outline-none sm:inset-0 sm:m-auto sm:max-w-lg"
+      className="bg-dex-paper text-dex-ink shadow-panel backdrop:bg-dex-shade/50 rounded-t-panel border-t-dex-red motion-safe:animate-rise sm:rounded-panel inset-x-0 top-auto bottom-0 m-0 max-h-[90dvh] w-full max-w-none overflow-y-auto overscroll-contain border-t-6 p-0 outline-none sm:inset-0 sm:m-auto sm:max-w-lg"
     >
       <div className="safe-area-sheet flex flex-col gap-4 pt-4 sm:p-6">
         <div className="flex items-center justify-between gap-3">

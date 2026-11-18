@@ -24,12 +24,12 @@ export const ItemRow = ({ item, onToggle, onDelete }: ItemRowProps) => {
   // The input is visually hidden and the box drawn next to it, so the whole row is the touch
   // target instead of a small native checkbox.
   return (
-    <li className="flex items-center gap-2 rounded-2xl bg-white/80 py-1 pr-1 pl-4">
+    <li className="bg-dex-surface/80 flex items-center gap-2 rounded-2xl py-1 pr-1 pl-4">
       <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3">
         <input type="checkbox" className="peer sr-only" checked={checked} onChange={toggle} />
         <span
           aria-hidden
-          className="border-dex-field-border peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink flex size-7 shrink-0 items-center justify-center rounded-lg border-2 bg-white text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2"
+          className="border-dex-field-border peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink bg-dex-surface flex size-7 shrink-0 items-center justify-center rounded-lg border-2 text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2"
         >
           {checked ? <Check size={18} strokeWidth={3} /> : null}
         </span>

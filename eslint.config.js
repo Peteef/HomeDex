@@ -211,8 +211,8 @@ export const domainRules = [
 // wires them. Features and libs are used only through their index.ts. Dependencies point one way:
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
-const FRONTEND_FEATURES = ['auth', 'modules', 'tiles'];
-const FRONTEND_LIBS = ['http', 'i18n', 'search', 'version'];
+const FRONTEND_FEATURES = ['auth', 'modules', 'tiles', 'time-of-day'];
+const FRONTEND_LIBS = ['dev', 'http', 'i18n', 'search', 'theme', 'version'];
 
 const SKELETON = [
   '**/App.tsx',

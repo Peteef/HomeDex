@@ -109,7 +109,7 @@ export const TileForm = ({
       <IconPicker value={values.icon} onChange={onIconChange} />
       <ScopeChoice value={values.scope} locked={scopeLocked} onChange={onScopeChange} />
       {failure ? (
-        <p role="alert" className="text-dex-red-deep px-5 text-base font-bold">
+        <p role="alert" className="text-dex-red-text px-5 text-base font-bold">
           {messages.errors[failure]}
         </p>
       ) : null}

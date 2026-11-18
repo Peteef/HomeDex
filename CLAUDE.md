@@ -64,6 +64,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - `features/<name>/` (logic of one area: hooks, data access, state) and `lib/<name>/` (generic utilities, such as the `http` API client) are used only through their `index.ts`, with private files in `internal/`. Add a new one to `FRONTEND_FEATURES` or `FRONTEND_LIBS` in `eslint.config.js`.
 - The app skeleton sits at the base (`App.tsx`, `AppLayout.tsx`, `RequireAuth.tsx`, `routes.ts`, ...). A 401 from any request ends the session and the guard sends the user to the login page, so data hooks don't handle it.
 - UI that belongs to one module stays in that module.
+- Development-only overrides are dev parameters (`?dev-<name>=`): declare one with `devParam()` from `lib/dev` next to the code that reads it, and list it in the README. `lib/dev` holds only dev machinery; a feature's own dev override stays in that feature.
 
 ## Code style
 
@@ -83,7 +84,9 @@ assets/                art, loaded at runtime from ASSETS_DIR
 ## UI and text
 
 - Check every UI change with Playwright on desktop (Chrome and Safari) and at 375 and 402 pt wide (iPhone 13 mini, iPhone 17 Pro). Touch targets are at least 44 pt.
-- Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only). Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
+- Functional elements sit in a translucent panel over a layered background scene. Text contrast is at least 4.5:1 on any background. Colours, radii and fonts come from the `@theme` tokens in `index.css` (system fonts only), never raw values such as `bg-white`, so every component follows the theme untouched.
+- Themes: the `@theme` tokens are the default day theme; every other theme is a `:root[data-theme='<name>']` block in `index.css` that overrides some of them, plus its name in `Theme` (`lib/theme`) and its art in `sceneLayers.ts`. The time-of-day feature's schedule picks the theme (today day 07:00–21:00, otherwise night); the contrast test checks every theme block by itself.
+- Scene art loads only from `ASSETS_DIR`; PWA icons live in `public/`. Animation is optional and respects reduced motion.
 - Pokémon wording: Dex numbers ("No. 001") and "Dex" for the tiles; pinned tiles come first, with no name of their own.
 - All UI text lives in TypeScript locale files (`export default { ... } as const`): `platform/frontend/locales/<language>.ts` (namespace `platform`) and `<module>/frontend/locales/<language>.ts` (namespace = module id). Keys follow folders: one camelCased key per page folder with its components inside, `components.<name>` for generic components, and `common.<kind>` only for text two or more places share with the same meaning.
 - Read text with `useText('login.picker')`, then `text.title` or `text.greeting({ username })`; `<Trans>` for text with markup.

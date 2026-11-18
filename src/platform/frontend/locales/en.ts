@@ -49,7 +49,12 @@ const en = {
     },
   },
   home: {
-    greeting: 'Hello {{username}}! What do you need today?',
+    greeting: {
+      morning: 'Good morning, {{username}}! What do you need today?',
+      afternoon: 'Good afternoon, {{username}}! What do you need today?',
+      evening: 'Good evening, {{username}}! What do you need tonight?',
+      night: 'Still up, {{username}}? What do you need?',
+    },
     signOut: 'Sign out',
     search: {
       label: 'Find a tile',

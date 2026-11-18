@@ -1,7 +1,12 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { E2E_ARCHIVED_USER, E2E_USER } from './fixtures.ts';
-import { E2E_GREETING, REMEMBERED_ACCOUNT_KEY, skipUnlessFailedLoginProject } from './session.ts';
+import {
+  E2E_GREETING,
+  fixClock,
+  REMEMBERED_ACCOUNT_KEY,
+  skipUnlessFailedLoginProject,
+} from './session.ts';
 
 const enterPassword = async (page: Page, password = E2E_USER.password) => {
   await page.getByLabel('Password').fill(password);
@@ -22,6 +27,10 @@ const welcomeBack = (page: Page) =>
   page.getByRole('heading', { level: 1, name: `Welcome back, ${E2E_USER.username}!` });
 
 test.describe('login', () => {
+  test.beforeEach(async ({ page }) => {
+    await fixClock(page);
+  });
+
   test('should send a visitor to the login page when nobody is signed in', async ({ page }) => {
     // When
     await page.goto('/');

@@ -1,7 +1,14 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
-import { fakeApi, ok, renderApp, signedIn, status } from '../../../__tests__/helpers.tsx';
+import {
+  fakeApi,
+  fixClockAt,
+  ok,
+  renderApp,
+  signedIn,
+  status,
+} from '../../../__tests__/helpers.tsx';
 import type { FakeResponse } from '../../../__tests__/helpers.tsx';
 import { linkTile, moduleTile } from '../../../__tests__/tiles.ts';
 import type { Tile } from '../../../features/tiles/index.ts';
@@ -61,6 +68,39 @@ const fakeFinePointer = () => {
 };
 
 describe('HomePage', () => {
+  it.each([
+    [8, 'Good morning, Misty! What do you need today?'],
+    [13, 'Good afternoon, Misty! What do you need today?'],
+    [20, 'Good evening, Misty! What do you need tonight?'],
+    [2, 'Still up, Misty? What do you need?'],
+  ])('should greet the user for the part of the day at %i:00', async (hour, greeting) => {
+    // Given
+    fixClockAt(hour);
+
+    // When
+    await openHome();
+
+    // Then
+    expect(screen.getByRole('heading', { level: 1, name: greeting })).toBeInTheDocument();
+  });
+
+  it('should greet the user in the current language', async () => {
+    // Given
+    fixClockAt(19);
+    await openHome();
+
+    // When
+    await act(() => i18next.changeLanguage('pl'));
+
+    // Then
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Dobry wieczór, Misty! Czego dziś potrzebujesz?',
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('should show the tiles pinned first, then by title', async () => {
     // When
     await openHome([FINANCES, { ...WEIGHT, pinned: true }, SHOPPING]);

@@ -1,9 +1,10 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { rememberedAccount } from '../../../features/auth/index.ts';
 import {
   accountsList,
   fakeApi,
+  fixClockAt,
   renderApp,
   signedIn,
   signedOut,
@@ -52,6 +53,10 @@ const pickAndSubmit = async () => {
 };
 
 describe('LoginPage', () => {
+  beforeEach(() => {
+    fixClockAt(10);
+  });
+
   describe('account picker', () => {
     it('should ask who is there and show a tile for every account', async () => {
       // When
@@ -136,7 +141,7 @@ describe('LoginPage', () => {
 
       // Then
       expect(
-        await screen.findByRole('heading', { level: 1, name: /Hello Misty!/ }),
+        await screen.findByRole('heading', { level: 1, name: /Good morning, Misty!/ }),
       ).toBeInTheDocument();
 
       expect(api.callsTo(LOGIN)[0]?.body).toEqual({ username: 'Misty', password: 'fake-password' });
@@ -220,7 +225,10 @@ describe('LoginPage', () => {
       const button = await screen.findByRole('button', { name: 'Signing in…' });
       expect(button).toBeDisabled();
       answer(signedIn());
-      expect(await screen.findByRole('heading', { name: /Hello Misty!/ })).toBeInTheDocument();
+
+      expect(
+        await screen.findByRole('heading', { name: /Good morning, Misty!/ }),
+      ).toBeInTheDocument();
     });
 
     it('should go back to the picker when the user switches Trainer', async () => {
@@ -300,7 +308,7 @@ describe('LoginPage', () => {
 
     // Then
     expect(
-      await screen.findByRole('heading', { level: 1, name: /Hello Misty!/ }),
+      await screen.findByRole('heading', { level: 1, name: /Good morning, Misty!/ }),
     ).toBeInTheDocument();
   });
 

@@ -15,6 +15,7 @@ HomeDex is a personal project, built for my own household and run on the home ne
 ## Features
 
 - **Home screen:** a greeting, quick-find and one grid of tiles, with your pinned tiles first.
+- **Day and night:** the scene and colours follow the time of day, and the greeting follows the part of the day.
 - **Link tiles:** add, edit and delete them from the home screen. Each one is shared with everyone or visible only to you.
 - **Modules:** small built-in apps that live behind a tile. The first one is a shared shopping list.
 - **Quick-find:** type a few letters and press Enter to open the best match. Case and accents are ignored, so "lodz" finds "Łódź".
@@ -163,6 +164,16 @@ DEV_PASSWORD=<password>
 ```
 
 `npm run dev` then creates this user when the database has no accounts at all, and does nothing otherwise. Only `npm run dev` reads this file. The server refuses to start in production when any variable starting with `DEV_` is set.
+
+### Dev parameters
+
+During `npm run dev`, URL parameters starting with `dev-` override parts of the app, so you can check them without waiting for the real state. A value stays for the browser tab until you set the parameter empty (`?dev-hour=`), reset all of them with `?dev-reset`, or close the tab. The browser console says which ones are on. Production builds ignore them.
+
+| Parameter        | What it does                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `?dev-hour=0…23` | Acts as if it were that full hour: the theme (scene and colours) and the greeting follow |
+
+For example, open http://localhost:5173/?dev-hour=22 to see the night theme.
 
 ### Accounts CLI
 
