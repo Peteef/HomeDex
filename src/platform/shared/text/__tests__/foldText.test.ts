@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foldText } from '../index.ts';
+import { foldText } from '../foldText.ts';
 
 describe('foldText', () => {
   it.each([
