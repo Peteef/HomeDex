@@ -13,7 +13,8 @@ export type RouteDependencies = AuthRoutesOptions & TilesRoutesOptions & Modules
 
 export const apiRoutes = (deps: RouteDependencies): Router => {
   const router = Router();
-  // Each module parses bodies with its own limit, so it comes before the platform's parser.
+  // Order matters: the platform's parser below would refuse a module's larger body before the
+  // module's own parser, with its own limit, could read it. So module routes come first.
   router.use('/m', deps.requireAuth, moduleApiRoutes(deps));
   router.use(jsonBody());
   router.use('/health', healthRoutes());
