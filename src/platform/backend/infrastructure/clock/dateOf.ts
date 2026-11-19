@@ -7,7 +7,7 @@ const partOf = (parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartT
 
 // The calendar date of an instant in a time zone, as YYYY-MM-DD: 2026-03-31T22:30:00Z is still
 // 2026-03-31 in UTC but already 2026-04-01 in Europe/Warsaw.
-export const dateIn = (timeZone: string, instant: number): string => {
+export const dateOf = (instant: number, timeZone: string): string => {
   const format = new Intl.DateTimeFormat(PARTS_LOCALE, { timeZone, ...DATE_PARTS });
   const parts = format.formatToParts(instant);
   return `${partOf(parts, 'year')}-${partOf(parts, 'month')}-${partOf(parts, 'day')}`;
