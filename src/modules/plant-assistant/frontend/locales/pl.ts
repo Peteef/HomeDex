@@ -6,28 +6,28 @@ export default {
     name: 'Zielony Asystent',
     description: 'Które rośliny potrzebują dziś wody',
   },
-  main: {
+  layout: {
     title: 'Zielony Asystent',
     tabBar: {
       label: 'Widoki',
-      today: 'Dziś',
       plants: 'Rośliny',
+      today: 'Dziś',
       calendar: 'Kalendarz',
     },
     viewTabs: {
       label: 'Widoki',
-      today: 'Do podlania dziś',
       plants: 'Wszystkie rośliny',
+      today: 'Do podlania dziś',
       calendar: 'Kalendarz',
     },
-    todayBoard: {
-      heading: 'Do podlania dziś',
-    },
-    plantList: {
-      heading: 'Wszystkie rośliny',
-    },
-    calendarView: {
-      heading: 'Najbliższe podlewania',
-    },
+  },
+  allPlants: {
+    heading: 'Wszystkie rośliny',
+  },
+  today: {
+    heading: 'Do podlania dziś',
+  },
+  calendar: {
+    heading: 'Najbliższe podlewanie',
   },
 } as const satisfies Translation<typeof en>;

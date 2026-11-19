@@ -2,9 +2,9 @@ import { CalendarDays, Droplets, Sprout } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router';
-import { useText } from '../../../locales/index.ts';
-import { VIEW_PATHS } from '../internal/views.ts';
-import type { View } from '../internal/views.ts';
+import { useText } from './locales/index.ts';
+import { VIEW_PATHS } from './views.ts';
+import type { View } from './views.ts';
 
 const TABS: { view: View; Icon: LucideIcon }[] = [
   { view: 'plants', Icon: Sprout },
@@ -24,7 +24,7 @@ const tabClasses = ({ isActive }: { isActive: boolean }): string =>
 // The bar follows the whole page, footer included, in the document: it sticks to the bottom of
 // the screen, and at the end of the page it sits below the footer instead of covering it.
 export const TabBar = () => {
-  const text = useText('main.tabBar');
+  const text = useText('layout.tabBar');
 
   return createPortal(
     <nav
