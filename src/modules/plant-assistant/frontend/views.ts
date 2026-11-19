@@ -1,11 +1,11 @@
-import manifest from '../../../../manifest.ts';
+import manifest from '../manifest.ts';
 
-export type View = 'today' | 'plants' | 'calendar';
+export type View = 'plants' | 'today' | 'calendar';
 
 export const VIEWS: View[] = ['plants', 'today', 'calendar'];
 
 export const VIEW_PATHS: Record<View, string> = {
-  today: `${manifest.route}/today`,
   plants: manifest.route,
+  today: `${manifest.route}/today`,
   calendar: `${manifest.route}/calendar`,
 };

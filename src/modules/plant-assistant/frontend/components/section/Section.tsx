@@ -3,19 +3,19 @@ import type { ReactNode } from 'react';
 
 export interface SectionProps {
   heading: string;
-  hideHeading?: boolean;
   children?: ReactNode;
 }
 
+// From lg the view tabs name the page, so the heading stays for screen readers only.
 const HEADING_CLASSES =
-  'border-dex-line flex min-h-11 items-center border-b text-xl font-extrabold';
+  'border-dex-line flex min-h-11 items-center border-b text-xl font-extrabold lg:sr-only';
 
-export const Section = ({ heading, hideHeading = false, children }: SectionProps) => {
+export const Section = ({ heading, children }: SectionProps) => {
   const headingId = useId();
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className={hideHeading ? 'sr-only' : HEADING_CLASSES}>
+      <h2 id={headingId} className={HEADING_CLASSES}>
         {heading}
       </h2>
       {children}

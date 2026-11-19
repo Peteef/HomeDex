@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PlantAssistant from '../index.tsx';
-import { stubScreenWidth } from '../pages/main/__tests__/screenWidth.ts';
+import { stubScreenWidth } from './screenWidth.ts';
 
 const PHONE_WIDTH_REM = 23.4375;
 

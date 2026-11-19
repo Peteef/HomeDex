@@ -9,19 +9,19 @@ const renderAt = (path: string) => {
 };
 
 describe('TabBar', () => {
-  it('should link to Today, Plants and Calendar', () => {
+  it('should link to Plants, Today and Calendar', () => {
     // When
     const tabBar = renderAt('/m/plant-assistant');
 
     // Then
-    expect(tabBar.getByRole('link', { name: 'Today' })).toHaveAttribute(
-      'href',
-      '/m/plant-assistant/today',
-    );
-
     expect(tabBar.getByRole('link', { name: 'Plants' })).toHaveAttribute(
       'href',
       '/m/plant-assistant',
+    );
+
+    expect(tabBar.getByRole('link', { name: 'Today' })).toHaveAttribute(
+      'href',
+      '/m/plant-assistant/today',
     );
 
     expect(tabBar.getByRole('link', { name: 'Calendar' })).toHaveAttribute(
@@ -30,17 +30,7 @@ describe('TabBar', () => {
     );
   });
 
-  it('should mark the current view', () => {
-    // When
-    const tabBar = renderAt('/m/plant-assistant/calendar');
-
-    // Then
-    expect(tabBar.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
-    expect(tabBar.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
-    expect(tabBar.getByRole('link', { name: 'Plants' })).not.toHaveAttribute('aria-current');
-  });
-
-  it('should list All plants first, then Today and Calendar', () => {
+  it('should list Plants first, then Today and Calendar', () => {
     // When
     const tabBar = renderAt('/m/plant-assistant');
 
@@ -50,5 +40,15 @@ describe('TabBar', () => {
       'Today',
       'Calendar',
     ]);
+  });
+
+  it('should mark the current view', () => {
+    // When
+    const tabBar = renderAt('/m/plant-assistant/calendar');
+
+    // Then
+    expect(tabBar.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
+    expect(tabBar.getByRole('link', { name: 'Plants' })).not.toHaveAttribute('aria-current');
+    expect(tabBar.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
   });
 });
