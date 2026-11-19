@@ -8,11 +8,18 @@ export default {
   },
   main: {
     title: 'Zielony Asystent',
-    views: 'Widoki',
-    rightColumn: 'Rośliny lub kalendarz',
-    today: 'Dziś',
-    plants: 'Rośliny',
-    calendar: 'Kalendarz',
+    tabBar: {
+      label: 'Widoki',
+      today: 'Dziś',
+      plants: 'Rośliny',
+      calendar: 'Kalendarz',
+    },
+    viewTabs: {
+      label: 'Widoki',
+      today: 'Do podlania dziś',
+      plants: 'Wszystkie rośliny',
+      calendar: 'Kalendarz',
+    },
     todayBoard: {
       heading: 'Do podlania dziś',
     },
