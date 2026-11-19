@@ -11,6 +11,7 @@ import { loginRateLimit } from './http/auth/loginRateLimit.ts';
 import type { LoginLimit } from './http/auth/loginRateLimit.ts';
 import { requireAuth } from './http/auth/requireAuth.ts';
 import { sessionCookies } from './http/auth/sessionCookie.ts';
+import { dateOf } from './clock/dateOf.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
 import type { LoadedModule } from './modules/types.ts';
@@ -77,13 +78,13 @@ export const createApp = ({
     API_PATH,
     cookieParser(),
     requestGuard,
-    express.json(),
     apiRoutes({
       accounts,
       sessions,
       tiles,
       modules,
       storage,
+      today: () => dateOf(now(), config.TZ),
       cookies,
       requireAuth: requireAuth(sessions, cookies),
       loginRateLimit: loginRateLimit(loginLimit),

@@ -5,6 +5,11 @@
   --color-dex-red: #c8202f;
   --color-dex-red-deep: #b01c29;
   --color-dex-red-text: #9a1824;
+  --color-dex-red-soft: #fbe1dd;
+  --color-dex-amber-text: #7a3e00;
+  --color-dex-amber-soft: #fbe8cf;
+  --color-dex-green-text: #185a1d;
+  --color-dex-green-soft: #dff0da;
   --color-dex-blue: #4da3ff;
   --color-dex-ink: #2b2118;
   --color-dex-ink-muted: #5c4a38;
@@ -69,6 +74,11 @@
 /* The night theme. Tokens left out keep their day value. */
 :root[data-theme='night'] {
   --color-dex-red-text: #ffb1aa;
+  --color-dex-red-soft: #4a2230;
+  --color-dex-amber-text: #ffc98a;
+  --color-dex-amber-soft: #46331c;
+  --color-dex-green-text: #a8e6a3;
+  --color-dex-green-soft: #1f3d2a;
   --color-dex-ink: #f6eddc;
   --color-dex-ink-muted: #cfc3b2;
   --color-dex-paper: #1c2340;

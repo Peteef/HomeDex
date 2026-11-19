@@ -9,6 +9,7 @@ import {
   moduleTestKitRules,
   sharedRules,
   styleRules,
+  temporalRules,
 } from '../../eslint.config.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
@@ -27,6 +28,7 @@ const violationsOf = async (file: string): Promise<string[]> => {
       ...domainRules,
       ...frontendRules,
       sharedRules,
+      temporalRules,
       moduleTestKitRules,
       styleRules,
     ],
@@ -194,6 +196,25 @@ describe('lint rules', () => {
         expect(await violationsOf(file)).toContain('no-restricted-imports');
       },
     );
+  });
+
+  describe('Temporal', () => {
+    it.each(['src/platform/backend/ok-temporal.ts', 'src/modules/alpha/backend/ok-temporal.ts'])(
+      'should allow %s',
+      async (file) => {
+        // When / Then
+        expect(await violationsOf(file)).toEqual([]);
+      },
+    );
+
+    it.each([
+      'src/platform/frontend/pages/home/bad-temporal.ts',
+      'src/platform/shared/bad-temporal.ts',
+      'src/modules/alpha/frontend/bad-temporal.ts',
+    ])('should reject %s', async (file) => {
+      // When / Then
+      expect(await violationsOf(file)).toContain('no-restricted-globals');
+    });
   });
 
   describe('style', () => {

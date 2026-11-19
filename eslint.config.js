@@ -212,7 +212,7 @@ export const domainRules = [
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth', 'modules', 'tiles', 'time-of-day'];
-const FRONTEND_LIBS = ['dev', 'http', 'i18n', 'search', 'theme', 'version'];
+const FRONTEND_LIBS = ['dev', 'http', 'i18n', 'theme', 'version'];
 
 const SKELETON = [
   '**/App.tsx',
@@ -223,6 +223,7 @@ const SKELETON = [
   '**/sceneLayers.ts',
   '**/i18n.ts',
   '**/ErrorBoundaries.tsx',
+  '**/ModulePage.tsx',
 ];
 
 // Each group of files gets one complete list: a later no-restricted-imports setting for the same
@@ -305,7 +306,7 @@ export const uiTextRules = {
 };
 
 // src/platform/shared/ holds what frontend and backend both need (status codes, icon names,
-// languages, tile rules, the manifest schema).
+// languages, tile rules, the manifest schema, text folding).
 // It stands on its own, so both sides can import it without depending on each other.
 /** @type {import('eslint').Linter.Config} */
 export const sharedRules = {
@@ -316,6 +317,23 @@ export const sharedRules = {
       message: 'shared/ must not import frontend, backend or module code.',
     },
   ]),
+};
+
+// tsconfig types Temporal for every file, but not every browser ships it yet. The UI gets its
+// dates from the API and formats them with Intl, so only server code may use it.
+/** @type {import('eslint').Linter.Config} */
+export const temporalRules = {
+  files: [
+    'src/platform/frontend/**/*.{ts,tsx}',
+    'src/platform/shared/**/*.ts',
+    'src/modules/*/frontend/**/*.{ts,tsx}',
+  ],
+  rules: {
+    'no-restricted-globals': [
+      'error',
+      { name: 'Temporal', message: 'Temporal is for server code only: not every browser has it.' },
+    ],
+  },
 };
 
 // The platform's test kits (#platform/<side>/testing) live in __tests__ and are left out of the
@@ -452,6 +470,7 @@ export default defineConfig(
     ...uiTextRules,
   },
   sharedRules,
+  temporalRules,
   moduleTestKitRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },

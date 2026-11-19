@@ -34,6 +34,7 @@ interface TestAppOverrides {
   db?: Database.Database;
   loginLimit?: LoginLimit;
   modules?: LoadedModule[];
+  now?: () => number;
 }
 
 export const createTestApp = (

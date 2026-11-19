@@ -181,14 +181,20 @@ describe('App', () => {
 
       // Then
       expect(Object.keys(api).sort()).toEqual([
+        'ApiError',
         'Button',
+        'Dialog',
         'ICON_NAMES',
         'Icon',
         'IconButton',
+        'LoadFailed',
+        'LoadingStatus',
+        'ModulePage',
         'Panel',
         'TextInput',
         'del',
         'getJson',
+        'post',
         'postForJson',
         'put',
         'textHook',

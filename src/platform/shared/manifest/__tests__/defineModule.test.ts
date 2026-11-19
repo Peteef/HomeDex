@@ -22,10 +22,12 @@ describe('defineModule', () => {
     // Then
     expect(Object.keys(api).sort()).toEqual([
       'BAD_REQUEST',
+      'CONFLICT',
       'CREATED',
       'NOT_FOUND',
       'NO_CONTENT',
       'defineModule',
+      'foldText',
     ]);
   });
 });

@@ -8,7 +8,7 @@ describe('IconPicker', () => {
     render(<IconPicker value="wallet" onChange={vi.fn()} />);
 
     // Then
-    expect(screen.getAllByRole('radio')).toHaveLength(20);
+    expect(screen.getAllByRole('radio')).toHaveLength(21);
     expect(screen.getByRole('radio', { name: 'Wallet' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Cart' })).not.toBeChecked();
   });

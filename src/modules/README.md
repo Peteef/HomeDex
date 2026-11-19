@@ -45,6 +45,7 @@ export default defineModule({
 - `route`: always `/m/<id>`.
 - `enabled`: `false` hides the page and the tile, does not mount the endpoints and does not run the migrations. The backend code of a disabled module is never imported.
 - `quickActions` (optional, unused for now): `[{ id, keyword }]`, where `id` is kebab-case and `keyword` one lowercase word. This is a placeholder until quick actions are designed.
+- `requestBodyLimitKb` (optional): the largest JSON body the module's endpoints accept, in kB, a whole number from 1 to 5120 (5 MB). For modules that receive large bodies, such as photos; platform routes and modules without it keep 100 kB.
 
 Every enabled module gets one shared tile on the home screen, created at server start, with the manifest's `icon` (a changed icon is picked up at the next start). Disabling or deleting the module hides the tile; its Dex number and the users' pins stay for when it comes back.
 
@@ -70,10 +71,37 @@ const ShoppingList = () => (
 export default ShoppingList;
 ```
 
+Each screen sits in the platform's `ModulePage`, which brings the way back to the Dex and the title:
+
+```tsx
+import { LoadFailed, LoadingStatus, ModulePage } from '#platform/frontend';
+import { useItems } from '../../features/items/index.ts';
+import { useText } from '../../locales/index.ts';
+import { ItemList } from './components/ItemList.tsx';
+
+export const ListPage = () => {
+  const text = useText('list');
+  const items = useItems();
+
+  const retry = (): void => {
+    void items.refetch();
+  };
+
+  return (
+    <ModulePage title={text.title}>
+      {items.isPending && <LoadingStatus />}
+      {items.isError && <LoadFailed message={text.loadFailed} onRetry={retry} />}
+      {items.data && <ItemList items={items.data} />}
+    </ModulePage>
+  );
+};
+```
+
+- Wrap the module's screen in `ModulePage` (the way back, the title, `wide` for two columns). Show `LoadingStatus` while data loads and `LoadFailed` with the module's own message when it fails.
 - `useCurrentUser()` always has a user on a module's page.
 - Text the user sees comes from the module's locale files (see Text below), never from literals in the code.
-- Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. Colours, radii and fonts come from the theme tokens, never raw values such as `bg-white` or `text-black`: themes such as the dark night one override the same tokens, so only token colours follow them.
-- Call the module's endpoints with the platform's HTTP client from `#platform/frontend`: `getJson`, `postForJson`, `put` and `del`. Paths start after `/api`, so the module's own are `/m/<id>/...` (`getJson('/m/shopping-list/items')`). Writes always send `Content-Type: application/json`, as the backend requires. A failed request throws.
+- Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. `Dialog` shows content over the page: a bottom sheet on phones and a centred dialog from the `sm` breakpoint; focus stays inside. Colours, radii and fonts come from the theme tokens, never raw values such as `bg-white` or `text-black`: themes such as the dark night one override the same tokens, so only token colours follow them. For statuses there are `dex-red`, `dex-amber` and `dex-green`: `*-text` for text on panels, and `*-soft` as a pill's background with the matching `*-text` on it.
+- Call the module's endpoints with the platform's HTTP client from `#platform/frontend`: `getJson`, `postForJson`, `post` (for a write that answers without a body), `put` and `del`. Paths start after `/api`, so the module's own are `/m/<id>/...` (`getJson('/m/shopping-list/items')`). Writes always send `Content-Type: application/json`, as the backend requires. A request the server refuses throws an `ApiError`; its `status` tells, for example, a 409 apart.
 - Any request that answers 401 ends the session, and the user lands on the login page. A module needs no handling for it.
 - If a module's page crashes or its code cannot be loaded, the platform shows a message with a reload button instead; the rest of HomeDex keeps working.
 
@@ -185,9 +213,10 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `storage`     | The database (`prepare`, `exec`, `transaction`), the same SQLite file as the platform           |
 | `currentUser` | `currentUser(req)` returns `{ id, username }` of the signed-in user                             |
 | `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
+| `today`       | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
 
-- Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`.
-- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, and `CREATED`, `NO_CONTENT` for success).
+- Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`. A body larger than the module's limit (100 kB, or the manifest's `requestBodyLimitKb`) answers 413 before the handler runs.
+- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success). For a domain error with a `code`, end the router with `router.use(domainErrorHandler(ItemError))` from `#platform/backend`: it answers that class with the status of its code and `{ error: message }`, and passes every other error on. The codes `invalid`, `not_found`, `forbidden` and `conflict` answer 400, 404, 403 and 409; any other code needs a table, such as `domainErrorHandler(TrainerError, { taken: CONFLICT })`, which may also override a default.
 - If `register` throws, the server does not start.
 
 ## Data
@@ -200,6 +229,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 ## Rules
 
 - A module imports only its own files and the platform's public APIs: `manifest.ts` only `#platform/shared`, `frontend/` only `#platform/frontend` and `#platform/shared`, `backend/` only `#platform/backend` and `#platform/shared`. Never another module, never the platform's internals. Packages from `package.json` (React, React Router, TanStack Query, zod) are fine.
+- To compare or search text the way quick-find does, without regard to case or diacritics ("Żółw" matches "zolw"), fold both sides with `foldText` from `#platform/shared`, in the frontend and the backend alike.
 - Inside a module the platform's layer rules apply: components are pure and import no pages or features; features and domains are used only through their `index.ts`; domains do not import routes. `npm run verify` checks all of it with lint.
 - The contract test (`tests/modules/contract.test.ts`) checks every module: the required files exist, the manifest is valid, the id matches the folder, every supported language has a locale file with `manifest.name`, and every table carries the prefix.
 - **Need something the public APIs do not offer?** Add it to the platform first, in its own PR, then build the module on it. Never reach into the platform's internals.
@@ -210,7 +240,7 @@ Unit tests live in `__tests__/` folders next to the code, as in the platform (`f
 
 The platform has a test kit for each side, importable only from a module's `__tests__` (lint checks it; the Docker image leaves the kits out):
 
-- `#platform/backend/testing`: `moduleTestStorage(moduleDir)` is an in-memory database with the module's migrations applied, for domain tests. `moduleTestApp(moduleDir)` is the real app with only this module loaded, for route tests with `supertest`: it returns `{ app, storage, signIn }`, where `signIn(username)` creates the account on first use and returns its session cookie. Pass `moduleDir` as `path.resolve(import.meta.dirname, '<up to the module folder>')`.
+- `#platform/backend/testing`: `moduleTestStorage(moduleDir)` is an in-memory database with the module's migrations applied, for domain tests. `moduleTestApp(moduleDir)` is the real app with only this module loaded, for route tests with `supertest`: it returns `{ app, storage, signIn }`, where `signIn(username)` creates the account on first use and returns its session cookie. `moduleTestApp(moduleDir, { today: () => '2026-04-01' })` fixes the module's `ctx.today()`; the function is read on every call, so a test can move to another day. Pass `moduleDir` as `path.resolve(import.meta.dirname, '<up to the module folder>')`.
 - `#platform/frontend/testing`: `fakeApi({ 'GET /api/m/<id>/items': ok({ items }) })` stubs `fetch` (an unknown route answers 404) and records the calls (`callsTo('POST /api/m/<id>/items')`); `ok(body)` and `status(code)` build responses; `withProviders(element)` wraps a page or hook in the query client and a router. The module's text is loaded in tests, in English unless a test changes the language.
 
 ## Checklist

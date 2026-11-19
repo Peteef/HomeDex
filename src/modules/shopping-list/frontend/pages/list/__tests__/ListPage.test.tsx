@@ -242,6 +242,25 @@ describe('ListPage', () => {
     expect(api.callsTo('DELETE /api/m/shopping-list/checked-items')).toHaveLength(1);
   });
 
+  it('should show the title as the heading and a link back to the Dex', async () => {
+    // When
+    openList();
+
+    // Then
+    expect(screen.getByRole('heading', { level: 1, name: 'Shopping list' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to the Dex' })).toHaveAttribute('href', '/');
+    await screen.findByText('Milk');
+  });
+
+  it('should say the list is loading when it has not arrived yet', async () => {
+    // When
+    openList();
+
+    // Then
+    expect(screen.getByRole('status')).toHaveTextContent('Loading…');
+    await screen.findByText('Milk');
+  });
+
   it('should offer to try again when the list cannot be loaded', async () => {
     // Given
     const api = openList(status(400));

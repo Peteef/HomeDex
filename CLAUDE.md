@@ -21,7 +21,7 @@ A private, Pokémon-themed mission control for a household: a greeting, quick-fi
 
 The current stack, not a limit: when a task needs something it lacks, look for a library before building it yourself (see Principles).
 
-- TypeScript strict with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and the Docker image. The backend runs `.ts` directly through Node's type stripping, with no build step: use `import type`, `.ts` extensions on relative imports, and no enums or namespaces.
+- TypeScript strict with `erasableSyntaxOnly`. Node.js LTS, pinned in `.nvmrc` and the Docker image. The backend runs `.ts` directly through Node's type stripping, with no build step: use `import type`, `.ts` extensions on relative imports, and no enums or namespaces. Server code uses the built-in `Temporal` for calendar dates; browser and shared code may not, since not every browser has it.
 - Frontend: React, Vite (build only), React Router, TanStack Query, Tailwind CSS 4, `lucide-react`, `i18next` with `react-i18next`. Backend: Express. `zod` validates config, requests and manifests. Storage: SQLite (`better-sqlite3`) behind a thin storage layer.
 - One npm package; modules are folders. Tooling: npm, Prettier, ESLint, Vitest, Playwright, GitHub Actions.
 - `dependencies` holds only what the server imports at run time; libraries that only the browser bundle uses are `devDependencies`, so the image stays small.
@@ -34,7 +34,7 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 src/platform/          the core
   frontend/            components/, pages/, features/, lib/, locales/, app skeleton, public-api/
   backend/             domain/, routes/, infrastructure/, public-api/
-  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema); imports neither side
+  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema, text folding); imports neither side
 src/modules/<id>/      one module, laid out like the platform (guide: src/modules/README.md)
 e2e/                   Playwright tests
 tests/                 tests of the repository itself (lint boundaries, module contract)

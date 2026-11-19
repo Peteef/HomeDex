@@ -129,6 +129,7 @@ const pl = {
         food: 'Jedzenie',
         work: 'Praca',
         star: 'Gwiazdka',
+        plant: 'Roślina',
       },
     },
   },

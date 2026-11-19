@@ -61,6 +61,22 @@ describe('module test kit', () => {
       expect(response.status).toBe(401);
     });
 
+    it('should give the module the chosen today when today is set', async () => {
+      // Given
+      let day = '2026-04-01';
+      const { app, signIn } = await moduleTestApp(NOTES, { today: () => day });
+      const cookie = await signIn('Misty');
+      const first = await request(app).get('/api/m/notes/today').set('Cookie', cookie);
+
+      // When
+      day = '2026-04-02';
+      const second = await request(app).get('/api/m/notes/today').set('Cookie', cookie);
+
+      // Then
+      expect(first.body).toEqual({ today: '2026-04-01' });
+      expect(second.body).toEqual({ today: '2026-04-02' });
+    });
+
     it('should refuse a disabled module', async () => {
       // When / Then
       await expect(moduleTestApp(path.join(fixtures, 'paused'))).rejects.toThrow('disabled');

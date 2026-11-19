@@ -4,6 +4,7 @@ import { ICON_NAMES } from '../icons/iconNames.ts';
 const KEBAB_CASE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const KEYWORD = /^[a-z]+$/;
 const MODULE_ROUTE_PREFIX = '/m/';
+const MAX_REQUEST_BODY_LIMIT_KB = 5120;
 
 const quickActionSchema = z.strictObject({
   id: z.string().regex(KEBAB_CASE, 'must be kebab-case'),
@@ -17,6 +18,7 @@ export const manifestSchema = z
     route: z.string(),
     enabled: z.boolean(),
     quickActions: z.array(quickActionSchema).exactOptional(),
+    requestBodyLimitKb: z.number().int().min(1).max(MAX_REQUEST_BODY_LIMIT_KB).exactOptional(),
   })
   .refine((manifest) => manifest.route === `${MODULE_ROUTE_PREFIX}${manifest.id}`, {
     path: ['route'],
