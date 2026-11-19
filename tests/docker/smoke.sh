@@ -12,6 +12,9 @@ readonly HEALTH_TIMEOUT_SECONDS=60
 readonly CLI=src/platform/backend/infrastructure/cli/users.ts
 readonly USERNAME=smoke-tester
 readonly PASSWORD=not-a-real-password
+# The server refuses to start with a zone it does not know, so this proves the image carries the
+# time zone data.
+readonly TIME_ZONE=Europe/Warsaw
 
 cleanup() {
   docker rm --force "$NAME" >/dev/null 2>&1 || true
@@ -29,7 +32,7 @@ pass() {
   echo "ok - $1"
 }
 
-docker run --detach --name "$NAME" --volume "$VOLUME:/data" \
+docker run --detach --name "$NAME" --volume "$VOLUME:/data" --env "TZ=$TIME_ZONE" \
   --publish "127.0.0.1::$CONTAINER_PORT" "$IMAGE" >/dev/null
 base_url="http://$(docker port "$NAME" "$CONTAINER_PORT" | head -n 1)"
 

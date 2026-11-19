@@ -78,6 +78,23 @@ describe('modules API', () => {
       expect(response.body).toEqual({ user: 'Ash', count: 1 });
     });
 
+    it("should give a module today's date in the household time zone", async () => {
+      // Given
+      const modules = await loadModules(fixtures('valid'));
+      const warsaw = createTestApp({ TZ: 'Europe/Warsaw' }, { modules });
+      migrateModules(warsaw.db, modules);
+      warsaw.clock.now = Date.parse('2026-03-31T22:30:00Z');
+      await createTestUser(warsaw.db, 'Ash');
+      const cookie = await sessionCookieFor(warsaw.app, 'Ash');
+
+      // When
+      const response = await request(warsaw.app).get('/api/m/notes/today').set('Cookie', cookie);
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ today: '2026-04-01' });
+    });
+
     it("should prefix a module's log lines with its id", async () => {
       // Given
       const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);

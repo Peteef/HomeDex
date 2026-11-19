@@ -1,6 +1,6 @@
 import type { RegisterModule } from '#platform/backend';
 
-export const register: RegisterModule = ({ router, storage, currentUser, logger }) => {
+export const register: RegisterModule = ({ router, storage, currentUser, logger, today }) => {
   router.get('/', (req, res) => {
     const { count } = storage.prepare('SELECT COUNT(*) AS count FROM notes_items').get() as {
       count: number;
@@ -8,5 +8,9 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 
     logger.info('listed');
     res.json({ user: currentUser(req).username, count });
+  });
+
+  router.get('/today', (_req, res) => {
+    res.json({ today: today() });
   });
 };

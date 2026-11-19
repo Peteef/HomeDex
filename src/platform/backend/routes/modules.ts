@@ -6,6 +6,7 @@ import type { Storage } from '../infrastructure/storage/index.ts';
 export interface ModulesRoutesOptions {
   modules: LoadedModule[];
   storage: Storage;
+  today: () => string;
 }
 
 const toSummary = ({ manifest }: LoadedModule) => ({
@@ -25,12 +26,12 @@ export const modulesRoutes = ({ modules }: ModulesRoutesOptions): Router => {
 };
 
 // Each module's own endpoints, under /api/m/<id>.
-export const moduleApiRoutes = ({ modules, storage }: ModulesRoutesOptions): Router => {
+export const moduleApiRoutes = ({ modules, storage, today }: ModulesRoutesOptions): Router => {
   const router = Router();
 
   for (const { manifest, register } of modules) {
     if (register !== null) {
-      const ctx = moduleContext(manifest.id, storage);
+      const ctx = moduleContext(manifest.id, storage, today);
       register(ctx);
       router.use(`/${manifest.id}`, ctx.router);
     }
