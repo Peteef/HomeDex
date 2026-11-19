@@ -187,7 +187,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
 
 - Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`.
-- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, and `CREATED`, `NO_CONTENT` for success).
+- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success).
 - If `register` throws, the server does not start.
 
 ## Data
