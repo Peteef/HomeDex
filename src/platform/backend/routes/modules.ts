@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { jsonBody } from '../infrastructure/http/jsonBody.ts';
 import { moduleContext } from '../infrastructure/modules/moduleContext.ts';
 import type { LoadedModule } from '../infrastructure/modules/types.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
@@ -33,7 +34,7 @@ export const moduleApiRoutes = ({ modules, storage, today }: ModulesRoutesOption
     if (register !== null) {
       const ctx = moduleContext(manifest.id, storage, today);
       register(ctx);
-      router.use(`/${manifest.id}`, ctx.router);
+      router.use(`/${manifest.id}`, jsonBody(manifest.requestBodyLimitKb), ctx.router);
     }
   }
 

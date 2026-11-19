@@ -45,6 +45,7 @@ export default defineModule({
 - `route`: always `/m/<id>`.
 - `enabled`: `false` hides the page and the tile, does not mount the endpoints and does not run the migrations. The backend code of a disabled module is never imported.
 - `quickActions` (optional, unused for now): `[{ id, keyword }]`, where `id` is kebab-case and `keyword` one lowercase word. This is a placeholder until quick actions are designed.
+- `requestBodyLimitKb` (optional): the largest JSON body the module's endpoints accept, in kB, a whole number from 1 to 5120 (5 MB). For modules that receive large bodies, such as photos; platform routes and modules without it keep 100 kB.
 
 Every enabled module gets one shared tile on the home screen, created at server start, with the manifest's `icon` (a changed icon is picked up at the next start). Disabling or deleting the module hides the tile; its Dex number and the users' pins stay for when it comes back.
 
@@ -215,7 +216,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
 | `today`       | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
 
-- Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`.
+- Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`. A body larger than the module's limit (100 kB, or the manifest's `requestBodyLimitKb`) answers 413 before the handler runs.
 - An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success).
 - If `register` throws, the server does not start.
 

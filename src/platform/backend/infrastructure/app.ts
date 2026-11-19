@@ -79,7 +79,6 @@ export const createApp = ({
     API_PATH,
     cookieParser(),
     requestGuard,
-    express.json(),
     apiRoutes({
       accounts,
       sessions,
