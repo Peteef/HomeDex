@@ -3,3 +3,4 @@ export type { CurrentUser } from '../domain/auth/index.ts';
 export type { Logger } from '../infrastructure/logger.ts';
 export type { ModuleContext, RegisterModule } from '../infrastructure/modules/types.ts';
 export type { Storage } from '../infrastructure/storage/index.ts';
+export { domainErrorHandler } from '../infrastructure/http/domainErrorHandler.ts';
