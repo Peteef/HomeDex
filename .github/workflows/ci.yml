@@ -134,8 +134,8 @@ jobs:
       - run: npm ci --ignore-scripts
       # The last tag is looked up from the parent, so a re-run gets the same versions after this
       # merge is tagged. Before the first tag, versions start with the merge that added versioning.
-      # A merge's pull request is the one merged as that commit: an open epic/ pull request that
-      # merged master also lists it.
+      # A merge's pull request is the one merged as that commit: an open epic/ pull request rebased
+      # onto master also lists it.
       - id: merges
         shell: bash
         env:

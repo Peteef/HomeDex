@@ -22,7 +22,10 @@ _Written <YYYY-MM-DD> by <model> (planner) from the agreed PRD, `../<PRD file na
 - **After the merge**, the executor of that task (or whoever the owner asks):
   1. ticks the task in the table below and adds one line to the Log;
   2. edits the epic PR's description (`gh pr edit <n> --body-file ...`, after reading the current body with `gh pr view <n> --json body`): add the pull request to "Pull requests in this epic" (`- <title without the model prefix> (#<n>)`), and update the "Release notes" if what users can do has changed. Keep the rest of the description as it is.
-- **Keeping up with `master`**: when the owner asks, merge `master` into the epic with `gh pr update-branch <n>` (a merge commit on the epic, which the final squash merge flattens). If it reports conflicts, resolve them in a local merge (`git switch epic/<name> && git merge origin/master`), run `npm run verify`, and push the merge commit to the epic only with the owner's OK. Never rebase the epic and never force-push it.
+- **Always rebase, never back-merge.** No merge commits from `master` into the epic, or from the epic into a task branch.
+  - **Keeping a task branch current:** when the epic moved, `git fetch origin && git rebase origin/epic/<name>`, then `git push --force-with-lease`. Never `git merge` the epic into it.
+  - **Keeping the epic current with `master`:** only when the owner asks, and best when no task PR is open. `git switch epic/<name> && git pull --ff-only && git rebase origin/master`, resolve conflicts commit by commit, run `npm run verify`, then push with `git push --force-with-lease=epic/<name>:<the epic's sha before the rebase>`. Its commits are the squashed task PRs, so the rebase replays one commit per task.
+  - **After the epic was rebased**, every open task branch is based on the old epic: `git rebase --onto origin/epic/<name> <old epic sha> <branch>`, then `git push --force-with-lease`. Note the old sha in the Log when rebasing the epic.
 
 ## Rules every task follows (from `CLAUDE.md`, repeated because they are easy to miss)
 
