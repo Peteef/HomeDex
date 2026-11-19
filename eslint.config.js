@@ -320,6 +320,23 @@ export const sharedRules = {
   ]),
 };
 
+// tsconfig types Temporal for every file, but not every browser ships it yet. The UI gets its
+// dates from the API and formats them with Intl, so only server code may use it.
+/** @type {import('eslint').Linter.Config} */
+export const temporalRules = {
+  files: [
+    'src/platform/frontend/**/*.{ts,tsx}',
+    'src/platform/shared/**/*.ts',
+    'src/modules/*/frontend/**/*.{ts,tsx}',
+  ],
+  rules: {
+    'no-restricted-globals': [
+      'error',
+      { name: 'Temporal', message: 'Temporal is for server code only: not every browser has it.' },
+    ],
+  },
+};
+
 // The platform's test kits (#platform/<side>/testing) live in __tests__ and are left out of the
 // Docker image, so a module may import them only from its own tests.
 /** @type {import('eslint').Linter.Config} */
@@ -604,6 +621,7 @@ export default defineConfig(
     ...uiTextRules,
   },
   sharedRules,
+  temporalRules,
   moduleTestKitRules,
   { files: ['*.js', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
