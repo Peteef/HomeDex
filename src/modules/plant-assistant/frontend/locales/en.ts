@@ -5,11 +5,18 @@ export default {
   },
   main: {
     title: 'Plant Assistant',
-    views: 'Views',
-    rightColumn: 'Plants or calendar',
-    today: 'Today',
-    plants: 'Plants',
-    calendar: 'Calendar',
+    tabBar: {
+      label: 'Views',
+      today: 'Today',
+      plants: 'Plants',
+      calendar: 'Calendar',
+    },
+    viewTabs: {
+      label: 'Views',
+      today: 'To water today',
+      plants: 'All plants',
+      calendar: 'Calendar',
+    },
     todayBoard: {
       heading: 'To water today',
     },

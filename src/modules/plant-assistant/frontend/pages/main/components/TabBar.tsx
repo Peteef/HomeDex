@@ -7,8 +7,8 @@ import { VIEW_PATHS } from '../internal/views.ts';
 import type { View } from '../internal/views.ts';
 
 const TABS: { view: View; Icon: LucideIcon }[] = [
-  { view: 'today', Icon: Droplets },
   { view: 'plants', Icon: Sprout },
+  { view: 'today', Icon: Droplets },
   { view: 'calendar', Icon: CalendarDays },
 ];
 
@@ -24,11 +24,11 @@ const tabClasses = ({ isActive }: { isActive: boolean }): string =>
 // The bar follows the whole page, footer included, in the document: it sticks to the bottom of
 // the screen, and at the end of the page it sits below the footer instead of covering it.
 export const TabBar = () => {
-  const text = useText('main');
+  const text = useText('main.tabBar');
 
   return createPortal(
     <nav
-      aria-label={text.views}
+      aria-label={text.label}
       className="bg-dex-glass border-dex-rim sticky bottom-0 z-10 border-t px-[max(0.75rem,env(safe-area-inset-right))] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md"
     >
       <ul className="mx-auto flex max-w-md gap-2">
