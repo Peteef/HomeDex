@@ -124,6 +124,7 @@ const en = {
         food: 'Food',
         work: 'Work',
         star: 'Star',
+        plant: 'Plant',
       },
     },
   },
