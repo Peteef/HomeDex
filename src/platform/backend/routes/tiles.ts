@@ -2,25 +2,13 @@ import { Router } from 'express';
 import type { RequestParamHandler } from 'express';
 import { z } from 'zod';
 import { TILE_SCOPES, TileError } from '../domain/tiles/index.ts';
-import type { TileErrorCode, TilesService } from '../domain/tiles/index.ts';
+import type { TilesService } from '../domain/tiles/index.ts';
 import { currentUser } from '../infrastructure/http/auth/currentUser.ts';
 import { domainErrorHandler } from '../infrastructure/http/domainErrorHandler.ts';
-import {
-  BAD_REQUEST,
-  CREATED,
-  FORBIDDEN,
-  NO_CONTENT,
-  NOT_FOUND,
-} from '../../shared/http/status.ts';
+import { BAD_REQUEST, CREATED, NO_CONTENT, NOT_FOUND } from '../../shared/http/status.ts';
 
 const INVALID_TILE_RESPONSE = { error: 'Invalid tile' };
 const TILE_NOT_FOUND_RESPONSE = { error: 'Tile not found' };
-
-const TILE_ERROR_STATUS: Record<TileErrorCode, number> = {
-  invalid: BAD_REQUEST,
-  not_found: NOT_FOUND,
-  forbidden: FORBIDDEN,
-};
 
 const tileIdSchema = z.coerce.number().int().positive();
 
@@ -104,6 +92,6 @@ export const tilesRoutes = ({ tiles }: TilesRoutesOptions): Router => {
     res.status(NO_CONTENT).end();
   });
 
-  router.use(domainErrorHandler(TileError, TILE_ERROR_STATUS));
+  router.use(domainErrorHandler(TileError));
   return router;
 };
