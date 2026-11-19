@@ -4,10 +4,10 @@ import { VIEW_PATHS } from './pages/main/internal/views.ts';
 
 const PlantAssistant = () => (
   <Routes>
-    <Route index element={<MainPage view="today" />} />
-    <Route path="plants" element={<MainPage view="plants" />} />
+    <Route index element={<MainPage view="plants" />} />
+    <Route path="today" element={<MainPage view="today" />} />
     <Route path="calendar" element={<MainPage view="calendar" />} />
-    <Route path="*" element={<Navigate to={VIEW_PATHS.today} replace />} />
+    <Route path="*" element={<Navigate to={VIEW_PATHS.plants} replace />} />
   </Routes>
 );
 

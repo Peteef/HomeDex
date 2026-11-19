@@ -15,4 +15,14 @@ describe('Section', () => {
     const section = screen.getByRole('region', { name: 'All plants' });
     expect(section).toHaveTextContent('Monstera');
   });
+
+  it('should keep the heading for screen readers only when it is hidden', () => {
+    // When
+    render(<Section heading="All plants" hideHeading />);
+
+    // Then
+    const heading = screen.getByRole('heading', { level: 2, name: 'All plants' });
+    expect(heading).toHaveClass('sr-only');
+    expect(screen.getByRole('region', { name: 'All plants' })).toBeInTheDocument();
+  });
 });

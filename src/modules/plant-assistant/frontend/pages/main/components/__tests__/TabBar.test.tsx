@@ -16,12 +16,12 @@ describe('TabBar', () => {
     // Then
     expect(tabBar.getByRole('link', { name: 'Today' })).toHaveAttribute(
       'href',
-      '/m/plant-assistant',
+      '/m/plant-assistant/today',
     );
 
     expect(tabBar.getByRole('link', { name: 'Plants' })).toHaveAttribute(
       'href',
-      '/m/plant-assistant/plants',
+      '/m/plant-assistant',
     );
 
     expect(tabBar.getByRole('link', { name: 'Calendar' })).toHaveAttribute(
@@ -38,5 +38,17 @@ describe('TabBar', () => {
     expect(tabBar.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
     expect(tabBar.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
     expect(tabBar.getByRole('link', { name: 'Plants' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('should list All plants first, then Today and Calendar', () => {
+    // When
+    const tabBar = renderAt('/m/plant-assistant');
+
+    // Then
+    expect(tabBar.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Plants',
+      'Today',
+      'Calendar',
+    ]);
   });
 });

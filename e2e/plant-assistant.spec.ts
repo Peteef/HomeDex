@@ -30,18 +30,18 @@ test.describe('plant assistant', () => {
   });
 
   test('should switch views with the tab bar on a phone', async ({ page }, testInfo) => {
-    test.skip(!isPhone(testInfo), 'Desktops show the views side by side');
+    test.skip(!isPhone(testInfo), 'Desktops switch views with the tabs at the top');
 
     // Given
     await page.goto(PLANT_ASSISTANT_PATH);
-    await expect(viewHeadings(page)).toHaveText(['To water today']);
+    await expect(viewHeadings(page)).toHaveText(['All plants']);
 
     // When
-    await tabBar(page).getByRole('link', { name: 'Plants' }).click();
+    await tabBar(page).getByRole('link', { name: 'Today' }).click();
 
     // Then
-    await expect(page).toHaveURL(`${PLANT_ASSISTANT_PATH}/plants`);
-    await expect(viewHeadings(page)).toHaveText(['All plants']);
+    await expect(page).toHaveURL(`${PLANT_ASSISTANT_PATH}/today`);
+    await expect(viewHeadings(page)).toHaveText(['To water today']);
 
     // When
     await tabBar(page).getByRole('link', { name: 'Calendar' }).click();
@@ -78,20 +78,30 @@ test.describe('plant assistant', () => {
     expect((footer?.y ?? 0) + (footer?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
   });
 
-  test('should show Today beside the plants on desktop', async ({ page }, testInfo) => {
-    test.skip(isPhone(testInfo), 'Phones show one view at a time');
+  test('should switch views with the tabs on desktop', async ({ page }, testInfo) => {
+    test.skip(isPhone(testInfo), 'Phones switch views with the tab bar');
 
     // Given
     await page.goto(PLANT_ASSISTANT_PATH);
-    await expect(viewHeadings(page)).toHaveText(['To water today', 'All plants']);
-    await expect(tabBar(page)).toHaveCount(0);
+
+    await expect(page.getByRole('link', { name: 'All plants' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    // When
+    await page.getByRole('link', { name: 'To water today' }).click();
+
+    // Then
+    await expect(page).toHaveURL(`${PLANT_ASSISTANT_PATH}/today`);
+    await expect(viewHeadings(page)).toHaveText(['To water today']);
 
     // When
     await page.getByRole('link', { name: 'Calendar' }).click();
 
     // Then
     await expect(page).toHaveURL(`${PLANT_ASSISTANT_PATH}/calendar`);
-    await expect(viewHeadings(page)).toHaveText(['To water today', 'Upcoming waterings']);
+    await expect(viewHeadings(page)).toHaveText(['Upcoming waterings']);
   });
 
   for (const [time, at] of [
