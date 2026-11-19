@@ -19,8 +19,8 @@ export interface PlantRepository {
   list(): StoredPlant[];
   find(id: number): StoredPlant | undefined;
   insert(plant: PlantRecord): number;
-  update(id: number, plant: PlantRecord): boolean;
-  remove(id: number): boolean;
+  update(id: number, plant: PlantRecord): void;
+  remove(id: number): void;
   tags(): string[];
 }
 
@@ -32,21 +32,23 @@ interface PlantRow {
   winter_interval_days: number;
   last_watered_on: string;
   next_watering_on: string;
+  tags: string;
 }
 
-interface TagRow {
-  plant_id: number;
-  tag: string;
-}
+// One row per plant: its tags come as a JSON array, in the order they were given (the rowid
+// grows with every insert), and a plant without tags gets an empty one.
+const SELECT_PLANTS = `
+  SELECT p.id, p.name, p.description, p.summer_interval_days, p.winter_interval_days,
+    p.last_watered_on, p.next_watering_on,
+    json_group_array(t.tag ORDER BY t.rowid) FILTER (WHERE t.tag IS NOT NULL) AS tags
+  FROM plant_assistant_plants p
+  LEFT JOIN plant_assistant_tags t ON t.plant_id = p.id`;
 
-const COLUMNS =
-  'id, name, description, summer_interval_days, winter_interval_days, last_watered_on, next_watering_on';
-
-const toPlant = (row: PlantRow, tags: string[]): StoredPlant => ({
+const toPlant = (row: PlantRow): StoredPlant => ({
   id: row.id,
   name: row.name,
   description: row.description,
-  tags,
+  tags: JSON.parse(row.tags) as string[],
   summerIntervalDays: row.summer_interval_days,
   winterIntervalDays: row.winter_interval_days,
   lastWateredOn: row.last_watered_on,
@@ -54,22 +56,9 @@ const toPlant = (row: PlantRow, tags: string[]): StoredPlant => ({
 });
 
 export const plantRepository = (db: Storage): PlantRepository => {
-  const selectAll = db.prepare<[], PlantRow>(
-    `SELECT ${COLUMNS} FROM plant_assistant_plants ORDER BY id`,
-  );
+  const selectAll = db.prepare<[], PlantRow>(`${SELECT_PLANTS} GROUP BY p.id ORDER BY p.id`);
 
-  const selectOne = db.prepare<[number], PlantRow>(
-    `SELECT ${COLUMNS} FROM plant_assistant_plants WHERE id = ?`,
-  );
-
-  // Tags keep the order they were given in: the rowid grows with every insert.
-  const selectAllTags = db.prepare<[], TagRow>(
-    'SELECT plant_id, tag FROM plant_assistant_tags ORDER BY rowid',
-  );
-
-  const selectTagsOf = db.prepare<[number], TagRow>(
-    'SELECT plant_id, tag FROM plant_assistant_tags WHERE plant_id = ? ORDER BY rowid',
-  );
+  const selectOne = db.prepare<[number], PlantRow>(`${SELECT_PLANTS} WHERE p.id = ? GROUP BY p.id`);
 
   const selectDistinctTags = db.prepare<[], { tag: string }>(
     `SELECT tag FROM plant_assistant_tags
@@ -97,35 +86,17 @@ export const plantRepository = (db: Storage): PlantRepository => {
 
   const deleteTagsOf = db.prepare('DELETE FROM plant_assistant_tags WHERE plant_id = ?');
 
-  const tagsByPlant = (): Map<number, string[]> => {
-    const byPlant = new Map<number, string[]>();
-
-    selectAllTags.all().forEach(({ plant_id: plantId, tag }) => {
-      byPlant.set(plantId, [...(byPlant.get(plantId) ?? []), tag]);
-    });
-
-    return byPlant;
-  };
-
   const insertTags = (plantId: number, tags: string[]): void => {
     tags.forEach((tag) => {
       insertTag.run(plantId, tag, foldText(tag));
     });
   };
 
-  const list = (): StoredPlant[] => {
-    const tags = tagsByPlant();
-    return selectAll.all().map((row) => toPlant(row, tags.get(row.id) ?? []));
-  };
+  const list = (): StoredPlant[] => selectAll.all().map(toPlant);
 
   const find = (id: number): StoredPlant | undefined => {
     const row = selectOne.get(id);
-    return row === undefined
-      ? undefined
-      : toPlant(
-          row,
-          selectTagsOf.all(id).map(({ tag }) => tag),
-        );
+    return row === undefined ? undefined : toPlant(row);
   };
 
   const insert = (plant: PlantRecord): number =>
@@ -149,7 +120,7 @@ export const plantRepository = (db: Storage): PlantRepository => {
       return id;
     })();
 
-  const update = (id: number, plant: PlantRecord): boolean =>
+  const update = (id: number, plant: PlantRecord): void => {
     db.transaction(() => {
       const changed =
         updatePlant.run(
@@ -167,11 +138,12 @@ export const plantRepository = (db: Storage): PlantRepository => {
         deleteTagsOf.run(id);
         insertTags(id, plant.tags);
       }
-
-      return changed;
     })();
+  };
 
-  const remove = (id: number): boolean => deletePlant.run(id).changes > 0;
+  const remove = (id: number): void => {
+    deletePlant.run(id);
+  };
 
   const tags = (): string[] => selectDistinctTags.all().map(({ tag }) => tag);
 

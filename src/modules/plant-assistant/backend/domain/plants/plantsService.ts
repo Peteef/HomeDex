@@ -134,7 +134,7 @@ const detailsOf = (plant: StoredPlant, today: string): PlantDetails => ({
 export const plantsService = (db: Storage, { today }: PlantsServiceOptions): PlantsService => {
   const plants = plantRepository(db);
 
-  const stored = (id: number): StoredPlant => {
+  const requirePlant = (id: number): StoredPlant => {
     const plant = plants.find(id);
 
     if (plant === undefined) {
@@ -156,7 +156,7 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
     const day = today();
     return {
       today: day,
-      plant: detailsOf(stored(id), day),
+      plant: detailsOf(requirePlant(id), day),
     };
   };
 
@@ -174,14 +174,14 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
       nextWateringOn: nextWateringAfter(valid, lastWateredOn),
     });
 
-    return detailsOf(stored(id), day);
+    return detailsOf(requirePlant(id), day);
   };
 
   // A changed next watering must not be in the past; an unchanged one stays even when it is,
   // so editing an overdue plant's name keeps it overdue (PRD R6).
   const edit = (id: number, { nextWateringOn, ...fields }: PlantChanges): void => {
     const valid = validate(fields);
-    const current = stored(id);
+    const current = requirePlant(id);
 
     if (nextWateringOn !== current.nextWateringOn && daysBetween(today(), nextWateringOn) < 0) {
       throw invalidPlant('The next watering is in the past');
@@ -191,9 +191,7 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
   };
 
   const remove = (id: number): void => {
-    if (!plants.remove(id)) {
-      throw plantNotFound(id);
-    }
+    plants.remove(id);
   };
 
   const tags = (): string[] => plants.tags();
