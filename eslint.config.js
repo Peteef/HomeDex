@@ -224,6 +224,7 @@ const SKELETON = [
   '**/sceneLayers.ts',
   '**/i18n.ts',
   '**/ErrorBoundaries.tsx',
+  '**/ModulePage.tsx',
 ];
 
 // Each group of files gets one complete list: a later no-restricted-imports setting for the same
