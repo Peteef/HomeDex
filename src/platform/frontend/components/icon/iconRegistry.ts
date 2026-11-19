@@ -17,6 +17,7 @@ import {
   Receipt,
   Scale,
   ShoppingCart,
+  Sprout,
   Star,
   Utensils,
   Wallet,
@@ -46,6 +47,7 @@ const ICONS = {
   food: Utensils,
   work: Briefcase,
   star: Star,
+  plant: Sprout,
 } as const satisfies Record<IconName, LucideIcon>;
 
 const FALLBACK_ICON: LucideIcon = CircleHelp;

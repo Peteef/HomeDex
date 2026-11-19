@@ -19,6 +19,7 @@ export const ICON_NAMES = [
   'food',
   'work',
   'star',
+  'plant',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
