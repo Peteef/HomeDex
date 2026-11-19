@@ -70,6 +70,33 @@ const ShoppingList = () => (
 export default ShoppingList;
 ```
 
+Each screen sits in the platform's `ModulePage`, which brings the way back to the Dex and the title:
+
+```tsx
+import { LoadFailed, LoadingStatus, ModulePage } from '#platform/frontend';
+import { useItems } from '../../features/items/index.ts';
+import { useText } from '../../locales/index.ts';
+import { ItemList } from './components/ItemList.tsx';
+
+export const ListPage = () => {
+  const text = useText('list');
+  const items = useItems();
+
+  const retry = (): void => {
+    void items.refetch();
+  };
+
+  return (
+    <ModulePage title={text.title}>
+      {items.isPending && <LoadingStatus />}
+      {items.isError && <LoadFailed message={text.loadFailed} onRetry={retry} />}
+      {items.data && <ItemList items={items.data} />}
+    </ModulePage>
+  );
+};
+```
+
+- Wrap the module's screen in `ModulePage` (the way back, the title, `wide` for two columns). Show `LoadingStatus` while data loads and `LoadFailed` with the module's own message when it fails.
 - `useCurrentUser()` always has a user on a module's page.
 - Text the user sees comes from the module's locale files (see Text below), never from literals in the code.
 - Build the screen from the platform's components (`Panel`, `Button`, `TextInput`, ...) so it follows the theme. `Dialog` shows content over the page: a bottom sheet on phones and a centred dialog from the `sm` breakpoint; focus stays inside. Colours, radii and fonts come from the theme tokens, never raw values such as `bg-white` or `text-black`: themes such as the dark night one override the same tokens, so only token colours follow them. For statuses there are `dex-red`, `dex-amber` and `dex-green`: `*-text` for text on panels, and `*-soft` as a pill's background with the matching `*-text` on it.
