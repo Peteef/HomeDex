@@ -27,10 +27,15 @@ const moduleLogger = (id: string): Logger => {
   };
 };
 
-export const moduleContext = (id: string, storage: Storage): ModuleContext => ({
+export const moduleContext = (
+  id: string,
+  storage: Storage,
+  today: () => string,
+): ModuleContext => ({
   id,
   router: Router(),
   storage,
   currentUser,
   logger: moduleLogger(id),
+  today,
 });

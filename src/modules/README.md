@@ -185,6 +185,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `storage`     | The database (`prepare`, `exec`, `transaction`), the same SQLite file as the platform           |
 | `currentUser` | `currentUser(req)` returns `{ id, username }` of the signed-in user                             |
 | `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
+| `today`       | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
 
 - Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`.
 - An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success).
@@ -211,7 +212,7 @@ Unit tests live in `__tests__/` folders next to the code, as in the platform (`f
 
 The platform has a test kit for each side, importable only from a module's `__tests__` (lint checks it; the Docker image leaves the kits out):
 
-- `#platform/backend/testing`: `moduleTestStorage(moduleDir)` is an in-memory database with the module's migrations applied, for domain tests. `moduleTestApp(moduleDir)` is the real app with only this module loaded, for route tests with `supertest`: it returns `{ app, storage, signIn }`, where `signIn(username)` creates the account on first use and returns its session cookie. Pass `moduleDir` as `path.resolve(import.meta.dirname, '<up to the module folder>')`.
+- `#platform/backend/testing`: `moduleTestStorage(moduleDir)` is an in-memory database with the module's migrations applied, for domain tests. `moduleTestApp(moduleDir)` is the real app with only this module loaded, for route tests with `supertest`: it returns `{ app, storage, signIn }`, where `signIn(username)` creates the account on first use and returns its session cookie. `moduleTestApp(moduleDir, { today: () => '2026-04-01' })` fixes the module's `ctx.today()`; the function is read on every call, so a test can move to another day. Pass `moduleDir` as `path.resolve(import.meta.dirname, '<up to the module folder>')`.
 - `#platform/frontend/testing`: `fakeApi({ 'GET /api/m/<id>/items': ok({ items }) })` stubs `fetch` (an unknown route answers 404) and records the calls (`callsTo('POST /api/m/<id>/items')`); `ok(body)` and `status(code)` build responses; `withProviders(element)` wraps a page or hook in the query client and a router. The module's text is loaded in tests, in English unless a test changes the language.
 
 ## Checklist
