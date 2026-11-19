@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  daysBetween,
-  intervalOn,
-  isCalendarDate,
-  nextWateringAfter,
-  seasonOf,
-  urgencyOf,
-} from '../index.ts';
+import { daysBetween, isCalendarDate, nextWateringAfter, seasonOf, urgencyOf } from '../index.ts';
 
 const INTERVALS = { summerIntervalDays: 7, winterIntervalDays: 30 };
 
@@ -39,19 +32,17 @@ describe('schedule', () => {
     });
   });
 
-  describe('intervalOn', () => {
-    it('should use the summer interval in summer', () => {
-      // When / Then
-      expect(intervalOn(INTERVALS, '2026-07-15')).toBe(7);
-    });
-
-    it('should use the winter interval in winter', () => {
-      // When / Then
-      expect(intervalOn(INTERVALS, '2026-12-15')).toBe(30);
-    });
-  });
-
   describe('nextWateringAfter', () => {
+    it('should add the summer interval to a summer watering', () => {
+      // When / Then
+      expect(nextWateringAfter(INTERVALS, '2026-07-15')).toBe('2026-07-22');
+    });
+
+    it('should add the winter interval to a winter watering', () => {
+      // When / Then
+      expect(nextWateringAfter(INTERVALS, '2026-11-15')).toBe('2026-12-15');
+    });
+
     it('should use the season of the watering date across a season boundary', () => {
       // When / Then
       expect(nextWateringAfter(INTERVALS, '2026-03-20')).toBe('2026-04-19');

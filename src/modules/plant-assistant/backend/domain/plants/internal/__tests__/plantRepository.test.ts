@@ -43,6 +43,17 @@ describe('plant repository', () => {
       expect(plants.find(id)).toEqual({ id, ...FERN });
     });
 
+    it('should store a plant without tags', () => {
+      // Given
+      const { plants } = newRepository();
+
+      // When
+      const id = plants.insert({ ...FERN, tags: [] });
+
+      // Then
+      expect(plants.find(id)?.tags).toEqual([]);
+    });
+
     it('should find nothing for an unknown id', () => {
       // When / Then
       expect(newRepository().plants.find(42)).toBeUndefined();
@@ -71,16 +82,22 @@ describe('plant repository', () => {
       const id = plants.insert(FERN);
 
       // When
-      const updated = plants.update(id, { ...CACTUS, tags: ['Balcony'] });
+      plants.update(id, { ...CACTUS, tags: ['Balcony'] });
 
       // Then
-      expect(updated).toBe(true);
       expect(plants.find(id)).toEqual({ id, ...CACTUS, tags: ['Balcony'] });
     });
 
-    it('should report an unknown plant', () => {
-      // When / Then
-      expect(newRepository().plants.update(42, FERN)).toBe(false);
+    it('should change nothing for an unknown plant', () => {
+      // Given
+      const { plants } = newRepository();
+      const id = plants.insert(FERN);
+
+      // When
+      plants.update(id + 1, CACTUS);
+
+      // Then
+      expect(plants.list()).toEqual([{ id, ...FERN }]);
     });
   });
 
@@ -91,10 +108,9 @@ describe('plant repository', () => {
       const id = plants.insert(FERN);
 
       // When
-      const removed = plants.remove(id);
+      plants.remove(id);
 
       // Then
-      expect(removed).toBe(true);
       expect(plants.find(id)).toBeUndefined();
 
       expect(storage.prepare('SELECT COUNT(*) AS count FROM plant_assistant_tags').get()).toEqual({
@@ -102,9 +118,16 @@ describe('plant repository', () => {
       });
     });
 
-    it('should report an unknown plant', () => {
-      // When / Then
-      expect(newRepository().plants.remove(42)).toBe(false);
+    it('should change nothing for an unknown plant', () => {
+      // Given
+      const { plants } = newRepository();
+      const id = plants.insert(FERN);
+
+      // When
+      plants.remove(id + 1);
+
+      // Then
+      expect(plants.list()).toEqual([{ id, ...FERN }]);
     });
   });
 

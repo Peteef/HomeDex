@@ -27,7 +27,7 @@ export const seasonOf = (date: string): Season => {
   return month >= FIRST_SUMMER_MONTH && month <= LAST_SUMMER_MONTH ? 'summer' : 'winter';
 };
 
-export const intervalOn = (intervals: Intervals, date: string): number =>
+const intervalOn = (intervals: Intervals, date: string): number =>
   seasonOf(date) === 'summer' ? intervals.summerIntervalDays : intervals.winterIntervalDays;
 
 export const nextWateringAfter = (intervals: Intervals, wateredOn: string): string =>

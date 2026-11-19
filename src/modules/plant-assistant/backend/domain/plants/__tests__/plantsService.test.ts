@@ -396,14 +396,16 @@ describe('plants service', () => {
       expect(service.list().plants).toEqual([]);
     });
 
-    it('should reject an unknown plant', () => {
-      // When
-      const error = errorOf(() => {
-        newService().service.remove(42);
-      });
+    it('should do nothing for a plant that is already gone', () => {
+      // Given
+      const { service } = newService();
+      const fern = service.create(FERN);
+      service.remove(fern.id);
 
-      // Then
-      expect(error.code).toBe('not_found');
+      // When / Then
+      expect(() => {
+        service.remove(fern.id);
+      }).not.toThrow();
     });
   });
 
