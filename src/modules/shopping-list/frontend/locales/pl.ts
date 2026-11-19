@@ -8,14 +8,11 @@ export default {
   },
   list: {
     title: 'Lista zakupów',
-    back: 'Wróć do Dexu',
     toBuy: 'Do kupienia',
     inCart: 'W koszyku',
     clear: 'Wyczyść',
     empty: 'Nic do kupienia. Dodaj pierwszą rzecz powyżej.',
-    loading: 'Wczytywanie listy…',
     loadFailed: 'Nie udało się wczytać listy.',
-    tryAgain: 'Spróbuj ponownie',
     addItemForm: {
       item: 'Produkt',
       itemPlaceholder: 'np. mleko',
