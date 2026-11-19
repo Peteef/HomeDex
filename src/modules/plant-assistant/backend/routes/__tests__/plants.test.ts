@@ -235,10 +235,22 @@ describe('plants routes', () => {
     expect(response.status).toBe(400);
   });
 
+  it('should answer 204 to deleting a plant that is already gone', async () => {
+    // Given
+    const { send, create } = await signedInApp();
+    const { plant } = await create();
+    await send('delete', `${PLANTS}/${String(plant.id)}`);
+
+    // When
+    const response = await send('delete', `${PLANTS}/${String(plant.id)}`);
+
+    // Then
+    expect(response.status).toBe(204);
+  });
+
   it.each([
     ['get', `${PLANTS}/42`],
     ['put', `${PLANTS}/42`],
-    ['delete', `${PLANTS}/42`],
     ['get', `${PLANTS}/fern`],
   ] as const)('should answer 404 to %s %s', async (method, url) => {
     // Given
