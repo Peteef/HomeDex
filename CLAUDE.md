@@ -106,7 +106,8 @@ assets/                art, loaded at runtime from ASSETS_DIR
 ## Git and pull requests
 
 - Every change is a pull request from a branch. Never commit or push to `master`, and never merge unless the owner asks. The owner reviews and merges; agents use the owner's account, so approval is the owner's review plus the merge. Required checks: `verify`, `e2e`, `secrets`, `docker`.
-- Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ci/` or `epic/`. An `epic/` branch builds up a bigger feature: its PRs target it, `master` is merged into it regularly, and its own PR into `master` lists them.
+- Branches: `<type>/<short-kebab-description>` with `feature/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ci/` or `epic/`. An `epic/` branch builds up a bigger feature: its PRs target it, it is rebased onto `master` regularly, and its own PR into `master` lists them.
+- Always rebase, never back-merge: a branch catches up with its base (`master` or an epic) by `git rebase` and `git push --force-with-lease`, never by merging the base into it.
 - Commit messages and PR titles: `[<model name>] Imperative summary`, about 70 characters. Merges are squash merges, so the PR title becomes the commit on `master`.
 - Anything posted on GitHub (descriptions, comments, review replies) starts with `**🤖 [<model name>]**` on its own line, then a blank line.
 - Every PR into `master` has one `release:*` label, which sets the version bump of its merge. New PRs get `release:minor` on `epic/` branches and `release:patch` otherwise; change it when it does not fit, such as `release:minor` for a change worth showing. `release:major` only on the owner's request. A minor or major PR fills its `## Release notes` section, the public description of the release: follow `docs/releases.md`.
