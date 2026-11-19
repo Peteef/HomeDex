@@ -30,6 +30,22 @@ describe('manifest schema', () => {
     expect(problemsOf(manifest)).toEqual([]);
   });
 
+  it.each([1, 1024, 5120])(
+    'should accept a body limit when it is a whole number of kB within range (%s)',
+    (requestBodyLimitKb) => {
+      // When / Then
+      expect(problemsOf({ ...NOTES, requestBodyLimitKb })).toEqual([]);
+    },
+  );
+
+  it.each([0, 1.5, 5121])(
+    'should reject a body limit when it is 0, fractional or above 5120 (%s)',
+    (requestBodyLimitKb) => {
+      // When / Then
+      expect(problemsOf({ ...NOTES, requestBodyLimitKb })).toEqual(['requestBodyLimitKb']);
+    },
+  );
+
   it.each([
     ['an id that is not kebab-case', { id: 'Quick_Notes', route: '/m/Quick_Notes' }, 'id'],
     ['an id with a trailing hyphen', { id: 'notes-', route: '/m/notes-' }, 'id'],
