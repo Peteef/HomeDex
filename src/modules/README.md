@@ -211,6 +211,7 @@ onAdd({ text: itemText, ...includeIf(amount.trim() !== '', { amount }) }, clear)
 ## Rules
 
 - A module imports only its own files and the platform's public APIs: `manifest.ts` only `#platform/shared`, `frontend/` only `#platform/frontend` and `#platform/shared`, `backend/` only `#platform/backend` and `#platform/shared`. Never another module, never the platform's internals. Packages from `package.json` (React, React Router, TanStack Query, zod) are fine.
+- To compare or search text the way quick-find does, without regard to case or diacritics ("Żółw" matches "zolw"), fold both sides with `foldText` from `#platform/shared`, in the frontend and the backend alike.
 - Inside a module the platform's layer rules apply: components are pure and import no pages or features; features and domains are used only through their `index.ts`; domains do not import routes. `npm run verify` checks all of it with lint.
 - The contract test (`tests/modules/contract.test.ts`) checks every module: the required files exist, the manifest is valid, the id matches the folder, every supported language has a locale file with `manifest.name`, and every table carries the prefix.
 - **Need something the public APIs do not offer?** Add it to the platform first, in its own PR, then build the module on it. Never reach into the platform's internals.

@@ -27,6 +27,7 @@ describe('defineModule', () => {
       'NOT_FOUND',
       'NO_CONTENT',
       'defineModule',
+      'foldText',
       'includeIf',
     ]);
   });

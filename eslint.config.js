@@ -213,7 +213,7 @@ export const domainRules = [
 // components import none of the rest, libs import no features or pages, features import no pages.
 const FRONTEND_DIR = 'src/platform/frontend';
 const FRONTEND_FEATURES = ['auth', 'modules', 'tiles', 'time-of-day'];
-const FRONTEND_LIBS = ['dev', 'http', 'i18n', 'live-query', 'search', 'theme', 'version'];
+const FRONTEND_LIBS = ['dev', 'http', 'i18n', 'live-query', 'theme', 'version'];
 
 const SKELETON = [
   '**/App.tsx',
@@ -306,7 +306,7 @@ export const uiTextRules = {
 };
 
 // src/platform/shared/ holds what frontend and backend both need (status codes, icon names,
-// languages, tile rules, the manifest schema, small object helpers).
+// languages, tile rules, the manifest schema, text folding, small object helpers).
 // It stands on its own, so both sides can import it without depending on each other.
 /** @type {import('eslint').Linter.Config} */
 export const sharedRules = {

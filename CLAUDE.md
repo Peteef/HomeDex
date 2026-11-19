@@ -34,7 +34,7 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 src/platform/          the core
   frontend/            components/, pages/, features/, lib/, locales/, app skeleton, public-api/
   backend/             domain/, routes/, infrastructure/, public-api/
-  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema, `includeIf`, `valueIf`, `definedProps`, `lookup`); imports neither side
+  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema, text folding, `includeIf`, `valueIf`, `definedProps`, `lookup`); imports neither side
 src/modules/<id>/      one module, laid out like the platform (guide: src/modules/README.md)
 e2e/                   Playwright tests
 tests/                 tests of the repository itself (lint boundaries, module contract)
