@@ -115,6 +115,6 @@ assets/                art, loaded at runtime from ASSETS_DIR
 ## Working practices
 
 - When this file does not cover something, follow the codebase's conventions. Ask the owner only as a last resort; never guess. Do not build beyond what was asked.
-- Planning docs (PRDs, plans) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo module guide.
+- Planning docs (PRDs, plans) live outside the repository and are provided by the owner. `src/modules/README.md` is the in-repo module guide. `/init-epic <draft PRD>` (`.claude/skills/init-epic/`) turns a draft into an agreed PRD, the epic branch with its draft PR, and a plan of one task per PR; its templates are the format for both.
 - **Done means, before a PR:** `npm run fix` then `npm run verify` pass; new behaviour has tests and no check was weakened; UI changes are checked on desktop and at both phone widths; the diff has no secrets, personal data or local paths; names follow the rules above.
 - Keep docs current in the same PR: this file, `README.md`, `src/modules/README.md`, `docs/releases.md`. Keep this file short, with no rules that lint or tooling already enforce.
