@@ -1,12 +1,16 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadConfig, loadEnvFile } from '../config.ts';
 import { ConfigError } from '../errors.ts';
 
 describe('config', () => {
   describe('loadConfig', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     it('should apply defaults when no variables are set', () => {
       // When
       const config = loadConfig({});
@@ -48,6 +52,30 @@ describe('config', () => {
         );
       },
     );
+
+    it('should accept a time zone when it is an IANA name', () => {
+      // When
+      const config = loadConfig({ TZ: 'Europe/Warsaw' });
+
+      // Then
+      expect(config.TZ).toBe('Europe/Warsaw');
+    });
+
+    it('should reject a time zone when it is unknown', () => {
+      // When / Then
+      expect(() => loadConfig({ TZ: 'Europe/Atlantis' })).toThrow(/Invalid configuration: TZ/);
+    });
+
+    it('should leave the time zone to the system when TZ is not set', () => {
+      // Given
+      vi.stubEnv('TZ', 'Asia/Tokyo');
+
+      // When
+      const config = loadConfig({});
+
+      // Then
+      expect(config.TZ).toBe('Asia/Tokyo');
+    });
 
     it('should refuse production when a development test user variable is set', () => {
       // When / Then

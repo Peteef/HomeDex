@@ -11,6 +11,8 @@ export interface ModuleContext {
   storage: Storage;
   currentUser: (req: Request) => CurrentUser;
   logger: Logger;
+  // Today's date as YYYY-MM-DD in the household time zone (TZ).
+  today: () => string;
 }
 
 export type RegisterModule = (ctx: ModuleContext) => void;

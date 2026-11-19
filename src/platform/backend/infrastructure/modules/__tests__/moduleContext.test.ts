@@ -9,12 +9,13 @@ describe('moduleContext', () => {
     vi.restoreAllMocks();
   });
 
-  it('should give the module its id, the storage, a router and currentUser when it is created', () => {
+  it('should give the module its id, the storage, a router, currentUser and today when it is created', () => {
     // Given
     const storage = createTestDatabase();
+    const today = () => '2026-04-01';
 
     // When
-    const ctx = moduleContext('notes', storage);
+    const ctx = moduleContext('notes', storage, today);
 
     // Then
     expect(ctx.id).toBe('notes');
@@ -22,6 +23,7 @@ describe('moduleContext', () => {
     expect(ctx.router).toEqual(expect.any(Function));
     expect(ctx.router.get).toEqual(expect.any(Function));
     expect(ctx.currentUser).toBe(currentUser);
+    expect(ctx.today()).toBe('2026-04-01');
   });
 
   it('should start every log line with the module id and pass details on when the module logs', () => {
@@ -29,7 +31,7 @@ describe('moduleContext', () => {
     const info = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
     const error = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
-    const moduleLogger = moduleContext('notes', createTestDatabase()).logger;
+    const moduleLogger = moduleContext('notes', createTestDatabase(), () => '2026-04-01').logger;
     const details = { id: 1 };
 
     // When

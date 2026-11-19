@@ -11,6 +11,7 @@ import { loginRateLimit } from './http/auth/loginRateLimit.ts';
 import type { LoginLimit } from './http/auth/loginRateLimit.ts';
 import { requireAuth } from './http/auth/requireAuth.ts';
 import { sessionCookies } from './http/auth/sessionCookie.ts';
+import { todayIn } from './clock/today.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
 import type { LoadedModule } from './modules/types.ts';
@@ -84,6 +85,7 @@ export const createApp = ({
       tiles,
       modules,
       storage,
+      today: todayIn(config.TZ, now),
       cookies,
       requireAuth: requireAuth(sessions, cookies),
       loginRateLimit: loginRateLimit(loginLimit),
