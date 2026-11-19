@@ -3,28 +3,28 @@ export default {
     name: 'Plant Assistant',
     description: 'Which plants need water today',
   },
-  main: {
+  layout: {
     title: 'Plant Assistant',
     tabBar: {
       label: 'Views',
-      today: 'Today',
       plants: 'Plants',
+      today: 'Today',
       calendar: 'Calendar',
     },
     viewTabs: {
       label: 'Views',
-      today: 'To water today',
       plants: 'All plants',
+      today: 'To water today',
       calendar: 'Calendar',
     },
-    todayBoard: {
-      heading: 'To water today',
-    },
-    plantList: {
-      heading: 'All plants',
-    },
-    calendarView: {
-      heading: 'Upcoming waterings',
-    },
+  },
+  allPlants: {
+    heading: 'All plants',
+  },
+  today: {
+    heading: 'To water today',
+  },
+  calendar: {
+    heading: 'Upcoming waterings',
   },
 } as const;
