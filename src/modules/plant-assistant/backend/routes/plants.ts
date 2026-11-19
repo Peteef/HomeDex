@@ -1,18 +1,14 @@
 import { Router } from 'express';
-import type { ErrorRequestHandler, RequestParamHandler } from 'express';
+import type { RequestParamHandler } from 'express';
 import { z } from 'zod';
+import { domainErrorHandler } from '#platform/backend';
 import { BAD_REQUEST, CREATED, NO_CONTENT, NOT_FOUND } from '#platform/shared';
 import { PlantError } from '../domain/plants/index.ts';
-import type { PlantErrorCode, PlantsService } from '../domain/plants/index.ts';
+import type { PlantsService } from '../domain/plants/index.ts';
 import { isCalendarDate } from '../domain/schedule/index.ts';
 
 const INVALID_PLANT_RESPONSE = { error: 'Invalid plant' };
 const PLANT_NOT_FOUND_RESPONSE = { error: 'Plant not found' };
-
-const PLANT_ERROR_STATUS: Record<PlantErrorCode, number> = {
-  invalid: BAD_REQUEST,
-  not_found: NOT_FOUND,
-};
 
 const plantIdSchema = z.coerce.number().int().positive();
 const dateSchema = z.string().refine(isCalendarDate);
@@ -39,15 +35,6 @@ const rejectUnknownPlantId: RequestParamHandler = (_req, res, next, id: string) 
   }
 
   next();
-};
-
-const sendPlantErrors: ErrorRequestHandler = (error, _req, res, next) => {
-  if (!(error instanceof PlantError)) {
-    next(error);
-    return;
-  }
-
-  res.status(PLANT_ERROR_STATUS[error.code]).json({ error: error.message });
 };
 
 export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
@@ -90,6 +77,6 @@ export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
     res.status(NO_CONTENT).end();
   });
 
-  router.use(sendPlantErrors);
+  router.use(domainErrorHandler(PlantError));
   return router;
 };

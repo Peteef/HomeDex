@@ -1,18 +1,14 @@
 import { Router } from 'express';
-import type { ErrorRequestHandler, Request, RequestParamHandler } from 'express';
+import type { Request, RequestParamHandler } from 'express';
 import { z } from 'zod';
+import { domainErrorHandler } from '#platform/backend';
 import type { CurrentUser } from '#platform/backend';
 import { BAD_REQUEST, CREATED, NO_CONTENT, NOT_FOUND } from '#platform/shared';
 import { ItemError } from '../domain/items/index.ts';
-import type { ItemErrorCode, ItemsService } from '../domain/items/index.ts';
+import type { ItemsService } from '../domain/items/index.ts';
 
 const INVALID_ITEM_RESPONSE = { error: 'Invalid item' };
 const ITEM_NOT_FOUND_RESPONSE = { error: 'Item not found' };
-
-const ITEM_ERROR_STATUS: Record<ItemErrorCode, number> = {
-  invalid: BAD_REQUEST,
-  not_found: NOT_FOUND,
-};
 
 const itemIdSchema = z.coerce.number().int().positive();
 
@@ -33,15 +29,6 @@ const rejectUnknownItemId: RequestParamHandler = (_req, res, next, id: string) =
   }
 
   next();
-};
-
-const sendItemErrors: ErrorRequestHandler = (error, _req, res, next) => {
-  if (!(error instanceof ItemError)) {
-    next(error);
-    return;
-  }
-
-  res.status(ITEM_ERROR_STATUS[error.code]).json({ error: error.message });
 };
 
 export const itemsRoutes = ({ items, currentUser }: ItemsRoutesOptions): Router => {
@@ -83,6 +70,6 @@ export const itemsRoutes = ({ items, currentUser }: ItemsRoutesOptions): Router 
     res.status(NO_CONTENT).end();
   });
 
-  router.use(sendItemErrors);
+  router.use(domainErrorHandler(ItemError));
   return router;
 };
