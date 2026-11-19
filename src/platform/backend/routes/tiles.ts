@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import type { ErrorRequestHandler, RequestParamHandler } from 'express';
+import type { RequestParamHandler } from 'express';
 import { z } from 'zod';
 import { TILE_SCOPES, TileError } from '../domain/tiles/index.ts';
 import type { TileErrorCode, TilesService } from '../domain/tiles/index.ts';
 import { currentUser } from '../infrastructure/http/auth/currentUser.ts';
+import { domainErrorHandler } from '../infrastructure/http/domainErrorHandler.ts';
 import {
   BAD_REQUEST,
   CREATED,
@@ -58,15 +59,6 @@ const rejectUnknownTileId: RequestParamHandler = (_req, res, next, id: string) =
   next();
 };
 
-const sendTileErrors: ErrorRequestHandler = (error, _req, res, next) => {
-  if (!(error instanceof TileError)) {
-    next(error);
-    return;
-  }
-
-  res.status(TILE_ERROR_STATUS[error.code]).json({ error: error.message });
-};
-
 export const tilesRoutes = ({ tiles }: TilesRoutesOptions): Router => {
   const router = Router();
   router.param('id', rejectUnknownTileId);
@@ -112,6 +104,6 @@ export const tilesRoutes = ({ tiles }: TilesRoutesOptions): Router => {
     res.status(NO_CONTENT).end();
   });
 
-  router.use(sendTileErrors);
+  router.use(domainErrorHandler(TileError, TILE_ERROR_STATUS));
   return router;
 };

@@ -216,7 +216,7 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 | `today`       | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
 
 - Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`. A body larger than the module's limit (100 kB, or the manifest's `requestBodyLimitKb`) answers 413 before the handler runs.
-- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success).
+- An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success). For a domain error with a `code`, end the router with `router.use(domainErrorHandler(ItemError, { invalid: BAD_REQUEST, not_found: NOT_FOUND }))` from `#platform/backend`: it answers that class with the status of its code and `{ error: message }`, and passes every other error on.
 - If `register` throws, the server does not start.
 
 ## Data
