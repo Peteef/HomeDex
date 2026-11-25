@@ -101,6 +101,37 @@ describe('plant repository', () => {
     });
   });
 
+  describe('setDates', () => {
+    it('should change only the dates', () => {
+      // Given
+      const { plants } = newRepository();
+      const id = plants.insert(FERN);
+
+      // When
+      plants.setDates(id, { lastWateredOn: '2026-06-09', nextWateringOn: '2026-06-16' });
+
+      // Then
+      expect(plants.find(id)).toEqual({
+        id,
+        ...FERN,
+        lastWateredOn: '2026-06-09',
+        nextWateringOn: '2026-06-16',
+      });
+    });
+
+    it('should change nothing for an unknown plant', () => {
+      // Given
+      const { plants } = newRepository();
+      const id = plants.insert(FERN);
+
+      // When
+      plants.setDates(id + 1, { lastWateredOn: '2026-06-09', nextWateringOn: '2026-06-16' });
+
+      // Then
+      expect(plants.list()).toEqual([{ id, ...FERN }]);
+    });
+  });
+
   describe('remove', () => {
     it('should delete the plant and its tags', () => {
       // Given

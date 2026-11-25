@@ -15,11 +15,17 @@ export interface StoredPlant extends PlantRecord {
   id: number;
 }
 
+export interface PlantDates {
+  lastWateredOn: string;
+  nextWateringOn: string;
+}
+
 export interface PlantRepository {
   list(): StoredPlant[];
   find(id: number): StoredPlant | undefined;
   insert(plant: PlantRecord): number;
   update(id: number, plant: PlantRecord): void;
+  setDates(id: number, dates: PlantDates): void;
   remove(id: number): void;
   tags(): string[];
 }
@@ -75,6 +81,11 @@ export const plantRepository = (db: Storage): PlantRepository => {
   const updatePlant = db.prepare(
     `UPDATE plant_assistant_plants SET name = ?, description = ?, summer_interval_days = ?,
        winter_interval_days = ?, last_watered_on = ?, next_watering_on = ?, updated_at = ?
+     WHERE id = ?`,
+  );
+
+  const updateDates = db.prepare(
+    `UPDATE plant_assistant_plants SET last_watered_on = ?, next_watering_on = ?, updated_at = ?
      WHERE id = ?`,
   );
 
@@ -141,6 +152,10 @@ export const plantRepository = (db: Storage): PlantRepository => {
     })();
   };
 
+  const setDates = (id: number, { lastWateredOn, nextWateringOn }: PlantDates): void => {
+    updateDates.run(lastWateredOn, nextWateringOn, Date.now(), id);
+  };
+
   const remove = (id: number): void => {
     deletePlant.run(id);
   };
@@ -152,6 +167,7 @@ export const plantRepository = (db: Storage): PlantRepository => {
     find,
     insert,
     update,
+    setDates,
     remove,
     tags,
   };

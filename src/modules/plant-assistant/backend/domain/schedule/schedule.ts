@@ -30,10 +30,11 @@ export const seasonOf = (date: string): Season => {
 const intervalOn = (intervals: Intervals, date: string): number =>
   seasonOf(date) === 'summer' ? intervals.summerIntervalDays : intervals.winterIntervalDays;
 
+export const addDays = (date: string, days: number): string =>
+  plainDate(date).add({ days }).toString();
+
 export const nextWateringAfter = (intervals: Intervals, wateredOn: string): string =>
-  plainDate(wateredOn)
-    .add({ days: intervalOn(intervals, wateredOn) })
-    .toString();
+  addDays(wateredOn, intervalOn(intervals, wateredOn));
 
 export const daysBetween = (from: string, to: string): number =>
   plainDate(from).until(plainDate(to), { largestUnit: 'day' }).days;

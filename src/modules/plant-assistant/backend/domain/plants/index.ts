@@ -1,6 +1,8 @@
 export { plantsService } from './plantsService.ts';
 export type { PlantsService, PlantsServiceOptions } from './plantsService.ts';
 export { PlantError } from './errors.ts';
+export { plantRepository } from './internal/plantRepository.ts';
+export type { PlantDates, PlantRepository, StoredPlant } from './internal/plantRepository.ts';
 export type {
   NewPlant,
   PlantChanges,
