@@ -78,10 +78,10 @@ describe('apiErrorHandler', () => {
     // Given
     const error = new Error('too late');
     const next = vi.fn() as unknown as NextFunction;
-    const res = { headersSent: true } as Response;
+    const res = { headersSent: true } as unknown as Response;
 
     // When
-    apiErrorHandler(error, {} as Request, res, next);
+    apiErrorHandler(error, {} as unknown as Request, res, next);
 
     // Then
     expect(next).toHaveBeenCalledWith(error);
