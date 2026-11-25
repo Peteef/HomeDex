@@ -15,15 +15,15 @@ export const AllPlantsPage = () => {
   const text = useText('allPlants');
   const { i18n } = useTranslation();
   const plants = usePlants();
-  const [openId, setOpenId] = useState<number | null>(null);
-  const openPlant = usePlant(openId);
+  const [opened, setOpened] = useState<PlantSummary | null>(null);
+  const openPlant = usePlant(opened?.id ?? null);
 
   const open = (plant: PlantSummary): void => {
-    setOpenId(plant.id);
+    setOpened(plant);
   };
 
   const close = (): void => {
-    setOpenId(null);
+    setOpened(null);
   };
 
   const retry = (): void => {
@@ -33,12 +33,6 @@ export const AllPlantsPage = () => {
   const retryOpenPlant = (): void => {
     void openPlant.refetch();
   };
-
-  // The list already knows the name, so the dialog has its title while the details load.
-  const openName =
-    openPlant.data?.plant.name ??
-    plants.data?.plants.find((plant) => plant.id === openId)?.name ??
-    '';
 
   const renderList = () => {
     if (plants.data !== undefined) {
@@ -74,9 +68,12 @@ export const AllPlantsPage = () => {
   return (
     <Section heading={text.heading}>
       {renderList()}
-      <Dialog open={openId !== null} title={openName} onClose={close}>
-        {renderDetails()}
-      </Dialog>
+      {/* The row's name titles the dialog while the details load, and after someone else deletes the plant. */}
+      {opened === null ? null : (
+        <Dialog open title={openPlant.data?.plant.name ?? opened.name} onClose={close}>
+          {renderDetails()}
+        </Dialog>
+      )}
     </Section>
   );
 };
