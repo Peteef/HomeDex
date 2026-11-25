@@ -37,7 +37,7 @@ const FERN_DETAILS: PlantDetails = {
 
 type Routes = Parameters<typeof fakeApi>[0];
 
-const openPage = (plants: PlantSummary[] | FakeResponse, routes: Routes = {}) => {
+const openPage = (plants: PlantSummary[] | Routes[string], routes: Routes = {}) => {
   const api = fakeApi({
     [PLANTS]: Array.isArray(plants) ? ok({ today: TODAY, plants }) : plants,
     ...routes,
@@ -172,6 +172,30 @@ describe('AllPlantsPage', () => {
 
     // Then
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('should keep the title of the open plant when someone else deletes it', async () => {
+    // Given
+    let deleted = false;
+    const listPlants = () => ok({ today: TODAY, plants: deleted ? [] : [FERN] });
+
+    const api = openPage(listPlants, { [FERN_PATH]: status(404) });
+
+    fireEvent.click(await screen.findByRole('button', { name: /Bulbasaur's fern/ }));
+    const dialog = screen.getByRole('dialog', { name: "Bulbasaur's fern" });
+    await within(dialog).findByRole('alert');
+
+    // When
+    deleted = true;
+    fireEvent.focus(window);
+
+    // Then
+    await waitFor(() => {
+      expect(api.callsTo(PLANTS)).toHaveLength(2);
+    });
+
+    expect(await screen.findByText('No plants yet.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
   });
 
   it('should refresh the plants when the window gets focus', async () => {
