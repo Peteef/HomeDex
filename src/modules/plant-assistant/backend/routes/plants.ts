@@ -1,16 +1,14 @@
 import { Router } from 'express';
-import type { RequestParamHandler } from 'express';
 import { z } from 'zod';
 import { domainErrorHandler } from '#platform/backend';
-import { BAD_REQUEST, CREATED, NO_CONTENT, NOT_FOUND } from '#platform/shared';
+import { BAD_REQUEST, CREATED, NO_CONTENT } from '#platform/shared';
 import { PlantError } from '../domain/plants/index.ts';
 import type { PlantsService } from '../domain/plants/index.ts';
 import { isCalendarDate } from '../domain/schedule/index.ts';
+import { rejectUnknownPlantId } from './params.ts';
 
 const INVALID_PLANT_RESPONSE = { error: 'Invalid plant' };
-const PLANT_NOT_FOUND_RESPONSE = { error: 'Plant not found' };
 
-const plantIdSchema = z.coerce.number().int().positive();
 const dateSchema = z.string().refine(isCalendarDate);
 
 const plantFieldsSchema = z.object({
@@ -27,15 +25,6 @@ const plantChangesSchema = plantFieldsSchema.extend({ nextWateringOn: dateSchema
 export interface PlantsRoutesOptions {
   plants: PlantsService;
 }
-
-const rejectUnknownPlantId: RequestParamHandler = (_req, res, next, id: string) => {
-  if (!plantIdSchema.safeParse(id).success) {
-    res.status(NOT_FOUND).json(PLANT_NOT_FOUND_RESPONSE);
-    return;
-  }
-
-  next();
-};
 
 export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
   const router = Router();

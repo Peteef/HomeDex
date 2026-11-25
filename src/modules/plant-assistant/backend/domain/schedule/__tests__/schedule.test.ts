@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, isCalendarDate, nextWateringAfter, seasonOf, urgencyOf } from '../index.ts';
+import {
+  addDays,
+  daysBetween,
+  isCalendarDate,
+  nextWateringAfter,
+  seasonOf,
+  urgencyOf,
+} from '../index.ts';
 
 const INTERVALS = { summerIntervalDays: 7, winterIntervalDays: 30 };
 
@@ -29,6 +36,18 @@ describe('schedule', () => {
     ])('should place %s in %s', (date, season) => {
       // When / Then
       expect(seasonOf(date)).toBe(season);
+    });
+  });
+
+  describe('addDays', () => {
+    it.each([
+      ['2026-06-03', 1, '2026-06-04'],
+      ['2026-12-31', 1, '2027-01-01'],
+      ['2028-02-28', 1, '2028-02-29'],
+      ['2026-06-03', 30, '2026-07-03'],
+    ])('should move %s by %i days to %s', (date, days, expected) => {
+      // When / Then
+      expect(addDays(date, days)).toBe(expected);
     });
   });
 
