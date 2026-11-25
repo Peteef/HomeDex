@@ -19,7 +19,6 @@ _Written <YYYY-MM-DD> by <model> (planner) from the agreed PRD, `../<PRD file na
 - **The pull request targets `epic/<name>`** (`gh pr create --base epic/<name>`). It needs no `release:*` label and no release notes: only pull requests into `master` do. Leave the "Release notes" section of the template empty.
 - CI runs the same required checks on pull requests into the epic. All must pass.
 - **Merge only after the owner approves it**, in an approving review on the pull request or in words. Opening and updating the pull request needs no permission.
-- **The same conditions as for `master`:** the branch is rebased onto the up-to-date epic, the required checks pass on its head, and every review thread is resolved.
 - **Task PRs are fast-forwarded into the epic, not squashed**, so the epic keeps each task's commits and can be rebased onto `master` commit by commit: `git push origin <head sha>:refs/heads/epic/<name>` (no force) moves the epic, and GitHub marks the PR merged. The merge button allows only squash, which is for `master`.
 - **After the merge**, the executor of that task (or whoever the owner asks):
   1. ticks the task in the table below and adds one line to the Log;
