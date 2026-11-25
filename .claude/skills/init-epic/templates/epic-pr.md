@@ -4,7 +4,7 @@
 
 The epic for the **<Name>** module: <one sentence from the PRD's problem and goals>.
 
-This draft collects the epic's pull requests and is not merged until the owner says so. Every component pull request targets `epic/<name>`. Platform changes come first, each in its own pull request, then the module. The epic is rebased onto `master` regularly, never back-merged. The first commit is empty and only opens this pull request.
+This draft collects the epic's pull requests and is not merged until the owner says so. Every component pull request targets `epic/<name>` and is fast-forwarded into it after the owner's approval. Platform changes come first, each in its own pull request, then the module. The epic is rebased onto `master` regularly, never back-merged. The first commit is empty and only opens this pull request.
 
 ### Pull requests in this epic
 
