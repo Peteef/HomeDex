@@ -1,4 +1,4 @@
-import { withProviders } from '#platform/frontend/testing';
+import { fakeApi, ok, withProviders } from '#platform/frontend/testing';
 import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -23,6 +23,7 @@ const viewHeading = () => screen.getByRole('heading', { level: 2 }).textContent;
 describe('plant assistant module page', () => {
   beforeEach(() => {
     stubScreenWidth(PHONE_WIDTH_REM);
+    fakeApi({ 'GET /api/m/plant-assistant/plants': ok({ today: '2026-11-20', plants: [] }) });
   });
 
   it('should show all plants at the module route', () => {
