@@ -62,6 +62,29 @@ describe('gridOf', () => {
   });
 
   it.each([
+    '2026-01',
+    '2026-02',
+    '2026-03',
+    '2026-04',
+    '2026-05',
+    '2026-06',
+    '2026-07',
+    '2026-08',
+    '2026-09',
+    '2026-10',
+    '2026-11',
+    '2026-12',
+    '2028-02',
+  ])('should hold no week without a day of %s', (month) => {
+    // When
+    const grid = gridOf(month);
+
+    // Then
+    expect(grid[0]?.at(-1)).toMatch(new RegExp(`^${month}-`));
+    expect(grid.at(-1)?.[0]).toMatch(new RegExp(`^${month}-`));
+  });
+
+  it.each([
     ['2027-02', 4],
     ['2026-06', 5],
     ['2026-08', 6],
