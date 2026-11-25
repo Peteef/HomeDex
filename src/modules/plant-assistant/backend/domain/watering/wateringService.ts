@@ -9,8 +9,8 @@ import {
   undoUnavailable,
   wateringNotFound,
 } from './errors.ts';
-import { wateringRepository } from './internal/wateringRepository.ts';
-import type { StoredWatering } from './internal/wateringRepository.ts';
+import { wateringEventRepository } from './internal/wateringEventRepository.ts';
+import type { StoredWateringEvent } from './internal/wateringEventRepository.ts';
 import type { Watering } from './types.ts';
 
 const MIN_POSTPONE_DAYS = 1;
@@ -43,7 +43,7 @@ export const wateringService = (
   { today }: WateringServiceOptions,
 ): WateringService => {
   const plants = plantRepository(db);
-  const waterings = wateringRepository(db);
+  const events = wateringEventRepository(db);
 
   const requirePlant = (id: number): StoredPlant => {
     const plant = plants.find(id);
@@ -65,8 +65,8 @@ export const wateringService = (
     return plant;
   };
 
-  const requireWatering = (plantId: number, id: number): StoredWatering => {
-    const watering = waterings.find(plantId, id);
+  const requireWatering = (plantId: number, id: number): StoredWateringEvent => {
+    const watering = events.find(plantId, id);
 
     if (watering === undefined) {
       throw wateringNotFound(id);
@@ -77,8 +77,8 @@ export const wateringService = (
 
   // Undo only reverts what the watering itself did: anything that happened to the plant since
   // (another watering, a postpone, an edit, a new day) makes the previous dates stale.
-  const isUndoable = (plant: StoredPlant, watering: StoredWatering, day: string): boolean =>
-    waterings.newestOf(plant.id)?.id === watering.id &&
+  const isUndoable = (plant: StoredPlant, watering: StoredWateringEvent, day: string): boolean =>
+    events.newestOf(plant.id)?.id === watering.id &&
     watering.wateredOn === day &&
     plant.lastWateredOn === day &&
     plant.nextWateringOn === nextWateringAfter(plant, day);
@@ -88,7 +88,7 @@ export const wateringService = (
     const plant = requireDuePlant(plantId, day);
 
     const wateringId = db.transaction(() => {
-      const id = waterings.insert({
+      const id = events.insert({
         plantId,
         wateredOn: day,
         accountId: user.id,
@@ -128,7 +128,7 @@ export const wateringService = (
 
     db.transaction(() => {
       plants.setDates(plantId, previous);
-      waterings.remove(wateringId);
+      events.remove(wateringId);
     })();
   };
 

@@ -3,7 +3,7 @@ import { moduleTestStorage } from '#platform/backend/testing';
 import { describe, expect, it } from 'vitest';
 import { plantRepository } from '../../plants/index.ts';
 import { WateringError, wateringService } from '../index.ts';
-import { wateringRepository } from '../internal/wateringRepository.ts';
+import { wateringEventRepository } from '../internal/wateringEventRepository.ts';
 
 const MODULE_DIR = path.resolve(import.meta.dirname, '../../../..');
 
@@ -28,19 +28,19 @@ const newService = (initialToday = '2026-06-08') => {
     today = day;
   };
 
-  const wateringsOf = (plantId: number) =>
+  const eventsOf = (plantId: number) =>
     storage
       .prepare(
-        'SELECT plant_id, watered_on, account_id, username FROM plant_assistant_waterings WHERE plant_id = ?',
+        'SELECT plant_id, watered_on, account_id, username FROM plant_assistant_watering_events WHERE plant_id = ?',
       )
       .all(plantId);
 
   return {
     service: wateringService(storage, { today: () => today }),
     plants,
-    waterings: wateringRepository(storage),
+    events: wateringEventRepository(storage),
     moveTo,
-    wateringsOf,
+    eventsOf,
   };
 };
 
@@ -62,7 +62,7 @@ describe('watering service', () => {
   describe('water', () => {
     it('should plan the next watering from today and record who watered', () => {
       // Given
-      const { service, plants, wateringsOf } = newService();
+      const { service, plants, eventsOf } = newService();
       const id = plants.insert(FERN);
 
       // When
@@ -79,7 +79,7 @@ describe('watering service', () => {
         nextWateringOn: '2026-06-15',
       });
 
-      expect(wateringsOf(id)).toEqual([
+      expect(eventsOf(id)).toEqual([
         { plant_id: id, watered_on: '2026-06-08', account_id: 1, username: 'Misty' },
       ]);
     });
@@ -120,7 +120,7 @@ describe('watering service', () => {
 
     it('should refuse a plant that is not due and record nothing', () => {
       // Given
-      const { service, plants, wateringsOf } = newService('2026-06-07');
+      const { service, plants, eventsOf } = newService('2026-06-07');
       const id = plants.insert(FERN);
 
       // When
@@ -129,7 +129,7 @@ describe('watering service', () => {
       // Then
       expect(error.code).toBe('conflict');
       expect(plants.find(id)).toMatchObject({ nextWateringOn: '2026-06-08' });
-      expect(wateringsOf(id)).toEqual([]);
+      expect(eventsOf(id)).toEqual([]);
     });
 
     it('should refuse an unknown plant', () => {
@@ -171,14 +171,14 @@ describe('watering service', () => {
 
     it('should record no watering', () => {
       // Given
-      const { service, plants, wateringsOf } = newService();
+      const { service, plants, eventsOf } = newService();
       const id = plants.insert(FERN);
 
       // When
       service.postpone(id, 2);
 
       // Then
-      expect(wateringsOf(id)).toEqual([]);
+      expect(eventsOf(id)).toEqual([]);
     });
 
     it.each([0, 31, 1.5])('should refuse %s days', (days) => {
@@ -240,14 +240,14 @@ describe('watering service', () => {
 
     it('should restore the dates and delete the watering', () => {
       // Given
-      const { service, plants, wateringsOf, id, wateringId, previous } = watered();
+      const { service, plants, eventsOf, id, wateringId, previous } = watered();
 
       // When
       service.undo(id, wateringId, previous);
 
       // Then
       expect(plants.find(id)).toMatchObject(previous);
-      expect(wateringsOf(id)).toEqual([]);
+      expect(eventsOf(id)).toEqual([]);
     });
 
     it('should refuse when the plant was rescheduled since', () => {
@@ -282,8 +282,8 @@ describe('watering service', () => {
 
     it('should refuse when the watering is not the newest one', () => {
       // Given
-      const { service, waterings, id, wateringId, previous } = watered();
-      waterings.insert({ plantId: id, wateredOn: '2026-06-08', accountId: 2, username: 'Brock' });
+      const { service, events, id, wateringId, previous } = watered();
+      events.insert({ plantId: id, wateredOn: '2026-06-08', accountId: 2, username: 'Brock' });
 
       // When
       const error = errorOf(() => {
