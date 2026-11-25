@@ -12,7 +12,8 @@ export interface LiveQueryOptions<Data> {
 // Plants are shared, so a query keeps up with the other user's changes: every 15 s while the page
 // is visible (TanStack Query pauses the interval in a hidden tab), and when the browser window gets
 // focus back, which TanStack Query's own refetch (on visibilitychange only) does not notice.
-// A skipped query stays quiet: refetch() would run it anyway.
+// A query skips while it has nothing to load (usePlant(null) while no plant is open). refetch()
+// would run it anyway, so a skipped query doesn't listen for focus.
 export const useLiveQuery = <Data>({ queryKey, queryFn }: LiveQueryOptions<Data>) => {
   const query = useQuery({
     queryKey,

@@ -17,7 +17,7 @@ const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: 'UTC',
 };
 
-const DAILY = 1;
+const DAILY_INTERVAL_DAYS = 1;
 
 const TERM_CLASSES = 'text-dex-ink-muted text-sm font-bold';
 const VALUE_CLASSES = 'flex flex-wrap items-center gap-2 text-base font-bold';
@@ -33,7 +33,7 @@ export const PlantDetails = ({ plant }: PlantDetailsProps) => {
     <>
       <dt className={TERM_CLASSES}>{text[season]}</dt>
       <dd className={VALUE_CLASSES}>
-        {days === DAILY ? text.everyDay : text.every({ count: days })}
+        {days === DAILY_INTERVAL_DAYS ? text.everyDay : text.every({ count: days })}
         {plant.currentSeason === season ? (
           <span className="bg-dex-green-soft text-dex-green-text rounded-full px-2 py-0.5 text-sm font-extrabold">
             {text.now}
