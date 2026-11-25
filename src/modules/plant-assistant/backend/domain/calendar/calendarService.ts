@@ -11,6 +11,11 @@ import type { CalendarMonth, CalendarPlant } from './types.ts';
 const MAX_MONTHS_AHEAD = 12;
 const URGENCY_ORDER: Urgency[] = ['overdue', 'today', 'soon', 'later'];
 
+interface ProjectedPlant {
+  date: string;
+  plant: CalendarPlant;
+}
+
 export interface CalendarService {
   month(yearMonth?: string): CalendarMonth;
 }
@@ -43,19 +48,13 @@ export const calendarService = (
 ): CalendarService => {
   const plants = plantRepository(db);
 
-  const plantsByDate = (day: string, lastDay: string): Map<string, CalendarPlant[]> => {
-    const byDate = new Map<string, CalendarPlant[]>();
-
-    plants.list().forEach((plant) => {
-      projectWaterings(plant, day, lastDay).forEach(({ date, urgency }) => {
-        const plantsOnDate = byDate.get(date) ?? [];
-        plantsOnDate.push({ id: plant.id, name: plant.name, photoId: null, urgency });
-        byDate.set(date, plantsOnDate);
-      });
-    });
-
-    return byDate;
-  };
+  const projectedPlants = (day: string, lastDay: string): ProjectedPlant[] =>
+    plants.list().flatMap((plant) =>
+      projectWaterings(plant, day, lastDay).map(({ date, urgency }) => ({
+        date,
+        plant: { id: plant.id, name: plant.name, photoId: null, urgency },
+      })),
+    );
 
   const month = (yearMonth?: string): CalendarMonth => {
     const day = today();
@@ -64,7 +63,7 @@ export const calendarService = (
 
     const grid = gridOf(shownMonth);
     const lastDay = grid.at(-1)?.at(-1) ?? day;
-    const byDate = plantsByDate(day, lastDay);
+    const projected = projectedPlants(day, lastDay);
 
     return {
       today: day,
@@ -75,7 +74,10 @@ export const calendarService = (
           inMonth: monthOf(date) === shownMonth,
           isToday: date === day,
           isPast: daysBetween(day, date) < 0,
-          plants: (byDate.get(date) ?? []).toSorted(byUrgencyThenName),
+          plants: projected
+            .filter((watering) => watering.date === date)
+            .map(({ plant }) => plant)
+            .toSorted(byUrgencyThenName),
         })),
       ),
     };
