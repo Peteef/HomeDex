@@ -48,10 +48,9 @@ export const calendarService = (
 
     plants.list().forEach((plant) => {
       projectWaterings(plant, day, lastDay).forEach(({ date, urgency }) => {
-        byDate.set(date, [
-          ...(byDate.get(date) ?? []),
-          { id: plant.id, name: plant.name, photoId: null, urgency },
-        ]);
+        const plantsOnDate = byDate.get(date) ?? [];
+        plantsOnDate.push({ id: plant.id, name: plant.name, photoId: null, urgency });
+        byDate.set(date, plantsOnDate);
       });
     });
 
@@ -76,7 +75,7 @@ export const calendarService = (
           inMonth: monthOf(date) === shownMonth,
           isToday: date === day,
           isPast: daysBetween(day, date) < 0,
-          plants: [...(byDate.get(date) ?? [])].sort(byUrgencyThenName),
+          plants: (byDate.get(date) ?? []).toSorted(byUrgencyThenName),
         })),
       ),
     };

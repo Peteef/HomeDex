@@ -1,19 +1,6 @@
-const YEAR_MONTH = /^\d{4}-\d{2}$/;
+const YEAR_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-// Temporal also accepts other forms (a full date, or a six-digit year), so the shape is checked
-// first.
-export const isYearMonth = (text: string): boolean => {
-  if (!YEAR_MONTH.test(text)) {
-    return false;
-  }
-
-  try {
-    Temporal.PlainYearMonth.from(text);
-    return true;
-  } catch {
-    return false;
-  }
-};
+export const isYearMonth = (text: string): boolean => YEAR_MONTH.test(text);
 
 export const monthOf = (date: string): string =>
   Temporal.PlainDate.from(date).toPlainYearMonth().toString();

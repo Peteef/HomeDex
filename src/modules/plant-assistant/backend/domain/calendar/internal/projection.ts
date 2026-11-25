@@ -10,25 +10,27 @@ export interface ProjectedWatering {
   urgency: Urgency;
 }
 
-// An overdue plant is shown on today, still overdue, and its schedule continues from today.
+const isAfter = (date: string, other: string): boolean => daysBetween(other, date) > 0;
+
+const wateringDatesFrom = (plant: Intervals, date: string, lastDay: string): string[] =>
+  isAfter(date, lastDay)
+    ? []
+    : [date, ...wateringDatesFrom(plant, nextWateringAfter(plant, date), lastDay)];
+
+// The days from today to lastDay on which the plant will need water, each with the urgency it has
+// as seen from today. An overdue plant shows on today, still overdue, and its schedule continues
+// from today.
 export const projectWaterings = (
   plant: ScheduledPlant,
   today: string,
   lastDay: string,
 ): ProjectedWatering[] => {
-  const isOverdue = daysBetween(today, plant.nextWateringOn) < 0;
-  const waterings: ProjectedWatering[] = [];
+  const isOverdue = isAfter(today, plant.nextWateringOn);
 
-  for (
-    let date = isOverdue ? today : plant.nextWateringOn;
-    daysBetween(date, lastDay) >= 0;
-    date = nextWateringAfter(plant, date)
-  ) {
-    waterings.push({
+  return wateringDatesFrom(plant, isOverdue ? today : plant.nextWateringOn, lastDay).map(
+    (date) => ({
       date,
       urgency: isOverdue && date === today ? 'overdue' : urgencyOf(daysBetween(today, date)),
-    });
-  }
-
-  return waterings;
+    }),
+  );
 };
