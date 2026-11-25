@@ -106,7 +106,7 @@ describe('watering routes', () => {
 
       // Then
       expect(
-        storage.prepare('SELECT account_id, username FROM plant_assistant_waterings').all(),
+        storage.prepare('SELECT account_id, username FROM plant_assistant_watering_events').all(),
       ).toEqual([{ account_id: 2, username: 'Brock' }]);
     });
 
