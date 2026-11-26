@@ -34,7 +34,9 @@ export const validateNewPlant = (
 
 export const lastWateredLimits = ({ today }: AddPlantContext): DateLimits => ({ max: today });
 
+// A new plant has no photo to keep or remove, so only a chosen one goes with it.
 export const toNewPlant = (values: AddPlantValues): NewPlant => ({
   ...toFields(values),
   lastWateredOn: values.lastWateredOn,
+  ...(values.photo.kind === 'replace' ? { photo: values.photo.jpeg } : {}),
 });

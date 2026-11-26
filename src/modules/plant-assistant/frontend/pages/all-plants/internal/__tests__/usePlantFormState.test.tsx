@@ -1,10 +1,17 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { resizePhoto } from '../../../../features/plants/index.ts';
 import type { AddPlantValues } from '../../types.ts';
 import { newPlantValues, validateNewPlant } from '../addPlantForm.ts';
 import { usePlantFormState } from '../usePlantFormState.ts';
 
+vi.mock(import('../../../../features/plants/index.ts'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  resizePhoto: vi.fn(),
+}));
+
 const CONTEXT = { today: '2026-11-20' };
+const PHOTO_FILE = new File(['photo'], 'fern.png', { type: 'image/png' });
 
 const renderState = () => renderHook(() => usePlantFormState(validateNewPlant));
 
@@ -46,6 +53,7 @@ describe('usePlantFormState', () => {
       values: newPlantValues('2026-11-20'),
       submitted: false,
       tagNote: null,
+      photoUnreadable: false,
     });
   });
 
@@ -138,6 +146,72 @@ describe('usePlantFormState', () => {
 
     // Then
     expect(state.result.current.form?.values.tags).toEqual([]);
+  });
+
+  it('should take a chosen photo once it is resized', async () => {
+    // Given
+    vi.mocked(resizePhoto).mockResolvedValue('/9j/AAAA');
+    const state = renderState();
+    openEmpty(state);
+
+    // When
+    act(() => {
+      state.result.current.choosePhoto(PHOTO_FILE);
+    });
+
+    // Then
+    await waitFor(() => {
+      expect(state.result.current.form?.values.photo).toEqual({
+        kind: 'replace',
+        jpeg: '/9j/AAAA',
+      });
+    });
+
+    expect(resizePhoto).toHaveBeenCalledWith(PHOTO_FILE);
+  });
+
+  it('should keep the photo and say so when the chosen one cannot be read, until another is chosen', async () => {
+    // Given
+    vi.mocked(resizePhoto).mockRejectedValueOnce(
+      new DOMException('The source image could not be decoded.'),
+    );
+
+    const state = renderState();
+    openEmpty(state);
+
+    // When
+    act(() => {
+      state.result.current.choosePhoto(PHOTO_FILE);
+    });
+
+    // Then
+    await waitFor(() => {
+      expect(state.result.current.form?.photoUnreadable).toBe(true);
+    });
+
+    expect(state.result.current.form?.values.photo).toEqual({ kind: 'keep' });
+
+    // When
+    act(() => {
+      state.result.current.removePhoto();
+    });
+
+    // Then
+    expect(state.result.current.form?.photoUnreadable).toBe(false);
+  });
+
+  it('should remove the photo', () => {
+    // Given
+    const state = renderState();
+    openEmpty(state);
+
+    // When
+    act(() => {
+      state.result.current.removePhoto();
+    });
+
+    // Then
+    expect(state.result.current.form?.values.photo).toEqual({ kind: 'remove' });
   });
 
   it('should close', () => {

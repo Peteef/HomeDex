@@ -420,4 +420,115 @@ describe('plants service', () => {
       expect(service.tags()).toEqual(['Balcony', 'Salon', 'Shade']);
     });
   });
+
+  describe('photo', () => {
+    const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x01]);
+    const OTHER_JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0x02]);
+    const base64Of = (bytes: Buffer) => bytes.toString('base64');
+
+    it('should store the photo given when creating a plant and give the plant its id', () => {
+      // Given
+      const { service } = newService();
+
+      // When
+      const plant = service.create({ ...FERN, photo: base64Of(JPEG) });
+
+      // Then
+      const photo = service.photo(plant.id);
+      expect(photo.jpeg).toEqual(JPEG);
+      expect(plant.photoId).toBe(photo.id);
+      expect(service.list().plants[0]?.photoId).toBe(photo.id);
+    });
+
+    it('should create a plant without a photo', () => {
+      // Given
+      const { service } = newService();
+
+      // When
+      const plant = service.create(FERN);
+
+      // Then
+      expect(plant.photoId).toBeNull();
+      expect(errorOf(() => service.photo(plant.id)).code).toBe('not_found');
+    });
+
+    it('should keep the photo when an edit leaves it out', () => {
+      // Given
+      const { service } = newService();
+      const plant = service.create({ ...FERN, photo: base64Of(JPEG) });
+
+      // When
+      service.edit(plant.id, changesOf(FERN, '2026-06-08'));
+
+      // Then
+      expect(service.photo(plant.id).jpeg).toEqual(JPEG);
+    });
+
+    it('should replace the photo with a new id', () => {
+      // Given
+      const { service } = newService();
+      const plant = service.create({ ...FERN, photo: base64Of(JPEG) });
+
+      // When
+      service.edit(plant.id, { ...changesOf(FERN, '2026-06-08'), photo: base64Of(OTHER_JPEG) });
+
+      // Then
+      const photo = service.photo(plant.id);
+      expect(photo.jpeg).toEqual(OTHER_JPEG);
+      expect(photo.id).not.toBe(plant.photoId);
+    });
+
+    it('should remove the photo when an edit sends null', () => {
+      // Given
+      const { service } = newService();
+      const plant = service.create({ ...FERN, photo: base64Of(JPEG) });
+
+      // When
+      service.edit(plant.id, { ...changesOf(FERN, '2026-06-08'), photo: null });
+
+      // Then
+      expect(service.get(plant.id).plant.photoId).toBeNull();
+    });
+
+    it.each([
+      ['not base64', 'not base64!', 'The photo is not base64'],
+      ['not a JPEG', Buffer.from('a PNG, say').toString('base64'), 'The photo is not a JPEG'],
+      [
+        'larger than 768 kB',
+        Buffer.concat([JPEG, Buffer.alloc(768 * 1024)]).toString('base64'),
+        'The photo is larger than 768 kB',
+      ],
+    ])('should refuse a photo that is %s and store nothing', (_kind, photo, message) => {
+      // Given
+      const { service } = newService();
+
+      // When
+      const error = errorOf(() => service.create({ ...FERN, photo }));
+
+      // Then
+      expect(error.code).toBe('invalid');
+      expect(error.message).toBe(message);
+      expect(service.list().plants).toEqual([]);
+    });
+
+    it('should accept a photo of exactly 768 kB', () => {
+      // Given
+      const { service } = newService();
+      const photo = Buffer.concat([JPEG, Buffer.alloc(768 * 1024 - JPEG.length)]);
+
+      // When
+      const plant = service.create({ ...FERN, photo: base64Of(photo) });
+
+      // Then
+      expect(service.photo(plant.id).jpeg).toHaveLength(768 * 1024);
+    });
+
+    it('should not find a photo of an unknown plant', () => {
+      // Given
+      const { service } = newService();
+
+      // When / Then
+      expect(errorOf(() => service.photo(9)).message).toBe('No plant with id 9');
+    });
+  });
 });

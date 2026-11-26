@@ -2,7 +2,9 @@ import type { Storage } from '#platform/backend';
 import { foldText } from '#platform/shared';
 import { z } from 'zod';
 import { daysBetween, nextWateringAfter, seasonOf, urgencyOf } from '../schedule/index.ts';
-import { invalidPlant, plantNotFound } from './errors.ts';
+import { invalidPlant, photoNotFound, plantNotFound } from './errors.ts';
+import { photoRepository } from './internal/photoRepository.ts';
+import type { StoredPhoto } from './internal/photoRepository.ts';
 import { plantRepository } from './internal/plantRepository.ts';
 import type { StoredPlant } from './internal/plantRepository.ts';
 import type {
@@ -21,6 +23,11 @@ const TAG_MAX_LENGTH = 30;
 const MAX_TAGS = 10;
 const MIN_INTERVAL_DAYS = 1;
 const MAX_INTERVAL_DAYS = 365;
+const PHOTO_MAX_KB = 768;
+const BYTES_PER_KB = 1024;
+const BASE64_BLOCK_LENGTH = 4;
+const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
+const JPEG_SIGNATURE = Buffer.from([0xff, 0xd8, 0xff]);
 
 export interface PlantsService {
   list(): PlantList;
@@ -29,6 +36,7 @@ export interface PlantsService {
   edit(id: number, changes: PlantChanges): void;
   remove(id: number): void;
   tags(): string[];
+  photo(id: number): StoredPhoto;
 }
 
 export interface PlantsServiceOptions {
@@ -108,6 +116,28 @@ const validate = (fields: PlantFields): PlantFields => {
   return result.data;
 };
 
+const decodePhoto = (photo: string): Buffer => {
+  if (photo.length % BASE64_BLOCK_LENGTH !== 0 || !BASE64.test(photo)) {
+    throw invalidPlant('The photo is not base64');
+  }
+
+  const jpeg = Buffer.from(photo, 'base64');
+
+  if (!jpeg.subarray(0, JPEG_SIGNATURE.length).equals(JPEG_SIGNATURE)) {
+    throw invalidPlant('The photo is not a JPEG');
+  }
+
+  if (jpeg.length > PHOTO_MAX_KB * BYTES_PER_KB) {
+    throw invalidPlant(`The photo is larger than ${String(PHOTO_MAX_KB)} kB`);
+  }
+
+  return jpeg;
+};
+
+// Left out, the photo stays (undefined); null removes it; otherwise the decoded JPEG replaces it.
+const decodedPhoto = (photo: string | null | undefined): Buffer | null | undefined =>
+  typeof photo === 'string' ? decodePhoto(photo) : photo;
+
 const summaryOf = (plant: StoredPlant, today: string): PlantSummary => {
   const daysUntil = daysBetween(today, plant.nextWateringOn);
 
@@ -116,7 +146,7 @@ const summaryOf = (plant: StoredPlant, today: string): PlantSummary => {
     name: plant.name,
     description: plant.description,
     tags: plant.tags,
-    photoId: null,
+    photoId: plant.photoId,
     lastWateredOn: plant.lastWateredOn,
     nextWateringOn: plant.nextWateringOn,
     daysUntil,
@@ -133,6 +163,15 @@ const detailsOf = (plant: StoredPlant, today: string): PlantDetails => ({
 
 export const plantsService = (db: Storage, { today }: PlantsServiceOptions): PlantsService => {
   const plants = plantRepository(db);
+  const photos = photoRepository(db);
+
+  const savePhoto = (plantId: number, jpeg: Buffer | null | undefined): void => {
+    if (jpeg === null) {
+      photos.remove(plantId);
+    } else if (jpeg !== undefined) {
+      photos.replace(plantId, jpeg);
+    }
+  };
 
   const requirePlant = (id: number): StoredPlant => {
     const plant = plants.find(id);
@@ -160,34 +199,44 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
     };
   };
 
-  const create = ({ lastWateredOn, ...fields }: NewPlant): PlantDetails => {
+  const create = ({ lastWateredOn, photo, ...fields }: NewPlant): PlantDetails => {
     const day = today();
     const valid = validate(fields);
+    const jpeg = decodedPhoto(photo);
 
     if (daysBetween(day, lastWateredOn) > 0) {
       throw invalidPlant('The last watering is in the future');
     }
 
-    const id = plants.insert({
-      ...valid,
-      lastWateredOn,
-      nextWateringOn: nextWateringAfter(valid, lastWateredOn),
-    });
+    const id = db.transaction(() => {
+      const created = plants.insert({
+        ...valid,
+        lastWateredOn,
+        nextWateringOn: nextWateringAfter(valid, lastWateredOn),
+      });
+
+      savePhoto(created, jpeg);
+      return created;
+    })();
 
     return detailsOf(requirePlant(id), day);
   };
 
   // A changed next watering must not be in the past; an unchanged one stays even when it is,
   // so editing an overdue plant's name keeps it overdue.
-  const edit = (id: number, { nextWateringOn, ...fields }: PlantChanges): void => {
+  const edit = (id: number, { nextWateringOn, photo, ...fields }: PlantChanges): void => {
     const valid = validate(fields);
+    const jpeg = decodedPhoto(photo);
     const current = requirePlant(id);
 
     if (nextWateringOn !== current.nextWateringOn && daysBetween(today(), nextWateringOn) < 0) {
       throw invalidPlant('The next watering is in the past');
     }
 
-    plants.update(id, { ...valid, lastWateredOn: current.lastWateredOn, nextWateringOn });
+    db.transaction(() => {
+      plants.update(id, { ...valid, lastWateredOn: current.lastWateredOn, nextWateringOn });
+      savePhoto(id, jpeg);
+    })();
   };
 
   const remove = (id: number): void => {
@@ -196,6 +245,17 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
 
   const tags = (): string[] => plants.tags();
 
+  const photo = (id: number): StoredPhoto => {
+    requirePlant(id);
+    const stored = photos.find(id);
+
+    if (stored === undefined) {
+      throw photoNotFound(id);
+    }
+
+    return stored;
+  };
+
   return {
     list,
     get,
@@ -203,5 +263,6 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
     edit,
     remove,
     tags,
+    photo,
   };
 };

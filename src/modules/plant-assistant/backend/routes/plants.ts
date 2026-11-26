@@ -3,11 +3,14 @@ import { z } from 'zod';
 import { domainErrorHandler } from '#platform/backend';
 import { BAD_REQUEST, CREATED, NO_CONTENT } from '#platform/shared';
 import { PlantError } from '../domain/plants/index.ts';
-import type { PlantsService } from '../domain/plants/index.ts';
+import type { PhotoInput, PlantsService } from '../domain/plants/index.ts';
 import { isCalendarDate } from '../domain/schedule/index.ts';
 import { rejectUnknownPlantId } from './params.ts';
 
 const INVALID_PLANT_RESPONSE = { error: 'Invalid plant' };
+const JPEG_TYPE = 'image/jpeg';
+// The URL carries the photo's id and a new photo gets a new id, so a photo never changes.
+const PHOTO_CACHE_CONTROL = 'private, max-age=31536000, immutable';
 
 const dateSchema = z.string().refine(isCalendarDate);
 
@@ -17,10 +20,14 @@ const plantFieldsSchema = z.object({
   tags: z.array(z.string()),
   summerIntervalDays: z.number(),
   winterIntervalDays: z.number(),
+  photo: z.string().nullable().optional(),
 });
 
 const newPlantSchema = plantFieldsSchema.extend({ lastWateredOn: dateSchema });
 const plantChangesSchema = plantFieldsSchema.extend({ nextWateringOn: dateSchema });
+
+const withPhoto = (photo: string | null | undefined): PhotoInput =>
+  photo === undefined ? {} : { photo };
 
 export interface PlantsRoutesOptions {
   plants: PlantsService;
@@ -46,7 +53,8 @@ export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
       return;
     }
 
-    res.status(CREATED).json({ plant: plants.create(body.data) });
+    const { photo, ...plant } = body.data;
+    res.status(CREATED).json({ plant: plants.create({ ...plant, ...withPhoto(photo) }) });
   });
 
   router.put('/plants/:id', (req, res) => {
@@ -57,8 +65,14 @@ export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
       return;
     }
 
-    plants.edit(Number(req.params.id), body.data);
+    const { photo, ...changes } = body.data;
+    plants.edit(Number(req.params.id), { ...changes, ...withPhoto(photo) });
     res.status(NO_CONTENT).end();
+  });
+
+  router.get('/plants/:id/photo', (req, res) => {
+    const { jpeg } = plants.photo(Number(req.params.id));
+    res.type(JPEG_TYPE).set('Cache-Control', PHOTO_CACHE_CONTROL).send(jpeg);
   });
 
   router.delete('/plants/:id', (req, res) => {

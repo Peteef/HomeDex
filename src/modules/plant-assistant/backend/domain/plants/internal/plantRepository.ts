@@ -13,6 +13,7 @@ export interface PlantRecord {
 
 export interface StoredPlant extends PlantRecord {
   id: number;
+  photoId: number | null;
 }
 
 export interface PlantDates {
@@ -38,16 +39,19 @@ interface PlantRow {
   winter_interval_days: number;
   last_watered_on: string;
   next_watering_on: string;
+  photo_id: number | null;
   tags: string;
 }
 
 // One row per plant: its tags come as a JSON array, in the order they were given (the rowid
-// grows with every insert), and a plant without tags gets an empty one.
+// grows with every insert), and a plant without tags gets an empty one. A plant has at most one
+// photo, so joining it adds no rows.
 const SELECT_PLANTS = `
   SELECT p.id, p.name, p.description, p.summer_interval_days, p.winter_interval_days,
-    p.last_watered_on, p.next_watering_on,
+    p.last_watered_on, p.next_watering_on, ph.id AS photo_id,
     json_group_array(t.tag ORDER BY t.rowid) FILTER (WHERE t.tag IS NOT NULL) AS tags
   FROM plant_assistant_plants p
+  LEFT JOIN plant_assistant_photos ph ON ph.plant_id = p.id
   LEFT JOIN plant_assistant_tags t ON t.plant_id = p.id`;
 
 const toPlant = (row: PlantRow): StoredPlant => ({
@@ -59,6 +63,7 @@ const toPlant = (row: PlantRow): StoredPlant => ({
   winterIntervalDays: row.winter_interval_days,
   lastWateredOn: row.last_watered_on,
   nextWateringOn: row.next_watering_on,
+  photoId: row.photo_id,
 });
 
 export const plantRepository = (db: Storage): PlantRepository => {

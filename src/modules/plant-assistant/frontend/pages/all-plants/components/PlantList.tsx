@@ -1,6 +1,7 @@
 import { PlantThumbnail } from '../../../components/plant-thumbnail/PlantThumbnail.tsx';
 import { SelectableTagChip } from '../../../components/tag-chip/SelectableTagChip.tsx';
 import { UrgencyLabel } from '../../../components/urgency-label/UrgencyLabel.tsx';
+import { photoUrl } from '../../../features/plants/index.ts';
 import type { PlantSummary } from '../../../features/plants/index.ts';
 
 export interface PlantListProps {
@@ -27,7 +28,7 @@ const PlantRow = ({ plant, onOpen, onSelectTag }: PlantRowProps) => {
   return (
     <li className="bg-dex-surface/80 rounded-2xl">
       <button type="button" onClick={open} className={ROW_CLASSES}>
-        <PlantThumbnail photoUrl={null} size="small" />
+        <PlantThumbnail photoUrl={photoUrl(plant)} size="small" />
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <span className="text-dex-ink max-w-full text-base font-bold break-words">
             {plant.name}

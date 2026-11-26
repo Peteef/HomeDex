@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
+import type { PlantFormValues } from '../../types.ts';
 import type { PlantFormProps } from '../PlantForm.tsx';
 import { PlantForm } from '../PlantForm.tsx';
 
@@ -11,13 +12,19 @@ const VALUES = {
   tagDraft: '',
   summerIntervalDays: '7',
   winterIntervalDays: '14',
-};
+  photo: { kind: 'keep' },
+} as const satisfies PlantFormValues;
 
-const renderForm = (props: Partial<PlantFormProps> = {}) => {
+const renderForm = (
+  props: Partial<Omit<PlantFormProps, 'photoUrl'>> = {},
+  photoUrl: string | null = null,
+) => {
   const handlers = {
     onChange: vi.fn(),
     onAddTag: vi.fn(),
     onRemoveTag: vi.fn(),
+    onChoosePhoto: vi.fn(),
+    onRemovePhoto: vi.fn(),
     onSubmit: vi.fn(),
   };
 
@@ -27,6 +34,8 @@ const renderForm = (props: Partial<PlantFormProps> = {}) => {
       errors={{}}
       tagNote={null}
       tagSuggestions={[]}
+      photoUrl={photoUrl}
+      photoUnreadable={false}
       dateField={<input aria-label="Watering date" />}
       saving={false}
       failed={false}
@@ -51,6 +60,30 @@ describe('PlantForm', () => {
     expect(screen.getByRole('button', { name: 'Remove Shade' })).toBeInTheDocument();
     expect(field('Summer')).toHaveValue(7);
     expect(field('Winter')).toHaveValue(14);
+  });
+
+  it('should show the photo field with the photo given', () => {
+    // When
+    renderForm({}, 'data:image/jpeg;base64,AAAA');
+
+    // Then
+    expect(screen.getByRole('group', { name: 'Photo' })).toBeInTheDocument();
+
+    expect(document.querySelector('img')).toHaveAttribute('src', 'data:image/jpeg;base64,AAAA');
+  });
+
+  it('should pass on a chosen photo and a removal', () => {
+    // Given
+    const file = new File(['photo'], 'fern.png', { type: 'image/png' });
+    const { onChoosePhoto, onRemovePhoto } = renderForm({}, '/fern.jpg');
+
+    // When
+    fireEvent.change(screen.getByLabelText('Choose photo'), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
+
+    // Then
+    expect(onChoosePhoto).toHaveBeenCalledWith(file);
+    expect(onRemovePhoto).toHaveBeenCalledOnce();
   });
 
   it('should show the date field it is given', () => {

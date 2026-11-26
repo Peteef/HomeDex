@@ -262,4 +262,116 @@ describe('plants routes', () => {
     // Then
     expect(response.status).toBe(404);
   });
+
+  describe('photos', () => {
+    const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x01]);
+    const OTHER_JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0x02]);
+    const photoOf = (id: number) => `${PLANTS}/${String(id)}/photo`;
+
+    it('should create a plant with a photo and serve it with long private caching', async () => {
+      // Given
+      const { send, create } = await signedInApp();
+
+      // When
+      const { plant } = await create({ ...FERN, photo: JPEG.toString('base64') });
+      const response = await send('get', photoOf(plant.id));
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toBe('image/jpeg');
+      expect(response.headers['cache-control']).toBe('private, max-age=31536000, immutable');
+      expect(Buffer.from(response.body as Buffer)).toEqual(JPEG);
+    });
+
+    it('should keep the photo when an edit leaves it out, and replace it with a new one', async () => {
+      // Given
+      const { send, create } = await signedInApp();
+      const { plant } = await create({ ...FERN, photo: JPEG.toString('base64') });
+
+      const firstPhotoId = (
+        (await send('get', `${PLANTS}/${String(plant.id)}`)).body as {
+          plant: { photoId: number };
+        }
+      ).plant.photoId;
+
+      // When
+      await send('put', `${PLANTS}/${String(plant.id)}`, FERN_CHANGES);
+
+      // Then
+      expect(Buffer.from((await send('get', photoOf(plant.id))).body as Buffer)).toEqual(JPEG);
+
+      // When
+      await send('put', `${PLANTS}/${String(plant.id)}`, {
+        ...FERN_CHANGES,
+        photo: OTHER_JPEG.toString('base64'),
+      });
+
+      // Then
+      const changed = await send('get', `${PLANTS}/${String(plant.id)}`);
+      expect((changed.body as { plant: { photoId: number } }).plant.photoId).not.toBe(firstPhotoId);
+
+      expect(Buffer.from((await send('get', photoOf(plant.id))).body as Buffer)).toEqual(
+        OTHER_JPEG,
+      );
+    });
+
+    it('should remove the photo when an edit sends null', async () => {
+      // Given
+      const { send, create } = await signedInApp();
+      const { plant } = await create({ ...FERN, photo: JPEG.toString('base64') });
+
+      // When
+      await send('put', `${PLANTS}/${String(plant.id)}`, { ...FERN_CHANGES, photo: null });
+
+      // Then
+      expect((await send('get', photoOf(plant.id))).status).toBe(404);
+    });
+
+    it('should answer 404 for a plant without a photo', async () => {
+      // Given
+      const { send, create } = await signedInApp();
+      const { plant } = await create();
+
+      // When / Then
+      expect((await send('get', photoOf(plant.id))).status).toBe(404);
+    });
+
+    it('should take a body large enough for a photo of 700 kB', async () => {
+      // Given
+      const { send } = await signedInApp();
+      const photo = Buffer.concat([JPEG, Buffer.alloc(700 * 1024)]).toString('base64');
+
+      // When
+      const response = await send('post', PLANTS, { ...FERN, photo });
+
+      // Then
+      expect(response.status).toBe(201);
+    });
+
+    it('should reject a photo that is not a JPEG', async () => {
+      // Given
+      const { send } = await signedInApp();
+
+      // When
+      const response = await send('post', PLANTS, {
+        ...FERN,
+        photo: Buffer.from('not a jpeg').toString('base64'),
+      });
+
+      // Then
+      expect(response.status).toBe(400);
+    });
+
+    it('should keep the photo behind the login', async () => {
+      // Given
+      const { app, create } = await signedInApp();
+      const { plant } = await create({ ...FERN, photo: JPEG.toString('base64') });
+
+      // When
+      const response = await request(app).get(photoOf(plant.id));
+
+      // Then
+      expect(response.status).toBe(401);
+    });
+  });
 });

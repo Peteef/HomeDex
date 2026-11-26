@@ -3,6 +3,7 @@ import { Droplets } from 'lucide-react';
 import { PlantThumbnail } from '../../../components/plant-thumbnail/PlantThumbnail.tsx';
 import { UrgencyLabel } from '../../../components/urgency-label/UrgencyLabel.tsx';
 import type { PlantSummary } from '../../../features/plants/index.ts';
+import { photoUrl } from '../../../features/plants/index.ts';
 import { useText } from '../../../locales/index.ts';
 
 export interface TodayPlantCardProps {
@@ -30,7 +31,7 @@ export const TodayPlantCard = ({ plant, onOpen, onWater, onPostpone }: TodayPlan
   return (
     <li className="bg-dex-surface/80 flex flex-col gap-3 rounded-2xl p-2 sm:flex-row sm:items-center sm:pr-3">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <PlantThumbnail photoUrl={null} size="small" />
+        <PlantThumbnail photoUrl={photoUrl(plant)} size="small" />
         <div className="flex min-w-0 flex-col items-start gap-1">
           <button
             type="button"

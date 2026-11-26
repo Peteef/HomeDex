@@ -59,6 +59,61 @@ describe('useEditPlantForm', () => {
     expect(form.result.current.dateLimits).toEqual({});
   });
 
+  it('should show the photo of the plant until it is removed', () => {
+    // Given
+    const form = renderForm();
+
+    act(() => {
+      form.result.current.open({ ...FERN, photoId: 4 }, TODAY);
+    });
+
+    expect(form.result.current.photoUrl).toBe('/api/m/plant-assistant/plants/1/photo?v=4');
+
+    // When
+    act(() => {
+      form.result.current.removePhoto();
+    });
+
+    // Then
+    expect(form.result.current.photoUrl).toBeNull();
+  });
+
+  it('should send null for a removed photo, and no photo when it is left as it is', async () => {
+    // Given
+    const api = fakeApi({ [EDIT]: { status: 204 } });
+    const form = renderForm();
+
+    act(() => {
+      form.result.current.open({ ...FERN, photoId: 4 }, TODAY);
+    });
+
+    act(() => {
+      form.result.current.save();
+    });
+
+    await waitFor(() => {
+      expect(api.callsTo(EDIT)).toHaveLength(1);
+    });
+
+    act(() => {
+      form.result.current.open({ ...FERN, photoId: 4 }, TODAY);
+      form.result.current.removePhoto();
+    });
+
+    // When
+    act(() => {
+      form.result.current.save();
+    });
+
+    // Then
+    await waitFor(() => {
+      expect(api.callsTo(EDIT)).toHaveLength(2);
+    });
+
+    expect(api.callsTo(EDIT)[0]?.body).not.toHaveProperty('photo');
+    expect(api.callsTo(EDIT)[1]?.body).toMatchObject({ photo: null });
+  });
+
   it('should allow no next watering before today once it is changed', () => {
     // Given
     const form = renderForm();

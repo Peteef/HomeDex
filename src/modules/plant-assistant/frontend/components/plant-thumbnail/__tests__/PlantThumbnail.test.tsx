@@ -37,4 +37,12 @@ describe('PlantThumbnail', () => {
     // Then
     expect(container.firstChild).toHaveClass('h-28', 'w-full');
   });
+
+  it('should load a small photo only when it comes near the screen', () => {
+    // When
+    const { container } = render(<PlantThumbnail photoUrl="/fern.jpg" size="small" />);
+
+    // Then
+    expect(container.querySelector('img')).toHaveAttribute('loading', 'lazy');
+  });
 });

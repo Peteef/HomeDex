@@ -1,4 +1,4 @@
-import { useEditPlant } from '../../../features/plants/index.ts';
+import { photoUrl, useEditPlant } from '../../../features/plants/index.ts';
 import type { PlantDetails } from '../../../features/plants/index.ts';
 import type { DateLimits } from '../types.ts';
 import {
@@ -7,6 +7,7 @@ import {
   toPlantChanges,
   validatePlantEdit,
 } from './editPlantForm.ts';
+import { shownPhoto } from './plantForm.ts';
 import { usePlantFormState } from './usePlantFormState.ts';
 
 const NO_LIMITS: DateLimits = {};
@@ -33,6 +34,10 @@ export const useEditPlantForm = () => {
       state.form === null
         ? NO_LIMITS
         : nextWateringLimits(state.form.values.nextWateringOn, state.form.context),
+    photoUrl:
+      state.form === null
+        ? null
+        : shownPhoto(state.form.values.photo, photoUrl(state.form.context.plant)),
     saving: edit.isPending,
     failed: edit.isError,
     open,
@@ -40,6 +45,8 @@ export const useEditPlantForm = () => {
     change: state.change,
     addTag: state.addTag,
     removeTag: state.removeTag,
+    choosePhoto: state.choosePhoto,
+    removePhoto: state.removePhoto,
     save,
   };
 };

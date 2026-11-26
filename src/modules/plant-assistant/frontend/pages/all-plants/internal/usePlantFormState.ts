@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { resizePhoto } from '../../../features/plants/index.ts';
 import type { FormErrors, PlantFormValues, TagNote } from '../types.ts';
 import { addTag, hasErrors, removeTag } from './plantForm.ts';
 
@@ -7,6 +8,7 @@ export interface PlantFormState<Values extends PlantFormValues, Context> {
   values: Values;
   submitted: boolean;
   tagNote: TagNote | null;
+  photoUnreadable: boolean;
 }
 
 const NO_ERRORS = {};
@@ -26,7 +28,7 @@ export const usePlantFormState = <
     form?.submitted === true ? validate(form.values, form.context) : NO_ERRORS;
 
   const open = (context: Context, values: Values): void => {
-    setForm({ context, values, submitted: false, tagNote: null });
+    setForm({ context, values, submitted: false, tagNote: null, photoUnreadable: false });
   };
 
   const close = (): void => {
@@ -54,6 +56,36 @@ export const usePlantFormState = <
     );
   };
 
+  // A photo the browser can't decode (HEIC on desktop Chrome, say) leaves the current one.
+  const choosePhoto = (file: File): void => {
+    resizePhoto(file).then(
+      (jpeg) => {
+        setForm(
+          (current) =>
+            current && {
+              ...current,
+              values: { ...current.values, photo: { kind: 'replace', jpeg } },
+              photoUnreadable: false,
+            },
+        );
+      },
+      () => {
+        setForm((current) => current && { ...current, photoUnreadable: true });
+      },
+    );
+  };
+
+  const removePhoto = (): void => {
+    setForm(
+      (current) =>
+        current && {
+          ...current,
+          values: { ...current.values, photo: { kind: 'remove' } },
+          photoUnreadable: false,
+        },
+    );
+  };
+
   const submit = (save: (values: Values, context: Context) => void): void => {
     if (form === null) {
       return;
@@ -74,6 +106,8 @@ export const usePlantFormState = <
     change,
     addTag: addDraftTag,
     removeTag: removeTagNamed,
+    choosePhoto,
+    removePhoto,
     submit,
   };
 };

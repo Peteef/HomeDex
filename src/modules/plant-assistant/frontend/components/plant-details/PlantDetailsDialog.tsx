@@ -17,6 +17,7 @@ export type PlantDetailsDialogProps = Omit<PlantDetailsProps, 'plant'> & {
 export const PlantDetailsDialog = ({
   title,
   plant,
+  photoUrl,
   actions,
   failed,
   onRetry,
@@ -29,7 +30,7 @@ export const PlantDetailsDialog = ({
     if (plant !== undefined) {
       return (
         <>
-          <PlantDetails plant={plant} renderTag={renderTag} />
+          <PlantDetails plant={plant} photoUrl={photoUrl} renderTag={renderTag} />
           {actions}
         </>
       );

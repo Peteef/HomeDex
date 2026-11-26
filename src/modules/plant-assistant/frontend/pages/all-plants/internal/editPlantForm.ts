@@ -6,6 +6,7 @@ import type {
   EditPlantValues,
   FieldError,
   FormErrors,
+  PhotoChoice,
 } from '../types.ts';
 import { errorsOf, formValuesOf, toFields, validateFormFields } from './plantForm.ts';
 
@@ -39,7 +40,19 @@ export const validatePlantEdit = (
 export const nextWateringLimits = (date: string, { plant, today }: EditPlantContext): DateLimits =>
   date === plant.nextWateringOn ? {} : { min: today };
 
+const photoChange = (photo: PhotoChoice): { photo?: string | null } => {
+  switch (photo.kind) {
+    case 'keep':
+      return {};
+    case 'remove':
+      return { photo: null };
+    case 'replace':
+      return { photo: photo.jpeg };
+  }
+};
+
 export const toPlantChanges = (values: EditPlantValues): PlantChanges => ({
   ...toFields(values),
   nextWateringOn: values.nextWateringOn,
+  ...photoChange(values.photo),
 });

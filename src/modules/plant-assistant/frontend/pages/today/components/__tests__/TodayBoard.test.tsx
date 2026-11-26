@@ -60,4 +60,17 @@ describe('TodayBoard', () => {
     // Then
     expect(handlers[handler]).toHaveBeenCalledWith(ALOE);
   });
+
+  it('should show the photo of a plant that has one', () => {
+    // When
+    renderBoard({ plants: [{ ...FERN, photoId: 4 }, ALOE] });
+
+    // Then
+    expect(document.querySelectorAll('img')).toHaveLength(1);
+
+    expect(document.querySelector('img')).toHaveAttribute(
+      'src',
+      '/api/m/plant-assistant/plants/1/photo?v=4',
+    );
+  });
 });
