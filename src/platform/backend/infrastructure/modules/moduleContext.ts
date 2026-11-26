@@ -3,6 +3,7 @@ import { currentUser } from '../http/auth/currentUser.ts';
 import { logger } from '../logger.ts';
 import type { Logger } from '../logger.ts';
 import type { Storage } from '../storage/index.ts';
+import type { TileBadges } from './tileBadges.ts';
 import type { ModuleContext } from './types.ts';
 
 const moduleLogger = (id: string): Logger => {
@@ -31,11 +32,21 @@ export const moduleContext = (
   id: string,
   storage: Storage,
   today: () => string,
-): ModuleContext => ({
-  id,
-  router: Router(),
-  storage,
-  currentUser,
-  logger: moduleLogger(id),
-  today,
-});
+  tileBadges: TileBadges,
+): ModuleContext => {
+  const logger = moduleLogger(id);
+
+  const setTileBadge = (count: () => number): void => {
+    tileBadges.set(id, count, logger);
+  };
+
+  return {
+    id,
+    router: Router(),
+    storage,
+    currentUser,
+    logger,
+    today,
+    setTileBadge,
+  };
+};

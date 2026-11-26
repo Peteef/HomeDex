@@ -14,6 +14,7 @@ import { sessionCookies } from './http/auth/sessionCookie.ts';
 import { dateOf } from './clock/dateOf.ts';
 import { apiErrorHandler } from './http/errorHandler.ts';
 import { requestGuard } from './http/requestGuard.ts';
+import { tileBadges } from './modules/tileBadges.ts';
 import type { LoadedModule } from './modules/types.ts';
 import type { Storage } from './storage/index.ts';
 import { NOT_FOUND } from '../../shared/http/status.ts';
@@ -65,9 +66,12 @@ export const createApp = ({
     }),
   );
 
+  const badges = tileBadges();
+
   const { accounts, sessions, tiles } = domainServices(storage, {
     sessionTtlDays: config.SESSION_TTL_DAYS,
     enabledModuleIds: modules.map(({ manifest }) => manifest.id),
+    tileBadge: badges.badgeOf,
     now,
     ...(argon2Params && { argon2Params }),
   });
@@ -85,6 +89,7 @@ export const createApp = ({
       modules,
       storage,
       today: () => dateOf(now(), config.TZ),
+      tileBadges: badges,
       cookies,
       requireAuth: requireAuth(sessions, cookies),
       loginRateLimit: loginRateLimit(loginLimit),

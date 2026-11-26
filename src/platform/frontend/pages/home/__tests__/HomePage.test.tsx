@@ -164,6 +164,20 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: /clock/ })).toHaveAttribute('href', '/m/clock');
   });
 
+  it('should show the badge of a module tile that has one', async () => {
+    // When
+    await openHome([
+      FINANCES,
+      moduleTile('clock', { id: 9, dexNo: 9, badge: 4 }),
+      moduleTile('notes', { id: 10, dexNo: 10 }),
+    ]);
+
+    // Then
+    expect(await screen.findByRole('link', { name: /clock, 4 waiting/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /notes/ })).not.toHaveAccessibleName(/waiting/);
+    expect(screen.getByRole('link', { name: /Finances/ })).not.toHaveAccessibleName(/waiting/);
+  });
+
   it('should show only the matching tiles, best match first, while searching', async () => {
     // Given
     await openHome();

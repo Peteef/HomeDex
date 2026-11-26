@@ -206,17 +206,19 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 };
 ```
 
-| `ctx`         | What it is                                                                                      |
-| ------------- | ----------------------------------------------------------------------------------------------- |
-| `id`          | The module's id                                                                                 |
-| `router`      | An Express router, mounted at `/api/m/<id>` behind the login (a request without a session: 401) |
-| `storage`     | The database (`prepare`, `exec`, `transaction`), the same SQLite file as the platform           |
-| `currentUser` | `currentUser(req)` returns `{ id, username }` of the signed-in user                             |
-| `logger`      | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
-| `today`       | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
+| `ctx`          | What it is                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `id`           | The module's id                                                                                 |
+| `router`       | An Express router, mounted at `/api/m/<id>` behind the login (a request without a session: 401) |
+| `storage`      | The database (`prepare`, `exec`, `transaction`), the same SQLite file as the platform           |
+| `currentUser`  | `currentUser(req)` returns `{ id, username }` of the signed-in user                             |
+| `logger`       | `info`, `warn`, `error`; every line starts with `[<id>]`                                        |
+| `today`        | `today()` returns today's date as `YYYY-MM-DD` in the household time zone (`TZ`)                |
+| `setTileBadge` | `setTileBadge(() => count)` shows the count on the module's home tile when it is above 0        |
 
 - Every write request (`POST`, `PUT`, `PATCH`, `DELETE`) must send `Content-Type: application/json`, even without a body, and come from the app's own origin. The platform checks both for all of `/api`. A body larger than the module's limit (100 kB, or the manifest's `requestBodyLimitKb`) answers 413 before the handler runs.
 - An error thrown in a handler becomes a 500 with `{ error: 'Internal error' }` and is logged. Map expected failures (bad input, not found) to their status in the route, with the status codes from `#platform/shared` (`BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, and `CREATED`, `NO_CONTENT` for success). For a domain error with a `code`, end the router with `router.use(domainErrorHandler(ItemError))` from `#platform/backend`: it answers that class with the status of its code and `{ error: message }`, and passes every other error on. The codes `invalid`, `not_found`, `forbidden` and `conflict` answer 400, 404, 403 and 409; any other code needs a table, such as `domainErrorHandler(TrainerError, { taken: CONFLICT })`, which may also override a default.
+- The platform calls the `setTileBadge` function on every tiles request, so it must be cheap and synchronous: one quick query, no network. Call `setTileBadge` at most once, in `register`; a second call throws. If the function throws, the error is logged and the tile shows no badge.
 - If `register` throws, the server does not start.
 
 ## Data
