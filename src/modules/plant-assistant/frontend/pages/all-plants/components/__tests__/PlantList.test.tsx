@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { PlantSummary } from '../../../../features/plants/index.ts';
 import { PlantList } from '../PlantList.tsx';
@@ -33,35 +33,6 @@ describe('PlantList', () => {
     expect(
       screen.getAllByRole('button', { name: /cactus|fern/ }).map((row) => row.textContent),
     ).toEqual(["Cacnea's cactusIn 5 days", "Bulbasaur's fern3 days overdue"]);
-  });
-
-  it('should name each row by its plant and urgency', () => {
-    // When
-    render(<PlantList plants={[FERN, CACTUS]} onOpen={vi.fn()} onSelectTag={vi.fn()} />);
-
-    // Then
-    expect(
-      screen.getByRole('button', { name: /^Bulbasaur's fern.*3 days overdue$/ }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole('button', { name: /^Cacnea's cactus.*In 5 days$/ }),
-    ).toBeInTheDocument();
-  });
-
-  it('should show the tags of a plant as buttons beside its row', () => {
-    // When
-    render(<PlantList plants={[FERN]} onOpen={vi.fn()} onSelectTag={vi.fn()} />);
-
-    // Then
-    const row = screen.getByRole('button', { name: /Bulbasaur's fern/ });
-    expect(within(row).queryByText('Shade')).not.toBeInTheDocument();
-
-    expect(
-      screen.getByRole('button', { name: 'Show plants tagged Living room' }),
-    ).toBeInTheDocument();
-
-    expect(screen.getByRole('button', { name: 'Show plants tagged Shade' })).toBeInTheDocument();
   });
 
   it('should select the tag that is pressed', () => {

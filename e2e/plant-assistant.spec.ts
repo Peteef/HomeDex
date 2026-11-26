@@ -699,7 +699,7 @@ test.describe('plant assistant', () => {
     await form.getByLabel('Choose photo').setInputFiles({
       name: 'generated.png',
       mimeType: 'image/png',
-      buffer: await generatedImage(page, 1600, 1200),
+      buffer: await generatedImage(page, 2400, 1800),
     });
 
     // Then
@@ -715,7 +715,7 @@ test.describe('plant assistant', () => {
 
     await expect
       .poll(() => thumbnail.evaluate((image: HTMLImageElement) => image.naturalWidth))
-      .toBe(1024);
+      .toBe(1600);
 
     // When
     await row.getByRole('button', { name }).click();
@@ -724,7 +724,7 @@ test.describe('plant assistant', () => {
     // Then
     await expect
       .poll(() => details.locator('img').evaluate((image: HTMLImageElement) => image.naturalHeight))
-      .toBe(768);
+      .toBe(1200);
 
     // When
     await details.getByRole('button', { name: 'Edit' }).click();

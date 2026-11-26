@@ -23,7 +23,7 @@ const TAG_MAX_LENGTH = 30;
 const MAX_TAGS = 10;
 const MIN_INTERVAL_DAYS = 1;
 const MAX_INTERVAL_DAYS = 365;
-const PHOTO_MAX_KB = 768;
+const PHOTO_MAX_KB = 1536;
 const BYTES_PER_KB = 1024;
 const BASE64_BLOCK_LENGTH = 4;
 const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;

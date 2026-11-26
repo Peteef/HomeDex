@@ -336,10 +336,13 @@ describe('plants routes', () => {
       expect((await send('get', photoOf(plant.id))).status).toBe(404);
     });
 
-    it('should take a body large enough for a photo of 700 kB', async () => {
+    it('should take a body large enough for the largest photo', async () => {
       // Given
       const { send } = await signedInApp();
-      const photo = Buffer.concat([JPEG, Buffer.alloc(700 * 1024)]).toString('base64');
+
+      const photo = Buffer.concat([JPEG, Buffer.alloc(1536 * 1024 - JPEG.length)]).toString(
+        'base64',
+      );
 
       // When
       const response = await send('post', PLANTS, { ...FERN, photo });
