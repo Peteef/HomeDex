@@ -4,8 +4,9 @@ import { useText } from '../../locales/index.ts';
 
 export interface UndoNoticeProps {
   message: string | null;
-  undoing?: boolean;
-  onUndo?: () => void;
+  canUndo: boolean;
+  undoing: boolean;
+  onUndo: () => void;
   onPause: () => void;
   onResume: () => void;
 }
@@ -13,7 +14,14 @@ export interface UndoNoticeProps {
 // The live region stays in the page while it is empty, so screen readers announce each message.
 // It is portaled out of the module's panel, whose backdrop blur would pin a fixed element to the
 // panel; on phones it sits above the tab bar.
-export const UndoNotice = ({ message, undoing, onUndo, onPause, onResume }: UndoNoticeProps) => {
+export const UndoNotice = ({
+  message,
+  canUndo,
+  undoing,
+  onUndo,
+  onPause,
+  onResume,
+}: UndoNoticeProps) => {
   const text = useText('components.undoNotice');
 
   return createPortal(
@@ -30,7 +38,7 @@ export const UndoNotice = ({ message, undoing, onUndo, onPause, onResume }: Undo
           onBlur={onResume}
         >
           <p className="min-w-0 flex-1 text-base font-bold break-words">{message}</p>
-          {onUndo !== undefined && (
+          {canUndo && (
             <Button variant="secondary" disabled={undoing} onClick={onUndo}>
               {text.undo}
             </Button>

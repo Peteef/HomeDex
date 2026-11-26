@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
 import { Section } from '../../components/section/Section.tsx';
+import { TagChip } from '../../components/tag-chip/TagChip.tsx';
 import { UndoNotice } from '../../components/undo-notice/UndoNotice.tsx';
 import { usePlant, usePlants } from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
@@ -14,6 +15,7 @@ import {
 } from '../../features/watering/index.ts';
 import type { Watering } from '../../features/watering/index.ts';
 import { useText } from '../../locales/index.ts';
+import { EmptyTodayBoard } from './components/EmptyTodayBoard.tsx';
 import { PostponeChoice } from './components/PostponeChoice.tsx';
 import { TodayBoard } from './components/TodayBoard.tsx';
 import { duePlants, nextPlant } from './internal/duePlants.ts';
@@ -37,12 +39,21 @@ export const TodayPage = () => {
   const notices = useNotice<Notice>();
   // Plants watered but not saved yet leave the board at once, and come back if saving fails.
   const [hidden, setHidden] = useState<number[]>([]);
-  const [opened, setOpened] = useState<PlantSummary | null>(null);
+  const [openedId, setOpenedId] = useState<number | null>(null);
   const [postponing, setPostponing] = useState<PlantSummary | null>(null);
-  const openPlant = usePlant(opened?.id ?? null);
+  const openPlant = usePlant(openedId);
   const { notice } = notices;
+  const canUndo = notice?.kind === 'watered';
 
-  const messageOf = (shown: Notice): string => {
+  // The list names the open plant, so a plant deleted elsewhere closes its dialog.
+  const openedPlant =
+    openedId === null ? undefined : plants.data?.plants.find(({ id }) => id === openedId);
+
+  const messageOf = (shown: Notice | null): string | null => {
+    if (shown === null) {
+      return null;
+    }
+
     switch (shown.kind) {
       case 'watered':
         return text.notices.watered({ name: shown.plant.name });
@@ -125,9 +136,15 @@ export const TodayPage = () => {
     );
   };
 
-  const closeDetails = (): void => {
-    setOpened(null);
+  const openDetails = (plant: PlantSummary): void => {
+    setOpenedId(plant.id);
   };
+
+  const closeDetails = (): void => {
+    setOpenedId(null);
+  };
+
+  const renderTag = (tag: string) => <TagChip tag={tag} />;
 
   const retry = (): void => {
     void plants.refetch();
@@ -140,14 +157,20 @@ export const TodayPage = () => {
   const renderBoard = () => {
     if (plants.data !== undefined) {
       const all = plants.data.plants;
-      const shown = all.filter((plant) => !hidden.includes(plant.id));
+
+      const due = duePlants(
+        all.filter((plant) => !hidden.includes(plant.id)),
+        i18n.language,
+      );
+
+      if (due.length === 0) {
+        return <EmptyTodayBoard next={nextPlant(all, i18n.language)} hasPlants={all.length > 0} />;
+      }
 
       return (
         <TodayBoard
-          plants={duePlants(shown, i18n.language)}
-          next={nextPlant(all, i18n.language)}
-          hasPlants={all.length > 0}
-          onOpen={setOpened}
+          plants={due}
+          onOpen={openDetails}
           onWater={waterPlant}
           onPostpone={startPostponing}
         />
@@ -164,10 +187,12 @@ export const TodayPage = () => {
   return (
     <Section heading={text.heading}>
       {renderBoard()}
-      {opened !== null && (
+      {openedPlant !== undefined && (
         <PlantDetailsDialog
-          title={openPlant.data?.plant.name ?? opened.name}
+          title={openedPlant.name}
           plant={openPlant.data?.plant}
+          renderTag={renderTag}
+          actions={null}
           failed={openPlant.isError}
           onRetry={retryOpenPlant}
           onClose={closeDetails}
@@ -189,9 +214,10 @@ export const TodayPage = () => {
         </Dialog>
       )}
       <UndoNotice
-        message={notice === null ? null : messageOf(notice)}
+        message={messageOf(notice)}
+        canUndo={canUndo}
         undoing={undo.isPending}
-        {...(notice?.kind === 'watered' ? { onUndo: undoWatering } : {})}
+        onUndo={undoWatering}
         onPause={notices.pause}
         onResume={notices.resume}
       />

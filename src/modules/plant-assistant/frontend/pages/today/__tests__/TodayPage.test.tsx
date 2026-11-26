@@ -291,4 +291,27 @@ describe('TodayPage', () => {
     expect(within(details).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     expect(within(details).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
+
+  it('should close the details of a plant someone else deletes', async () => {
+    // Given
+    const server = serverWith([FERN]);
+
+    openPage({
+      [PLANTS]: server.list,
+      'GET /api/m/plant-assistant/plants/1': ok({ today: TODAY, plant: FERN_DETAILS }),
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: "Bulbasaur's fern" }));
+    const details = screen.getByRole('dialog', { name: "Bulbasaur's fern" });
+    await within(details).findByText('Likes shade.');
+
+    // When
+    server.change([]);
+    fireEvent.focus(window);
+
+    // Then
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
 });

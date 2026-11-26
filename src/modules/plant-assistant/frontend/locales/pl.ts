@@ -56,8 +56,6 @@ export default {
       now: 'teraz',
       lastWatered: 'Ostatnie podlewanie',
       nextWatering: 'Następne podlewanie',
-      edit: 'Edytuj',
-      delete: 'Usuń',
       loadFailed: 'Nie udało się wczytać tej rośliny.',
     },
     undoNotice: {
@@ -71,6 +69,10 @@ export default {
     emptyHint: 'Pierwszą dodasz przyciskiem „Dodaj roślinę”.',
     noMatch: 'Żadna roślina nie pasuje.',
     showAll: 'Pokaż wszystkie rośliny',
+    plantActions: {
+      edit: 'Edytuj',
+      delete: 'Usuń',
+    },
     plantFilters: {
       search: 'Szukaj roślin',
       tag: 'Tag:',

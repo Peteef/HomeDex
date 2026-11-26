@@ -22,6 +22,8 @@ const renderDialog = (props: Partial<Parameters<typeof PlantDetailsDialog>[0]> =
     <PlantDetailsDialog
       title="Bulbasaur's fern"
       plant={FERN}
+      renderTag={(tag) => <span>{tag}</span>}
+      actions={<button type="button">Water it</button>}
       failed={false}
       {...handlers}
       {...props}
@@ -63,17 +65,21 @@ describe('PlantDetailsDialog', () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it('should pass the actions on to the details', () => {
-    // Given
-    const onEdit = vi.fn();
-    const { dialog } = renderDialog({ onEdit });
-
+  it('should show the actions under the loaded details', () => {
     // When
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit' }));
+    const { dialog } = renderDialog();
 
     // Then
-    expect(onEdit).toHaveBeenCalledOnce();
-    expect(within(dialog).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Shade')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Water it' })).toBeInTheDocument();
+  });
+
+  it('should hide the actions until the details have loaded', () => {
+    // When
+    const { dialog } = renderDialog({ plant: undefined });
+
+    // Then
+    expect(within(dialog).queryByRole('button', { name: 'Water it' })).not.toBeInTheDocument();
   });
 
   it('should close', () => {

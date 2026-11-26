@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
 import { Section } from '../../components/section/Section.tsx';
+import { SelectableTagChip } from '../../components/tag-chip/SelectableTagChip.tsx';
 import { useDeletePlant, usePlant, usePlants, useTags } from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
 import { AddPlantForm } from './components/AddPlantForm.tsx';
 import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
 import { EditPlantForm } from './components/EditPlantForm.tsx';
+import { PlantActions } from './components/PlantActions.tsx';
 import { PlantFilters } from './components/PlantFilters.tsx';
 import { PlantList } from './components/PlantList.tsx';
 import { filterPlants } from './internal/filterPlants.ts';
@@ -156,6 +158,10 @@ export const AllPlantsPage = () => {
     }
   };
 
+  const renderSelectableTag = (tag: string) => (
+    <SelectableTagChip tag={tag} onSelect={showTagFromDetails} />
+  );
+
   const renderOpenedDialog = (view: Opened['view'], plant: PlantSummary) =>
     view === 'details' ? (
       <PlantDetailsDialog
@@ -164,12 +170,16 @@ export const AllPlantsPage = () => {
         plant={openPlant.data?.plant}
         failed={openPlant.isError}
         onRetry={retryOpenPlant}
+        renderTag={renderSelectableTag}
+        actions={
+          <PlantActions
+            onEdit={editOpened}
+            onDelete={() => {
+              askToDelete(plant);
+            }}
+          />
+        }
         onClose={close}
-        onEdit={editOpened}
-        onDelete={() => {
-          askToDelete(plant);
-        }}
-        onSelectTag={showTagFromDetails}
       />
     ) : (
       <Dialog

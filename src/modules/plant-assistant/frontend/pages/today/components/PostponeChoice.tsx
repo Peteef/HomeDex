@@ -4,8 +4,8 @@ import type { SubmitEvent } from 'react';
 import { useText } from '../../../locales/index.ts';
 import {
   MAX_POSTPONE_DAYS,
+  isPostponeDays,
   MIN_POSTPONE_DAYS,
-  parsePostponeDays,
   QUICK_POSTPONE_DAYS,
 } from '../internal/postponeDays.ts';
 
@@ -22,10 +22,11 @@ export const PostponeChoice = ({ postponing, failed, onPostpone }: PostponeChoic
 
   const postponeByOther = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    const days = parsePostponeDays(otherDays);
-    setInvalid(days === null);
+    const days = Number(otherDays);
+    const valid = isPostponeDays(days);
+    setInvalid(!valid);
 
-    if (days !== null) {
+    if (valid) {
       onPostpone(days);
     }
   };

@@ -45,8 +45,6 @@ export default {
       now: 'now',
       lastWatered: 'Last watered',
       nextWatering: 'Next watering',
-      edit: 'Edit',
-      delete: 'Delete',
       loadFailed: "Can't load this plant.",
     },
     undoNotice: {
@@ -60,6 +58,10 @@ export default {
     emptyHint: 'Add the first one with “Add plant”.',
     noMatch: 'No plants match.',
     showAll: 'Show all plants',
+    plantActions: {
+      edit: 'Edit',
+      delete: 'Delete',
+    },
     plantFilters: {
       search: 'Search plants',
       tag: 'Tag:',
