@@ -25,6 +25,5 @@ export interface Tile {
   scope: TileScope;
   pinned: boolean;
   editable: boolean;
-  // A module's count of things waiting, above 0; null otherwise.
-  badge: number | null;
+  countOnBadge: number;
 }

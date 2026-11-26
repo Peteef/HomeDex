@@ -3,7 +3,7 @@ import type { AccountsService, Argon2Params } from './accounts/index.ts';
 import { sessionService } from './auth/index.ts';
 import type { SessionService } from './auth/index.ts';
 import { tilesService } from './tiles/index.ts';
-import type { TileBadge, TilesService } from './tiles/index.ts';
+import type { CountOnBadge, TilesService } from './tiles/index.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
 
 export interface DomainServices {
@@ -16,7 +16,7 @@ export interface DomainServicesOptions {
   sessionTtlDays: number;
   argon2Params?: Argon2Params;
   enabledModuleIds?: readonly string[];
-  tileBadge?: TileBadge;
+  countOnBadge?: CountOnBadge;
   now?: () => number;
 }
 
@@ -25,7 +25,7 @@ export interface DomainServicesOptions {
 // them are made here.
 export const domainServices = (
   storage: Storage,
-  { sessionTtlDays, argon2Params, enabledModuleIds = [], tileBadge, now }: DomainServicesOptions,
+  { sessionTtlDays, argon2Params, enabledModuleIds = [], countOnBadge, now }: DomainServicesOptions,
 ): DomainServices => {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
@@ -42,7 +42,7 @@ export const domainServices = (
 
   const tiles = tilesService(storage, {
     enabledModuleIds,
-    ...(tileBadge && { tileBadge }),
+    ...(countOnBadge && { countOnBadge }),
     ...(now && { now }),
   });
 

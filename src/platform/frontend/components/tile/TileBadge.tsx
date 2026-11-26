@@ -4,7 +4,6 @@ export interface TileBadgeProps {
 
 const MAX_SHOWN = 99;
 
-// Only the eye needs the number here: the tile's link says the full count in words.
 export const TileBadge = ({ count }: TileBadgeProps) => (
   <span
     aria-hidden

@@ -5,7 +5,7 @@ export type TileBadgeCount = () => number;
 
 export interface TileBadges {
   set: (moduleId: string, count: TileBadgeCount, logger: Logger) => void;
-  badgeOf: (moduleId: string) => number | null;
+  countOnBadge: (moduleId: string) => number;
 }
 
 interface RegisteredBadge {
@@ -13,13 +13,13 @@ interface RegisteredBadge {
   logger: Logger;
 }
 
-const countOf = ({ count, logger }: RegisteredBadge): number | null => {
+const safeCount = ({ count, logger }: RegisteredBadge): number => {
   try {
     const value = count();
-    return value > 0 ? value : null;
+    return Math.max(value, 0);
   } catch (error) {
     logger.error('The tile badge failed', error);
-    return null;
+    return 0;
   }
 };
 
@@ -35,13 +35,13 @@ export const tileBadges = (): TileBadges => {
     badges.set(moduleId, { count, logger });
   };
 
-  const badgeOf = (moduleId: string): number | null => {
+  const countOnBadge = (moduleId: string): number => {
     const badge = badges.get(moduleId);
-    return badge ? countOf(badge) : null;
+    return badge ? safeCount(badge) : 0;
   };
 
   return {
     set,
-    badgeOf,
+    countOnBadge,
   };
 };

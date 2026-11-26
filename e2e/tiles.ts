@@ -13,7 +13,7 @@ export interface E2ETile {
   scope: 'shared' | 'personal';
   pinned: boolean;
   editable: boolean;
-  badge: number | null;
+  countOnBadge: number;
 }
 
 const link = (id: number, icon: string, texts: E2ETile['texts']): E2ETile => ({
@@ -27,7 +27,7 @@ const link = (id: number, icon: string, texts: E2ETile['texts']): E2ETile => ({
   scope: 'shared',
   pinned: false,
   editable: true,
-  badge: null,
+  countOnBadge: 0,
 });
 
 export const FINANCES = link(1, 'wallet', {
@@ -55,7 +55,12 @@ export const CLOCK: E2ETile = {
 
 export const SAMPLE_TILES = [FINANCES, WEIGHT, SHOPPING, CLOCK];
 
-export const BADGED_TILES = [FINANCES, WEIGHT, SHOPPING, { ...CLOCK, pinned: true, badge: 3 }];
+export const BADGED_TILES = [
+  FINANCES,
+  WEIGHT,
+  SHOPPING,
+  { ...CLOCK, pinned: true, countOnBadge: 3 },
+];
 
 const PIN_PATH = /\/api\/tiles\/(\d+)\/pin$/;
 
