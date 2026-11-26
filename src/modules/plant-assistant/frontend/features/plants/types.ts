@@ -29,3 +29,32 @@ export interface PlantView {
   today: string;
   plant: PlantDetails;
 }
+
+export interface PlantFields {
+  name: string;
+  description: string | null;
+  tags: string[];
+  summerIntervalDays: number;
+  winterIntervalDays: number;
+}
+
+export interface NewPlant extends PlantFields {
+  lastWateredOn: string;
+}
+
+export interface PlantChanges extends PlantFields {
+  nextWateringOn: string;
+}
+
+export interface PlantEdit {
+  id: number;
+  changes: PlantChanges;
+}
+
+export interface CreatedPlant {
+  plant: PlantDetails;
+}
+
+export interface TagList {
+  tags: string[];
+}
