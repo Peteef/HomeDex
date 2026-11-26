@@ -28,6 +28,7 @@ export default {
       inDays_other: 'In {{count}} days',
     },
     tagChip: {
+      select: 'Show plants tagged {{tag}}',
       remove: 'Remove {{tag}}',
     },
   },
@@ -37,6 +38,13 @@ export default {
     add: 'Add plant',
     empty: 'No plants yet.',
     emptyHint: 'Add the first one with “Add plant”.',
+    noMatch: 'No plants match.',
+    showAll: 'Show all plants',
+    plantFilters: {
+      search: 'Search plants',
+      tag: 'Tag:',
+      clearTag: 'Clear the tag filter',
+    },
     plantLoadFailed: "Can't load this plant.",
     plantDetails: {
       summer: 'Summer',

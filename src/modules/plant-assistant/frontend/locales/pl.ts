@@ -35,6 +35,7 @@ export default {
       inDays_other: 'Za {{count}} dnia',
     },
     tagChip: {
+      select: 'Pokaż rośliny z tagiem {{tag}}',
       remove: 'Usuń {{tag}}',
     },
   },
@@ -44,6 +45,13 @@ export default {
     add: 'Dodaj roślinę',
     empty: 'Nie ma jeszcze roślin.',
     emptyHint: 'Pierwszą dodasz przyciskiem „Dodaj roślinę”.',
+    noMatch: 'Żadna roślina nie pasuje.',
+    showAll: 'Pokaż wszystkie rośliny',
+    plantFilters: {
+      search: 'Szukaj roślin',
+      tag: 'Tag:',
+      clearTag: 'Wyczyść filtr tagu',
+    },
     plantLoadFailed: 'Nie udało się wczytać tej rośliny.',
     plantDetails: {
       summer: 'Lato',

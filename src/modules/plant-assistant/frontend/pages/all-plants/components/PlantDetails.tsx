@@ -2,7 +2,7 @@ import { Button } from '#platform/frontend';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PlantThumbnail } from '../../../components/plant-thumbnail/PlantThumbnail.tsx';
-import { TagChip } from '../../../components/tag-chip/TagChip.tsx';
+import { SelectableTagChip } from '../../../components/tag-chip/SelectableTagChip.tsx';
 import { UrgencyLabel } from '../../../components/urgency-label/UrgencyLabel.tsx';
 import type { PlantDetails as Plant, Season } from '../../../features/plants/index.ts';
 import { useText } from '../../../locales/index.ts';
@@ -11,6 +11,7 @@ export interface PlantDetailsProps {
   plant: Plant;
   onEdit: () => void;
   onDelete: () => void;
+  onSelectTag: (tag: string) => void;
 }
 
 // A calendar date parses as midnight UTC, so it is formatted in UTC to stay on the same day.
@@ -26,7 +27,7 @@ const DAILY_INTERVAL_DAYS = 1;
 const TERM_CLASSES = 'text-dex-ink-muted text-sm font-bold';
 const VALUE_CLASSES = 'flex flex-wrap items-center gap-2 text-base font-bold';
 
-export const PlantDetails = ({ plant, onEdit, onDelete }: PlantDetailsProps) => {
+export const PlantDetails = ({ plant, onEdit, onDelete, onSelectTag }: PlantDetailsProps) => {
   const text = useText('allPlants.plantDetails');
   const { i18n } = useTranslation();
   const dateFormat = new Intl.DateTimeFormat(i18n.language, DATE_FORMAT);
@@ -53,7 +54,7 @@ export const PlantDetails = ({ plant, onEdit, onDelete }: PlantDetailsProps) => 
       {plant.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {plant.tags.map((tag) => (
-            <TagChip key={tag} tag={tag} />
+            <SelectableTagChip key={tag} tag={tag} onSelect={onSelectTag} />
           ))}
         </div>
       )}

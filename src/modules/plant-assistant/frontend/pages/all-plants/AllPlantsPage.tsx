@@ -6,11 +6,13 @@ import { Section } from '../../components/section/Section.tsx';
 import { useDeletePlant, usePlant, usePlants, useTags } from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
-import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
-import { PlantDetails } from './components/PlantDetails.tsx';
 import { AddPlantForm } from './components/AddPlantForm.tsx';
+import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
 import { EditPlantForm } from './components/EditPlantForm.tsx';
+import { PlantDetails } from './components/PlantDetails.tsx';
+import { PlantFilters } from './components/PlantFilters.tsx';
 import { PlantList } from './components/PlantList.tsx';
+import { filterPlants } from './internal/filterPlants.ts';
 import { sortByName } from './internal/sortByName.ts';
 import { useAddPlantForm } from './internal/useAddPlantForm.ts';
 import { useEditPlantForm } from './internal/useEditPlantForm.ts';
@@ -30,6 +32,8 @@ export const AllPlantsPage = () => {
   const { i18n } = useTranslation();
   const plants = usePlants();
   const tags = useTags();
+  const [query, setQuery] = useState('');
+  const [tag, setTag] = useState<string | null>(null);
   const [opened, setOpened] = useState<Opened | null>(null);
   const openPlant = usePlant(opened?.plantId ?? null);
   const adder = useAddPlantForm();
@@ -58,6 +62,20 @@ export const AllPlantsPage = () => {
     remove.mutate(plant.id, { onSuccess: close });
   };
 
+  const clearTag = (): void => {
+    setTag(null);
+  };
+
+  const showAll = (): void => {
+    setQuery('');
+    setTag(null);
+  };
+
+  const showTagFromDetails = (selected: string): void => {
+    setOpened(null);
+    setTag(selected);
+  };
+
   const retry = (): void => {
     void plants.refetch();
   };
@@ -66,29 +84,60 @@ export const AllPlantsPage = () => {
     void openPlant.refetch();
   };
 
+  const renderPlants = (all: PlantSummary[]) => {
+    if (all.length === 0) {
+      return (
+        <div role="status" className={MESSAGE_CLASSES}>
+          <p>{text.empty}</p>
+          <p className="font-semibold">{text.emptyHint}</p>
+        </div>
+      );
+    }
+
+    const shown = filterPlants(sortByName(all, i18n.language), { query, tag });
+
+    return shown.length === 0 ? (
+      <div className="flex flex-col items-center gap-2 py-4">
+        <p role="status" className={MESSAGE_CLASSES}>
+          {text.noMatch}
+        </p>
+        <Button variant="secondary" onClick={showAll}>
+          {text.showAll}
+        </Button>
+      </div>
+    ) : (
+      <PlantList plants={shown} onOpen={open} onSelectTag={setTag} />
+    );
+  };
+
   const renderList = () => {
     if (plants.data !== undefined) {
-      const { today } = plants.data;
+      const { today, plants: all } = plants.data;
 
       return (
         <>
-          <Button
-            className="self-stretch sm:self-end"
-            onClick={() => {
-              adder.open(today);
-            }}
-          >
-            <Plus size={18} aria-hidden />
-            {text.add}
-          </Button>
-          {plants.data.plants.length === 0 ? (
-            <div role="status" className={MESSAGE_CLASSES}>
-              <p>{text.empty}</p>
-              <p className="font-semibold">{text.emptyHint}</p>
-            </div>
-          ) : (
-            <PlantList plants={sortByName(plants.data.plants, i18n.language)} onOpen={open} />
-          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <Button
+              className="shrink-0 sm:self-start"
+              onClick={() => {
+                adder.open(today);
+              }}
+            >
+              <Plus size={18} aria-hidden />
+              {text.add}
+            </Button>
+            {all.length > 0 && (
+              <div className="min-w-0 flex-1">
+                <PlantFilters
+                  query={query}
+                  tag={tag}
+                  onQueryChange={setQuery}
+                  onClearTag={clearTag}
+                />
+              </div>
+            )}
+          </div>
+          {renderPlants(all)}
         </>
       );
     }
@@ -113,6 +162,7 @@ export const AllPlantsPage = () => {
           onDelete={() => {
             askToDelete(plant);
           }}
+          onSelectTag={showTagFromDetails}
         />
       );
     }
