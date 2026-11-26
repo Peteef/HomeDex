@@ -50,9 +50,9 @@ export const calendarService = (
 
   const projectedPlants = (day: string, lastDay: string): ProjectedPlant[] =>
     plants.list().flatMap((plant) =>
-      projectWaterings(plant, day, lastDay).map(({ date, urgency }) => ({
+      projectWaterings(plant, day, lastDay).map(({ date, urgency, daysUntil }) => ({
         date,
-        plant: { id: plant.id, name: plant.name, photoId: null, urgency },
+        plant: { id: plant.id, name: plant.name, photoId: null, urgency, daysUntil },
       })),
     );
 

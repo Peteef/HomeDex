@@ -10,7 +10,7 @@ import {
 } from './internal/plantsApi.ts';
 import { useLiveQuery } from './internal/useLiveQuery.ts';
 
-const MODULE_QUERY_KEY = ['plant-assistant'] as const;
+export const MODULE_QUERY_KEY = ['plant-assistant'] as const;
 const PLANTS_QUERY_KEY = [...MODULE_QUERY_KEY, 'plants'] as const;
 const TAGS_QUERY_KEY = [...MODULE_QUERY_KEY, 'tags'] as const;
 

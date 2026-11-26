@@ -79,3 +79,51 @@ export const stubPlants = async (page: Page, plants: E2EPlant[]): Promise<void> 
   await page.route('**/api/m/plant-assistant/plants', listPlants);
   await page.route('**/api/m/plant-assistant/plants/*', getPlant);
 };
+
+const DAY_MS = 86_400_000;
+const GRID_START = Date.UTC(2026, 9, 26);
+const GRID_DAYS = 42;
+const DAYS_IN_WEEK = 7;
+
+const calendarPlant = (plant: E2EPlant, daysUntil: number) => ({
+  id: plant.id,
+  name: plant.name,
+  photoId: null,
+  urgency: plant.urgency,
+  daysUntil,
+});
+
+// November 2026 in whole weeks, Monday 26 October to Sunday 6 December, with the sample plants
+// on their next watering and a busy 24 November.
+export const stubCalendar = async (page: Page, plants: E2EPlant[]): Promise<void> => {
+  const dates = Array.from({ length: GRID_DAYS }, (_, index) =>
+    new Date(GRID_START + index * DAY_MS).toISOString().slice(0, 10),
+  );
+
+  const plantsOn = (date: string) => [
+    ...plants
+      .filter((plant) => (plant.daysUntil < 0 ? TODAY : plant.nextWateringOn) === date)
+      .map((plant) => calendarPlant(plant, plant.daysUntil)),
+    ...(date === '2026-11-24'
+      ? plants.map((plant) => ({
+          ...calendarPlant(plant, 4),
+          id: plant.id + 100,
+          urgency: 'later',
+        }))
+      : []),
+  ];
+
+  const weeks = Array.from({ length: GRID_DAYS / DAYS_IN_WEEK }, (_, week) =>
+    dates.slice(week * DAYS_IN_WEEK, (week + 1) * DAYS_IN_WEEK).map((date) => ({
+      date,
+      inMonth: date.startsWith('2026-11'),
+      isToday: date === TODAY,
+      isPast: date < TODAY,
+      plants: plantsOn(date),
+    })),
+  );
+
+  await page.route('**/api/m/plant-assistant/calendar*', (route) =>
+    route.fulfill({ json: { today: TODAY, month: '2026-11', weeks } }),
+  );
+};

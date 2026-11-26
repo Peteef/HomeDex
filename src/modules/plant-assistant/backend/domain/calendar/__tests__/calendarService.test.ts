@@ -81,11 +81,11 @@ describe('calendar service', () => {
 
     // Then
     expect(dayOf(calendar, '2026-06-03')?.plants).toEqual([
-      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'today' },
+      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'today', daysUntil: 0 },
     ]);
 
     expect(dayOf(calendar, '2026-06-10')?.plants).toEqual([
-      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'later' },
+      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'later', daysUntil: 7 },
     ]);
 
     expect(dayOf(calendar, '2026-06-04')?.plants).toEqual([]);
@@ -101,7 +101,10 @@ describe('calendar service', () => {
 
     // Then
     expect(dayOf(calendar, '2026-06-01')?.plants).toEqual([]);
-    expect(dayOf(calendar, '2026-06-03')?.plants).toMatchObject([{ urgency: 'overdue' }]);
+
+    expect(dayOf(calendar, '2026-06-03')?.plants).toMatchObject([
+      { urgency: 'overdue', daysUntil: -2 },
+    ]);
   });
 
   it('should order the plants of a day by urgency, then by name', () => {

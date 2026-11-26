@@ -14,10 +14,10 @@ describe('projectWaterings', () => {
 
     // Then
     expect(waterings).toEqual([
-      { date: '2026-06-03', urgency: 'today' },
-      { date: '2026-06-10', urgency: 'later' },
-      { date: '2026-06-17', urgency: 'later' },
-      { date: '2026-06-24', urgency: 'later' },
+      { date: '2026-06-03', urgency: 'today', daysUntil: 0 },
+      { date: '2026-06-10', urgency: 'later', daysUntil: 7 },
+      { date: '2026-06-17', urgency: 'later', daysUntil: 14 },
+      { date: '2026-06-24', urgency: 'later', daysUntil: 21 },
     ]);
   });
 
@@ -30,7 +30,7 @@ describe('projectWaterings', () => {
     );
 
     // Then
-    expect(waterings).toEqual([{ date: '2026-06-05', urgency: 'soon' }]);
+    expect(waterings).toEqual([{ date: '2026-06-05', urgency: 'soon', daysUntil: 2 }]);
   });
 
   it('should switch to the winter interval after the first watering in winter', () => {
@@ -43,13 +43,13 @@ describe('projectWaterings', () => {
 
     // Then
     expect(waterings).toEqual([
-      { date: '2026-09-28', urgency: 'later' },
-      { date: '2026-10-05', urgency: 'later' },
-      { date: '2026-11-04', urgency: 'later' },
+      { date: '2026-09-28', urgency: 'later', daysUntil: 8 },
+      { date: '2026-10-05', urgency: 'later', daysUntil: 15 },
+      { date: '2026-11-04', urgency: 'later', daysUntil: 45 },
     ]);
   });
 
-  it('should show an overdue plant on today and continue from today', () => {
+  it('should show an overdue plant on today, overdue by its own days, and continue from today', () => {
     // When
     const waterings = projectWaterings(
       { ...FERN, nextWateringOn: '2026-06-01' },
@@ -59,9 +59,9 @@ describe('projectWaterings', () => {
 
     // Then
     expect(waterings).toEqual([
-      { date: '2026-06-03', urgency: 'overdue' },
-      { date: '2026-06-10', urgency: 'later' },
-      { date: '2026-06-17', urgency: 'later' },
+      { date: '2026-06-03', urgency: 'overdue', daysUntil: -2 },
+      { date: '2026-06-10', urgency: 'later', daysUntil: 7 },
+      { date: '2026-06-17', urgency: 'later', daysUntil: 14 },
     ]);
   });
 

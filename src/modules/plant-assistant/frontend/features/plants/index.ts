@@ -1,5 +1,7 @@
 export { isDue } from './due.ts';
+export { useLiveQuery } from './internal/useLiveQuery.ts';
 export {
+  MODULE_QUERY_KEY,
   useCreatePlant,
   useDeletePlant,
   useEditPlant,
