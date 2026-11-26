@@ -87,7 +87,7 @@ const DayCell = ({ day, selected, format, onSelect, onOpen }: DayCellProps) => {
           </li>
         ))}
       </ul>
-      {hiddenCount > 0 ? (
+      {hiddenCount > 0 && (
         <button
           type="button"
           onClick={select}
@@ -96,7 +96,7 @@ const DayCell = ({ day, selected, format, onSelect, onOpen }: DayCellProps) => {
           {text.more({ count: hiddenCount })}
           <span className="sr-only">{text.moreOn({ date: format.fullDate(day.date) })}</span>
         </button>
-      ) : null}
+      )}
     </td>
   );
 };

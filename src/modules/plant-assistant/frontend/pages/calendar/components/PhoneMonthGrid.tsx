@@ -57,7 +57,7 @@ const DayCell = ({ day, selected, format, onSelect }: DayCellProps) => {
         className={dayClasses(day, selected)}
       >
         <span aria-hidden>{format.dayNumber(day.date)}</span>
-        {mostUrgent === undefined ? null : (
+        {mostUrgent !== undefined && (
           <span
             aria-hidden
             className={`min-w-5 rounded-full px-1 text-xs leading-4 font-extrabold ${MARKER_CLASSES[mostUrgent.urgency]}`}
