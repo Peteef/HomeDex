@@ -104,7 +104,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: true,
             editable: true,
-            badge: null,
+            countOnBadge: 0,
           },
         ],
       });
@@ -361,7 +361,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: false,
             editable: false,
-            badge: null,
+            countOnBadge: 0,
           },
           {
             id: expect.any(Number) as number,
@@ -374,7 +374,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: false,
             editable: false,
-            badge: null,
+            countOnBadge: 0,
           },
         ],
       });
@@ -442,9 +442,9 @@ describe('tiles API', () => {
     const badgesFor = async (cookie: string) =>
       (
         (await get(cookie)).body as {
-          tiles: { kind: string; moduleId: string | null; badge: number | null }[];
+          tiles: { kind: string; moduleId: string | null; countOnBadge: number }[];
         }
-      ).tiles.map(({ kind, moduleId, badge }) => [kind, moduleId, badge]);
+      ).tiles.map(({ kind, moduleId, countOnBadge }) => [kind, moduleId, countOnBadge]);
 
     beforeEach(async () => {
       logged = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
@@ -458,7 +458,7 @@ describe('tiles API', () => {
       vi.restoreAllMocks();
     });
 
-    it('should show each module tile its count above 0 and give every other tile none', async () => {
+    it('should give each module tile its count and every other tile 0', async () => {
       // Given
       await createTile(ash);
 
@@ -467,11 +467,11 @@ describe('tiles API', () => {
 
       // Then
       expect(badges).toEqual([
-        ['module', 'broken', null],
+        ['module', 'broken', 0],
         ['module', 'counted', 3],
-        ['module', 'idle', null],
-        ['module', 'quiet', null],
-        ['link', null, null],
+        ['module', 'idle', 0],
+        ['module', 'quiet', 0],
+        ['link', null, 0],
       ]);
     });
 

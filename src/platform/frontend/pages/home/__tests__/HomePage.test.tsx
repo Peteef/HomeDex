@@ -168,7 +168,7 @@ describe('HomePage', () => {
     // When
     await openHome([
       FINANCES,
-      moduleTile('clock', { id: 9, dexNo: 9, badge: 4 }),
+      moduleTile('clock', { id: 9, dexNo: 9, countOnBadge: 4 }),
       moduleTile('notes', { id: 10, dexNo: 10 }),
     ]);
 

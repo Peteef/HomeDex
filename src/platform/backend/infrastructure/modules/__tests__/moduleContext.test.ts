@@ -56,8 +56,8 @@ describe('moduleContext', () => {
     ctx.setTileBadge(() => 3);
 
     // Then
-    expect(badges.badgeOf('notes')).toBe(3);
-    expect(badges.badgeOf('clock')).toBeNull();
+    expect(badges.countOnBadge('notes')).toBe(3);
+    expect(badges.countOnBadge('clock')).toBe(0);
   });
 
   it('should log a failing badge count with the module id when the tiles ask for it', () => {
@@ -72,10 +72,10 @@ describe('moduleContext', () => {
     });
 
     // When
-    const badge = badges.badgeOf('notes');
+    const count = badges.countOnBadge('notes');
 
     // Then
-    expect(badge).toBeNull();
+    expect(count).toBe(0);
     expect(error).toHaveBeenCalledWith('[notes] The tile badge failed', failure);
   });
 });

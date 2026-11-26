@@ -11,7 +11,7 @@ export const linkTile = (texts: TileTexts, changes: Partial<Tile> = {}): Tile =>
   scope: 'shared',
   pinned: false,
   editable: true,
-  badge: null,
+  countOnBadge: 0,
   ...changes,
 });
 

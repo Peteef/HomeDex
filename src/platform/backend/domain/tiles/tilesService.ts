@@ -7,15 +7,15 @@ import { toTile } from './internal/toTile.ts';
 import { linkTileSchema, validate } from './internal/validation.ts';
 import type { EnabledModule, NewLinkTile, Tile, TileEdit, TileScope } from './types.ts';
 
-export type TileBadge = (moduleId: string) => number | null;
+export type CountOnBadge = (moduleId: string) => number;
 
 interface TilesOptions {
   enabledModuleIds: readonly string[];
-  tileBadge?: TileBadge;
+  countOnBadge?: CountOnBadge;
   now?: () => number;
 }
 
-const NO_BADGE: TileBadge = () => null;
+const NO_BADGE: CountOnBadge = () => 0;
 
 export interface TilesService {
   list(userId: number): Tile[];
@@ -50,7 +50,7 @@ const toLinkTileRecord = (row: LinkTileRow): LinkTileRecord => ({
 
 export const tilesService = (
   db: Storage,
-  { enabledModuleIds, tileBadge = NO_BADGE, now = Date.now }: TilesOptions,
+  { enabledModuleIds, countOnBadge = NO_BADGE, now = Date.now }: TilesOptions,
 ): TilesService => {
   const tiles = tileRepository(db);
   const pins = pinRepository(db);
@@ -87,11 +87,11 @@ export const tilesService = (
     }
   };
 
-  const badgeOf = (row: UserTileRow): number | null =>
-    row.module_id === null ? null : tileBadge(row.module_id);
+  const countOnBadgeOf = (row: UserTileRow): number =>
+    row.module_id === null ? 0 : countOnBadge(row.module_id);
 
   const toUserTile = (row: UserTileRow, userId: number): Tile =>
-    toTile(row, { editable: isEditable(row, userId), badge: badgeOf(row) });
+    toTile(row, { editable: isEditable(row, userId), countOnBadge: countOnBadgeOf(row) });
 
   const tileFor = (userId: number, id: number): Tile =>
     toUserTile(requireVisible(userId, id), userId);

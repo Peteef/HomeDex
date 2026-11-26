@@ -13,7 +13,8 @@ export interface ModuleContext {
   logger: Logger;
   // Today's date as YYYY-MM-DD in the household time zone (TZ).
   today: () => string;
-  // Called on every tiles request, so `count` must be cheap and synchronous. At most once.
+  // The platform calls `count` on every tiles request, so it must be cheap and synchronous.
+  // Call it at most once, in `register`.
   setTileBadge: (count: () => number) => void;
 }
 

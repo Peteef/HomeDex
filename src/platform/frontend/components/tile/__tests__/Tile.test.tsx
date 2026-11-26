@@ -63,7 +63,7 @@ describe('Tile', () => {
 
   it('should show the badge and say its count in the link name when there is a badge', () => {
     // When
-    renderTile({ badge: 3 });
+    renderTile({ countOnBadge: 3 });
 
     // Then
     expect(screen.getByText('3')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('Tile', () => {
 
   it('should say the full count in the link name when the badge shows 99+', () => {
     // When
-    renderTile({ badge: 100 });
+    renderTile({ countOnBadge: 100 });
 
     // Then
     expect(screen.getByText('99+')).toBeInTheDocument();
@@ -84,20 +84,20 @@ describe('Tile', () => {
     [3, '3 czekają'],
     [5, '5 czeka'],
     [22, '22 czekają'],
-  ])('should say %i in Polish as "%s" when the language is Polish', async (badge, words) => {
+  ])('should say %i in Polish as "%s" when the language is Polish', async (countOnBadge, words) => {
     // Given
     await i18next.changeLanguage('pl');
 
     // When
-    renderTile({ badge });
+    renderTile({ countOnBadge });
 
     // Then
     expect(screen.getByRole('link')).toHaveAccessibleName(new RegExp(`Finances, ${words}`));
   });
 
-  it('should show no badge without one', () => {
+  it.each([undefined, 0])('should show no badge when the count is %s', (countOnBadge) => {
     // When
-    renderTile();
+    renderTile(countOnBadge === undefined ? {} : { countOnBadge });
 
     // Then
     expect(screen.getByRole('link')).not.toHaveAccessibleName(/waiting/);
