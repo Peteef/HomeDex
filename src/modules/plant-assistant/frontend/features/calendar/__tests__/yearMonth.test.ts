@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addMonths, monthOf } from '../index.ts';
+import { addMonths, monthOf, nextMonth, previousMonth } from '../index.ts';
 
 describe('yearMonth', () => {
   describe('addMonths', () => {
@@ -12,6 +12,26 @@ describe('yearMonth', () => {
     ])('should step %s by %i to %s', (month, months, expected) => {
       // When / Then
       expect(addMonths(month, months)).toBe(expected);
+    });
+  });
+
+  describe('nextMonth', () => {
+    it.each([
+      ['2026-11', '2026-12'],
+      ['2026-12', '2027-01'],
+    ])('should follow %s with %s', (month, expected) => {
+      // When / Then
+      expect(nextMonth(month)).toBe(expected);
+    });
+  });
+
+  describe('previousMonth', () => {
+    it.each([
+      ['2026-11', '2026-10'],
+      ['2027-01', '2026-12'],
+    ])('should precede %s with %s', (month, expected) => {
+      // When / Then
+      expect(previousMonth(month)).toBe(expected);
     });
   });
 

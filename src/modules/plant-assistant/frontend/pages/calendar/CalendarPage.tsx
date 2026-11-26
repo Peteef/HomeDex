@@ -3,7 +3,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
 import { Section } from '../../components/section/Section.tsx';
-import { addMonths, monthOf, useCalendarMonth } from '../../features/calendar/index.ts';
+import { TagChip } from '../../components/tag-chip/TagChip.tsx';
+import {
+  addMonths,
+  findPlant,
+  monthOf,
+  nextMonth,
+  previousMonth,
+  useCalendarMonth,
+} from '../../features/calendar/index.ts';
 import type { CalendarMonth, CalendarPlant } from '../../features/calendar/index.ts';
 import { usePlant } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
@@ -15,20 +23,29 @@ import { calendarFormat } from './internal/calendarFormat.ts';
 
 const MAX_MONTHS_AHEAD = 12;
 
-// The month starts as the server's current one (null) and the day as today; both reset when the
-// page opens again (owner, 2026-11-20).
 export const CalendarPage = () => {
   const text = useText('calendar');
   const { i18n } = useTranslation();
-  const [month, setMonth] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [opened, setOpened] = useState<CalendarPlant | null>(null);
-  const calendar = useCalendarMonth(month);
-  const openPlant = usePlant(opened?.id ?? null);
+  // Until one is picked, the server's current month and today are shown.
+  const [pickedMonth, setPickedMonth] = useState<string | null>(null);
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const [openedId, setOpenedId] = useState<number | null>(null);
+  const calendar = useCalendarMonth(pickedMonth);
+  const openPlant = usePlant(openedId);
+
+  // The calendar names the open plant, so a plant deleted elsewhere closes its dialog.
+  const openedPlant =
+    openedId === null || calendar.data === undefined
+      ? undefined
+      : findPlant(calendar.data, openedId);
 
   const showMonth = (shown: string | null): void => {
-    setMonth(shown);
-    setSelected(null);
+    setPickedMonth(shown);
+    setPickedDay(null);
+  };
+
+  const openDetails = (plant: CalendarPlant): void => {
+    setOpenedId(plant.id);
   };
 
   const showToday = (): void => {
@@ -36,8 +53,10 @@ export const CalendarPage = () => {
   };
 
   const closeDetails = (): void => {
-    setOpened(null);
+    setOpenedId(null);
   };
+
+  const renderTag = (tag: string) => <TagChip tag={tag} />;
 
   const retry = (): void => {
     void calendar.refetch();
@@ -50,7 +69,7 @@ export const CalendarPage = () => {
   const renderMonth = ({ today, month: shown, weeks }: CalendarMonth) => {
     const currentMonth = monthOf(today);
     const days = weeks.flat();
-    const selectedDate = selected ?? days.find((day) => day.isToday)?.date ?? null;
+    const selectedDate = pickedDay ?? days.find((day) => day.isToday)?.date ?? null;
     const selectedDay = days.find((day) => day.date === selectedDate);
 
     return (
@@ -60,25 +79,25 @@ export const CalendarPage = () => {
           canGoBack={shown !== currentMonth}
           canGoForward={shown !== addMonths(currentMonth, MAX_MONTHS_AHEAD)}
           onPrevious={() => {
-            showMonth(addMonths(shown, -1));
+            showMonth(previousMonth(shown));
           }}
           onNext={() => {
-            showMonth(addMonths(shown, 1));
+            showMonth(nextMonth(shown));
           }}
           onToday={showToday}
         />
         <div className="lg:hidden">
-          <PhoneMonthGrid weeks={weeks} selected={selectedDate} onSelect={setSelected} />
+          <PhoneMonthGrid weeks={weeks} selected={selectedDate} onSelect={setPickedDay} />
         </div>
         <div className="hidden lg:block">
           <DesktopMonthGrid
             weeks={weeks}
             selected={selectedDate}
-            onSelect={setSelected}
-            onOpen={setOpened}
+            onSelect={setPickedDay}
+            onOpen={openDetails}
           />
         </div>
-        {selectedDay !== undefined && <DayPlants day={selectedDay} onOpen={setOpened} />}
+        {selectedDay !== undefined && <DayPlants day={selectedDay} onOpen={openDetails} />}
       </>
     );
   };
@@ -98,10 +117,12 @@ export const CalendarPage = () => {
   return (
     <Section heading={text.heading}>
       {renderCalendar()}
-      {opened !== null && (
+      {openedPlant !== undefined && (
         <PlantDetailsDialog
-          title={openPlant.data?.plant.name ?? opened.name}
+          title={openedPlant.name}
           plant={openPlant.data?.plant}
+          renderTag={renderTag}
+          actions={null}
           failed={openPlant.isError}
           onRetry={retryOpenPlant}
           onClose={closeDetails}
