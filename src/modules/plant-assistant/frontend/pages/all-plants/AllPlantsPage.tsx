@@ -5,7 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
 import { Section } from '../../components/section/Section.tsx';
 import { SelectableTagChip } from '../../components/tag-chip/SelectableTagChip.tsx';
-import { useDeletePlant, usePlant, usePlants, useTags } from '../../features/plants/index.ts';
+import {
+  photoUrl,
+  useDeletePlant,
+  usePlant,
+  usePlants,
+  useTags,
+} from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
 import { AddPlantForm } from './components/AddPlantForm.tsx';
@@ -168,6 +174,7 @@ export const AllPlantsPage = () => {
         key="details"
         title={plant.name}
         plant={openPlant.data?.plant}
+        photoUrl={openPlant.data === undefined ? null : photoUrl(openPlant.data.plant)}
         failed={openPlant.isError}
         onRetry={retryOpenPlant}
         renderTag={renderSelectableTag}
@@ -219,12 +226,16 @@ export const AllPlantsPage = () => {
           errors={adder.errors}
           tagNote={adder.form.tagNote}
           tagSuggestions={tags.data?.tags ?? NO_TAGS}
+          photoUrl={adder.photoUrl}
+          photoUnreadable={adder.form.photoUnreadable}
           dateLimits={adder.dateLimits}
           saving={adder.saving}
           failed={adder.failed}
           onChange={adder.change}
           onAddTag={adder.addTag}
           onRemoveTag={adder.removeTag}
+          onChoosePhoto={adder.choosePhoto}
+          onRemovePhoto={adder.removePhoto}
           onSubmit={adder.save}
         />
       </Dialog>
@@ -242,12 +253,16 @@ export const AllPlantsPage = () => {
           errors={editor.errors}
           tagNote={editor.form.tagNote}
           tagSuggestions={tags.data?.tags ?? NO_TAGS}
+          photoUrl={editor.photoUrl}
+          photoUnreadable={editor.form.photoUnreadable}
           dateLimits={editor.dateLimits}
           saving={editor.saving}
           failed={editor.failed}
           onChange={editor.change}
           onAddTag={editor.addTag}
           onRemoveTag={editor.removeTag}
+          onChoosePhoto={editor.choosePhoto}
+          onRemovePhoto={editor.removePhoto}
           onSubmit={editor.save}
         />
       </Dialog>

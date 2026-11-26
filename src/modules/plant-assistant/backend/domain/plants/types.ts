@@ -8,11 +8,16 @@ export interface PlantFields {
   winterIntervalDays: number;
 }
 
-export interface NewPlant extends PlantFields {
+// A photo is base64 JPEG text. Left out, the current photo stays; null removes it.
+export interface PhotoInput {
+  photo?: string | null;
+}
+
+export interface NewPlant extends PlantFields, PhotoInput {
   lastWateredOn: string;
 }
 
-export interface PlantChanges extends PlantFields {
+export interface PlantChanges extends PlantFields, PhotoInput {
   nextWateringOn: string;
 }
 

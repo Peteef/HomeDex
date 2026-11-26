@@ -8,6 +8,7 @@ import {
   formValuesOf,
   hasErrors,
   removeTag,
+  shownPhoto,
   toFields,
   validateFormFields,
 } from '../plantForm.ts';
@@ -34,6 +35,7 @@ const VALID: PlantFormValues = {
   tagDraft: '',
   summerIntervalDays: '7',
   winterIntervalDays: '14',
+  photo: { kind: 'keep' },
 };
 
 const errorsIn = (values: PlantFormValues) => errorsOf(validateFormFields(values));
@@ -51,6 +53,7 @@ describe('plantForm', () => {
         tagDraft: '',
         summerIntervalDays: '',
         winterIntervalDays: '',
+        photo: { kind: 'keep' },
       });
     });
   });
@@ -65,6 +68,7 @@ describe('plantForm', () => {
         tagDraft: '',
         summerIntervalDays: '7',
         winterIntervalDays: '14',
+        photo: { kind: 'keep' },
       });
     });
 
@@ -198,6 +202,30 @@ describe('plantForm', () => {
       expect(removeTag({ ...VALID, tags: ['Shade', 'Living room'] }, 'Shade').tags).toEqual([
         'Living room',
       ]);
+    });
+  });
+
+  describe('shownPhoto', () => {
+    it('should show the chosen photo', () => {
+      // When / Then
+      expect(shownPhoto({ kind: 'replace', jpeg: '/9j/AAAA' }, '/fern.jpg')).toBe(
+        'data:image/jpeg;base64,/9j/AAAA',
+      );
+    });
+
+    it('should show no photo once it is removed', () => {
+      // When / Then
+      expect(shownPhoto({ kind: 'remove' }, '/fern.jpg')).toBeNull();
+    });
+
+    it('should show the saved photo while it is kept', () => {
+      // When / Then
+      expect(shownPhoto({ kind: 'keep' }, '/fern.jpg')).toBe('/fern.jpg');
+    });
+
+    it('should show no photo when there is none to keep', () => {
+      // When / Then
+      expect(shownPhoto({ kind: 'keep' }, null)).toBeNull();
     });
   });
 

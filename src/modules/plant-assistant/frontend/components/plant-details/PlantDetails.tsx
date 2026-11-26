@@ -22,6 +22,7 @@ export interface DetailedPlant {
 
 export interface PlantDetailsProps {
   plant: DetailedPlant;
+  photoUrl: string | null;
   renderTag: (tag: string) => ReactNode;
 }
 
@@ -38,7 +39,7 @@ const DAILY_INTERVAL_DAYS = 1;
 const TERM_CLASSES = 'text-dex-ink-muted text-sm font-bold';
 const VALUE_CLASSES = 'flex flex-wrap items-center gap-2 text-base font-bold';
 
-export const PlantDetails = ({ plant, renderTag }: PlantDetailsProps) => {
+export const PlantDetails = ({ plant, photoUrl, renderTag }: PlantDetailsProps) => {
   const text = useText('components.plantDetails');
   const { i18n } = useTranslation();
   const dateFormat = new Intl.DateTimeFormat(i18n.language, DATE_FORMAT);
@@ -61,7 +62,7 @@ export const PlantDetails = ({ plant, renderTag }: PlantDetailsProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <PlantThumbnail photoUrl={null} size="large" />
+      <PlantThumbnail photoUrl={photoUrl} size="large" />
       {plant.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {plant.tags.map((tag) => (

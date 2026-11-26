@@ -15,13 +15,16 @@ const FERN: DetailedPlant = {
   currentSeason: 'winter',
 };
 
-const renderDialog = (props: Partial<Parameters<typeof PlantDetailsDialog>[0]> = {}) => {
+const renderDialog = (
+  props: Partial<Omit<Parameters<typeof PlantDetailsDialog>[0], 'photoUrl'>> = {},
+) => {
   const handlers = { onRetry: vi.fn(), onClose: vi.fn() };
 
   render(
     <PlantDetailsDialog
       title="Bulbasaur's fern"
       plant={FERN}
+      photoUrl={null}
       renderTag={(tag) => <span>{tag}</span>}
       actions={<button type="button">Water it</button>}
       failed={false}

@@ -95,6 +95,12 @@ export default {
         dateInPast: 'Choose today or a later date.',
       },
     },
+    photoField: {
+      label: 'Photo',
+      choose: 'Choose photo',
+      remove: 'Remove photo',
+      unreadable: "This photo can't be read. Try a JPEG or PNG.",
+    },
     tagsInput: {
       label: 'Tags',
       newTag: 'New tag',

@@ -5,7 +5,7 @@ import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsD
 import { Section } from '../../components/section/Section.tsx';
 import { TagChip } from '../../components/tag-chip/TagChip.tsx';
 import { UndoNotice } from '../../components/undo-notice/UndoNotice.tsx';
-import { usePlant, usePlants } from '../../features/plants/index.ts';
+import { photoUrl, usePlant, usePlants } from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
 import {
   isConflict,
@@ -191,6 +191,7 @@ export const TodayPage = () => {
         <PlantDetailsDialog
           title={openedPlant.name}
           plant={openPlant.data?.plant}
+          photoUrl={openPlant.data === undefined ? null : photoUrl(openPlant.data.plant)}
           renderTag={renderTag}
           actions={null}
           failed={openPlant.isError}

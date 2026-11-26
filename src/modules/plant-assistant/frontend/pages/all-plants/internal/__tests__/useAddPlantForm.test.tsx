@@ -63,6 +63,7 @@ describe('useAddPlantForm', () => {
     expect(form.result.current.form?.values.lastWateredOn).toBe('2026-11-20');
     expect(form.result.current.form?.values.name).toBe('');
     expect(form.result.current.dateLimits).toEqual({ max: '2026-11-20' });
+    expect(form.result.current.photoUrl).toBeNull();
   });
 
   it('should create the plant from the trimmed values and close when it is saved', async () => {

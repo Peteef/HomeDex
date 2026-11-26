@@ -9,6 +9,7 @@ import {
   NAME_MAX_LENGTH,
 } from '../internal/plantForm.ts';
 import type { FormErrors, PlantFormField, PlantFormValues, TagNote } from '../types.ts';
+import { PhotoField } from './PhotoField.tsx';
 import { TagsInput } from './TagsInput.tsx';
 
 export interface PlantFormProps {
@@ -16,11 +17,15 @@ export interface PlantFormProps {
   errors: FormErrors<PlantFormField>;
   tagNote: TagNote | null;
   tagSuggestions: string[];
+  photoUrl: string | null;
+  photoUnreadable: boolean;
   saving: boolean;
   failed: boolean;
   onChange: (field: PlantFormField, value: string) => void;
   onAddTag: () => void;
   onRemoveTag: (tag: string) => void;
+  onChoosePhoto: (file: File) => void;
+  onRemovePhoto: () => void;
   onSubmit: () => void;
   dateField: ReactNode;
 }
@@ -32,11 +37,15 @@ export const PlantForm = ({
   errors,
   tagNote,
   tagSuggestions,
+  photoUrl,
+  photoUnreadable,
   saving,
   failed,
   onChange,
   onAddTag,
   onRemoveTag,
+  onChoosePhoto,
+  onRemovePhoto,
   onSubmit,
   dateField,
 }: PlantFormProps) => {
@@ -92,6 +101,12 @@ export const PlantForm = ({
         onChange={(event) => {
           onChange('name', event.target.value);
         }}
+      />
+      <PhotoField
+        photoUrl={photoUrl}
+        unreadable={photoUnreadable}
+        onChoose={onChoosePhoto}
+        onRemove={onRemovePhoto}
       />
       <TextArea
         label={text.description}

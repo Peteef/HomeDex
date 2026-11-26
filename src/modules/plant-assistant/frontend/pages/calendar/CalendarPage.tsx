@@ -13,7 +13,7 @@ import {
   useCalendarMonth,
 } from '../../features/calendar/index.ts';
 import type { CalendarMonth, CalendarPlant } from '../../features/calendar/index.ts';
-import { usePlant } from '../../features/plants/index.ts';
+import { photoUrl, usePlant } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
 import { DayPlants } from './components/DayPlants.tsx';
 import { DesktopMonthGrid } from './components/DesktopMonthGrid.tsx';
@@ -121,6 +121,7 @@ export const CalendarPage = () => {
         <PlantDetailsDialog
           title={openedPlant.name}
           plant={openPlant.data?.plant}
+          photoUrl={openPlant.data === undefined ? null : photoUrl(openPlant.data.plant)}
           renderTag={renderTag}
           actions={null}
           failed={openPlant.isError}

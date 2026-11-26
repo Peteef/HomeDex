@@ -16,6 +16,7 @@ const VALID: AddPlantValues = {
   tagDraft: '',
   summerIntervalDays: '7',
   winterIntervalDays: '14',
+  photo: { kind: 'keep' },
   lastWateredOn: '2026-11-20',
 };
 
@@ -30,6 +31,7 @@ describe('addPlantForm', () => {
         tagDraft: '',
         summerIntervalDays: '',
         winterIntervalDays: '',
+        photo: { kind: 'keep' },
         lastWateredOn: '2026-11-20',
       });
     });
@@ -84,6 +86,16 @@ describe('addPlantForm', () => {
         winterIntervalDays: 14,
         lastWateredOn: '2026-11-18',
       });
+    });
+
+    it('should send a chosen photo, and nothing otherwise', () => {
+      // When / Then
+      expect(toNewPlant({ ...VALID, photo: { kind: 'replace', jpeg: '/9j/AAAA' } }).photo).toBe(
+        '/9j/AAAA',
+      );
+
+      expect(toNewPlant(VALID)).not.toHaveProperty('photo');
+      expect(toNewPlant({ ...VALID, photo: { kind: 'remove' } })).not.toHaveProperty('photo');
     });
   });
 });

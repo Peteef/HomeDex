@@ -106,6 +106,12 @@ export default {
         dateInPast: 'Wybierz dzisiejszą lub późniejszą datę.',
       },
     },
+    photoField: {
+      label: 'Zdjęcie',
+      choose: 'Wybierz zdjęcie',
+      remove: 'Usuń zdjęcie',
+      unreadable: 'Nie da się odczytać tego zdjęcia. Spróbuj JPEG lub PNG.',
+    },
     tagsInput: {
       label: 'Tagi',
       newTag: 'Nowy tag',

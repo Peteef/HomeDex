@@ -5,4 +5,5 @@ export default defineModule({
   icon: 'plant',
   route: '/m/plant-assistant',
   enabled: true,
+  requestBodyLimitKb: 1024,
 });

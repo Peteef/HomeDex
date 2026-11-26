@@ -32,6 +32,31 @@ const finishAnimations = (element: Element) =>
       .map((animation) => animation.finished.catch(() => animation)),
   );
 
+// A generated test image, never a real photo: a gradient drawn in the page, as PNG.
+const generatedImage = async (page: Page, width: number, height: number): Promise<Buffer> => {
+  const dataUrl = await page.evaluate(
+    ([w, h]) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const context = canvas.getContext('2d');
+
+      if (context !== null) {
+        const gradient = context.createLinearGradient(0, 0, w, h);
+        gradient.addColorStop(0, '#2f7d32');
+        gradient.addColorStop(1, '#f2c94c');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, w, h);
+      }
+
+      return canvas.toDataURL('image/png');
+    },
+    [width, height] as const,
+  );
+
+  return Buffer.from(dataUrl.split(',')[1] ?? '', 'base64');
+};
+
 const todayBoard = (page: Page) => page.getByRole('region', { name: 'To water today' });
 
 const createOverduePlant = async (page: Page, name: string): Promise<number> => {
@@ -656,4 +681,68 @@ test.describe('plant assistant', () => {
       });
     });
   }
+
+  // Against the real API on every project, so each browser's decoding and resizing is used.
+  test('should add a plant with a photo, show it and remove it', async ({ page }, testInfo) => {
+    // Given
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const name = `Photo ${testInfo.project.name} ${String(Date.now())}`;
+    const row = plantRows(page).filter({ hasText: name });
+    await page.goto(PLANT_ASSISTANT_PATH);
+    await page.getByRole('button', { name: 'Add plant' }).click();
+    const form = page.getByRole('dialog', { name: 'Add a plant' });
+    await form.getByLabel('Name').fill(name);
+    await form.getByLabel('Summer').fill('7');
+    await form.getByLabel('Winter').fill('14');
+
+    // When
+    await form.getByLabel('Choose photo').setInputFiles({
+      name: 'generated.png',
+      mimeType: 'image/png',
+      buffer: await generatedImage(page, 1600, 1200),
+    });
+
+    // Then
+    await expect(form.locator('img')).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
+
+    // When
+    await form.getByRole('button', { name: 'Save' }).click();
+
+    // Then
+    await expect(form).toBeHidden();
+    const thumbnail = row.locator('img');
+    await expect(thumbnail).toHaveAttribute('src', /\/photo\?v=\d+$/);
+
+    await expect
+      .poll(() => thumbnail.evaluate((image: HTMLImageElement) => image.naturalWidth))
+      .toBe(1024);
+
+    // When
+    await row.getByRole('button', { name }).click();
+    const details = page.getByRole('dialog', { name });
+
+    // Then
+    await expect
+      .poll(() => details.locator('img').evaluate((image: HTMLImageElement) => image.naturalHeight))
+      .toBe(768);
+
+    // When
+    await details.getByRole('button', { name: 'Edit' }).click();
+    const editForm = page.getByRole('dialog', { name: `Edit ${name}` });
+    await editForm.getByRole('button', { name: 'Remove photo' }).click();
+    await editForm.getByRole('button', { name: 'Save' }).click();
+
+    // Then
+    await expect(details.getByText('Every 14 days')).toBeVisible();
+    await expect(details.locator('img')).toHaveCount(0);
+
+    await details.getByRole('button', { name: 'Delete' }).click();
+
+    await page
+      .getByRole('dialog', { name: `Delete ${name}?` })
+      .getByRole('button', { name: 'Delete' })
+      .click();
+
+    await expect(row).toHaveCount(0);
+  });
 });

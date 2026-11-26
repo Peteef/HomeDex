@@ -1,16 +1,18 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
+import type { AddPlantValues } from '../../types.ts';
 import type { AddPlantFormProps } from '../AddPlantForm.tsx';
 import { AddPlantForm } from '../AddPlantForm.tsx';
 
-const VALUES = {
+const VALUES: AddPlantValues = {
   name: "Bulbasaur's fern",
   description: '',
   tags: [],
   tagDraft: '',
   summerIntervalDays: '7',
   winterIntervalDays: '14',
+  photo: { kind: 'keep' },
   lastWateredOn: '2026-11-20',
 };
 
@@ -23,12 +25,16 @@ const renderForm = (props: Partial<AddPlantFormProps> = {}) => {
       errors={{}}
       tagNote={null}
       tagSuggestions={[]}
+      photoUrl={null}
+      photoUnreadable={false}
       dateLimits={{ max: '2026-11-20' }}
       saving={false}
       failed={false}
       onChange={onChange}
       onAddTag={vi.fn()}
       onRemoveTag={vi.fn()}
+      onChoosePhoto={vi.fn()}
+      onRemovePhoto={vi.fn()}
       onSubmit={vi.fn()}
       {...props}
     />,

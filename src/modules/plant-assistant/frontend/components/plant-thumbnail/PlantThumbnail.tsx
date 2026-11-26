@@ -32,5 +32,10 @@ export const PlantThumbnail = ({ photoUrl, size }: PlantThumbnailProps) =>
       <Sprout size={ICON_SIZES[size]} aria-hidden />
     </span>
   ) : (
-    <img src={photoUrl} alt="" className={`shrink-0 object-cover ${PHOTO_CLASSES[size]}`} />
+    <img
+      src={photoUrl}
+      alt=""
+      loading={size === 'small' ? 'lazy' : 'eager'}
+      className={`shrink-0 object-cover ${PHOTO_CLASSES[size]}`}
+    />
   );

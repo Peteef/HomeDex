@@ -1,5 +1,7 @@
 import type { PlantDetails } from '../../features/plants/index.ts';
 
+export type PhotoChoice = { kind: 'keep' } | { kind: 'remove' } | { kind: 'replace'; jpeg: string };
+
 export interface PlantFormValues {
   name: string;
   description: string;
@@ -7,6 +9,7 @@ export interface PlantFormValues {
   tagDraft: string;
   summerIntervalDays: string;
   winterIntervalDays: string;
+  photo: PhotoChoice;
 }
 
 export interface AddPlantValues extends PlantFormValues {
@@ -17,7 +20,7 @@ export interface EditPlantValues extends PlantFormValues {
   nextWateringOn: string;
 }
 
-export type PlantFormField = Exclude<keyof PlantFormValues, 'tags'>;
+export type PlantFormField = Exclude<keyof PlantFormValues, 'tags' | 'photo'>;
 export type AddPlantField = PlantFormField | 'lastWateredOn';
 export type EditPlantField = PlantFormField | 'nextWateringOn';
 

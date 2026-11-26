@@ -4,6 +4,7 @@ import type {
   ErrorEntry,
   FieldError,
   FormErrors,
+  PhotoChoice,
   PlantFormField,
   PlantFormValues,
   TagNote,
@@ -17,6 +18,8 @@ export const MIN_INTERVAL_DAYS = 1;
 export const MAX_INTERVAL_DAYS = 365;
 
 const WHOLE_NUMBER = /^\d+$/;
+const KEEP_PHOTO: PhotoChoice = { kind: 'keep' };
+const JPEG_DATA_URL = 'data:image/jpeg;base64,';
 
 export interface TagAdded<Values extends PlantFormValues> {
   values: Values;
@@ -30,6 +33,7 @@ export const emptyFormValues = (): PlantFormValues => ({
   tagDraft: '',
   summerIntervalDays: '',
   winterIntervalDays: '',
+  photo: KEEP_PHOTO,
 });
 
 export const formValuesOf = (plant: PlantFields): PlantFormValues => ({
@@ -39,6 +43,7 @@ export const formValuesOf = (plant: PlantFields): PlantFormValues => ({
   tagDraft: '',
   summerIntervalDays: String(plant.summerIntervalDays),
   winterIntervalDays: String(plant.winterIntervalDays),
+  photo: KEEP_PHOTO,
 });
 
 const validateName = (name: string): FieldError | undefined => {
@@ -140,4 +145,13 @@ export const toFields = (values: PlantFormValues): PlantFields => {
     summerIntervalDays: Number(values.summerIntervalDays),
     winterIntervalDays: Number(values.winterIntervalDays),
   };
+};
+
+// The photo the form shows: the one just chosen, none after Remove, otherwise the saved one.
+export const shownPhoto = (photo: PhotoChoice, savedPhotoUrl: string | null): string | null => {
+  if (photo.kind === 'replace') {
+    return `${JPEG_DATA_URL}${photo.jpeg}`;
+  }
+
+  return photo.kind === 'keep' ? savedPhotoUrl : null;
 };

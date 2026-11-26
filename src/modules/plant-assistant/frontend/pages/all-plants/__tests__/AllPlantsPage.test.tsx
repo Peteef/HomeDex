@@ -3,8 +3,24 @@ import type { FakeResponse } from '#platform/frontend/testing';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
+import { resizePhoto } from '../../../features/plants/index.ts';
 import type { PlantDetails, PlantSummary } from '../../../features/plants/index.ts';
 import { AllPlantsPage } from '../AllPlantsPage.tsx';
+
+vi.mock(import('../../../features/plants/index.ts'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  resizePhoto: vi.fn(),
+}));
+
+const resized = (jpeg: string) => {
+  vi.mocked(resizePhoto).mockResolvedValue(jpeg);
+};
+
+const unreadable = () => {
+  vi.mocked(resizePhoto).mockRejectedValue(
+    new DOMException('The source image could not be decoded.'),
+  );
+};
 
 const PLANTS = 'GET /api/m/plant-assistant/plants';
 const FERN_PATH = 'GET /api/m/plant-assistant/plants/1';
@@ -561,6 +577,109 @@ describe('AllPlantsPage', () => {
       // Then
       await screen.findByText('No plants yet.');
       expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('photos', () => {
+    const PHOTO_FILE = new File(['photo'], 'fern.png', { type: 'image/png' });
+
+    const choosePhoto = (form: HTMLElement) => {
+      fireEvent.change(fieldIn(form, 'Choose photo'), { target: { files: [PHOTO_FILE] } });
+    };
+
+    it('should show a chosen photo at once and send it with the new plant', async () => {
+      // Given
+      resized('/9j/AAAA');
+
+      const api = openPage([FERN], {
+        [CREATE]: { status: 201, body: { plant: { ...FERN_DETAILS, id: 4, name: 'Oddish' } } },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+      fireEvent.change(fieldIn(form, 'Name'), { target: { value: 'Oddish' } });
+      fireEvent.change(fieldIn(form, 'Summer'), { target: { value: '5' } });
+      fireEvent.change(fieldIn(form, 'Winter'), { target: { value: '10' } });
+
+      // When
+      choosePhoto(form);
+
+      // Then
+      await waitFor(() => {
+        expect(form.querySelector('img')).toHaveAttribute('src', 'data:image/jpeg;base64,/9j/AAAA');
+      });
+
+      // When
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      await waitFor(() => {
+        expect(api.callsTo(CREATE)).toHaveLength(1);
+      });
+
+      expect(api.callsTo(CREATE)[0]?.body).toMatchObject({ photo: '/9j/AAAA' });
+    });
+
+    it('should say so when the chosen photo cannot be read', async () => {
+      // Given
+      unreadable();
+      openPage([FERN]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+
+      // When
+      choosePhoto(form);
+
+      // Then
+      expect(await within(form).findByRole('alert')).toHaveTextContent(
+        "This photo can't be read. Try a JPEG or PNG.",
+      );
+    });
+
+    it('should show the photo of the plant and remove it when editing', async () => {
+      // Given
+      const api = openPage([{ ...FERN, photoId: 4 }], {
+        [FERN_PATH]: ok({ today: TODAY, plant: { ...FERN_DETAILS, photoId: 4 } }),
+        [EDIT]: { status: 204 },
+      });
+
+      const details = await openDetails();
+
+      expect(details.querySelector('img')).toHaveAttribute(
+        'src',
+        '/api/m/plant-assistant/plants/1/photo?v=4',
+      );
+
+      fireEvent.click(within(details).getByRole('button', { name: 'Edit' }));
+      const form = screen.getByRole('dialog', { name: "Edit Bulbasaur's fern" });
+
+      // When
+      fireEvent.click(within(form).getByRole('button', { name: 'Remove photo' }));
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      await waitFor(() => {
+        expect(api.callsTo(EDIT)).toHaveLength(1);
+      });
+
+      expect(api.callsTo(EDIT)[0]?.body).toMatchObject({ photo: null });
+    });
+
+    it('should show each plant with a photo in the list', async () => {
+      // When
+      openPage([{ ...FERN, photoId: 4 }, CACTUS]);
+
+      // Then
+      const row = await screen.findByRole('button', { name: /^Bulbasaur's fern/ });
+
+      expect(row.querySelector('img')).toHaveAttribute(
+        'src',
+        '/api/m/plant-assistant/plants/1/photo?v=4',
+      );
+
+      expect(
+        screen.getByRole('button', { name: /^Cacnea's cactus/ }).querySelector('img'),
+      ).toBeNull();
     });
   });
 });

@@ -17,7 +17,7 @@ const FERN: DetailedPlant = {
 };
 
 const renderDetails = (plant: DetailedPlant) => {
-  render(<PlantDetails plant={plant} renderTag={(tag) => <span>{tag}</span>} />);
+  render(<PlantDetails plant={plant} photoUrl={null} renderTag={(tag) => <span>{tag}</span>} />);
 };
 
 const valueOf = (term: string) => screen.getByText(term).nextElementSibling?.textContent;
@@ -96,6 +96,7 @@ describe('PlantDetails', () => {
     render(
       <PlantDetails
         plant={FERN}
+        photoUrl={null}
         renderTag={(tag) => <button type="button">{`Pick ${tag}`}</button>}
       />,
     );
@@ -111,5 +112,15 @@ describe('PlantDetails', () => {
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('should show the photo large', () => {
+    // When
+    const { container } = render(
+      <PlantDetails plant={FERN} photoUrl="/fern.jpg" renderTag={(tag) => <span>{tag}</span>} />,
+    );
+
+    // Then
+    expect(container.querySelector('img')).toHaveAttribute('src', '/fern.jpg');
   });
 });
