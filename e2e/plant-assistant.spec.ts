@@ -8,13 +8,16 @@ import { E2E_GREETING, fixClock, LATE_EVENING, MORNING, signIn } from './session
 const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile === true;
 
 const REAL_API_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopChrome];
+const FILTER_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopSafari];
 
 const title = (page: Page) => page.getByRole('heading', { level: 1, name: 'Plant Assistant' });
 const viewHeadings = (page: Page) => page.getByRole('heading', { level: 2 });
 const tabBar = (page: Page) => page.getByRole('navigation', { name: 'Views' });
 
 const plantRows = (page: Page) =>
-  page.getByRole('region', { name: 'All plants' }).getByRole('listitem');
+  page.getByRole('region', { name: 'All plants' }).getByRole('list').first().locator(':scope > li');
+
+const rowButtons = (page: Page) => plantRows(page).locator(':scope > button');
 
 const details = (page: Page, name: string) => page.getByRole('dialog', { name });
 
@@ -132,22 +135,17 @@ test.describe('plant assistant', () => {
     await openSamplePlants(page);
 
     // Then
-    const names = await plantRows(page)
-      .getByRole('button')
-      .evaluateAll((rows) => rows.map((row) => row.textContent));
+    const names = await rowButtons(page).evaluateAll((rows) => rows.map((row) => row.textContent));
 
     expect(names).toEqual([
-      "Bellsprout's trailing pothos on the top shelf of the tall bookcase" +
-        'BookcaseLiving roomTrailingLow lightEasy careGift from MistyIn 2 days',
-      "Bulbasaur's fernLiving roomShade3 days overdue",
+      "Bellsprout's trailing pothos on the top shelf of the tall bookcaseIn 2 days",
+      "Bulbasaur's fern3 days overdue",
       "Cacnea's cactusTomorrow",
       "Oddish's aloeToday",
       "Tangela's ivyIn 9 days",
     ]);
 
-    await expect(plantRows(page).getByRole('button').nth(1)).toHaveAccessibleName(
-      "Bulbasaur's fern Living room Shade 3 days overdue",
-    );
+    await expect(rowButtons(page).nth(1)).toHaveAccessibleName("Bulbasaur's fern 3 days overdue");
   });
 
   test('should open the details as a bottom sheet on a phone', async ({ page }, testInfo) => {
@@ -268,7 +266,7 @@ test.describe('plant assistant', () => {
     await expect(row).toContainText('WindowsillSunny');
 
     // When
-    await row.getByRole('button').click();
+    await row.getByRole('button', { name }).click();
     const details = page.getByRole('dialog', { name });
     await details.getByRole('button', { name: 'Edit' }).click();
     const editForm = page.getByRole('dialog', { name: `Edit ${name}` });
@@ -319,6 +317,85 @@ test.describe('plant assistant', () => {
 
       await testInfo.attach(`plant form by ${time}.png`, {
         body: await page.screenshot(),
+        contentType: 'image/png',
+      });
+    });
+  }
+
+  test('should search the plants and filter them by tag', async ({ page }, testInfo) => {
+    test.skip(
+      !FILTER_PROJECTS.includes(testInfo.project.name),
+      'Runs once on a phone and once on desktop',
+    );
+
+    // Given
+    await openSamplePlants(page);
+    const search = page.getByRole('searchbox', { name: 'Search plants' });
+
+    // When
+    await search.fill('BULBASAUR');
+
+    // Then
+    await expect(rowButtons(page)).toHaveText(["Bulbasaur's fern3 days overdue"]);
+
+    // When
+    await search.fill('');
+    await page.getByRole('button', { name: 'Show plants tagged Living room' }).first().click();
+
+    // Then
+    await expect(page.getByText('Tag:')).toBeVisible();
+    await expect(rowButtons(page)).toHaveCount(2);
+
+    // When
+    await search.fill('ivy');
+
+    // Then
+    await expect(page.getByText('No plants match.')).toBeVisible();
+
+    // When
+    await page.getByRole('button', { name: 'Show all plants' }).click();
+
+    // Then
+    await expect(rowButtons(page)).toHaveCount(SAMPLE_PLANTS.length);
+    await expect(search).toHaveValue('');
+  });
+
+  test('should filter by a tag chosen in the details', async ({ page }) => {
+    // Given
+    await openSamplePlants(page);
+    await page.getByRole('button', { name: /^Bulbasaur's fern/ }).click();
+    const dialog = details(page, "Bulbasaur's fern");
+
+    // When
+    await dialog.getByRole('button', { name: 'Show plants tagged Shade' }).click();
+
+    // Then
+    await expect(dialog).toBeHidden();
+    await expect(rowButtons(page)).toHaveText(["Bulbasaur's fern3 days overdue"]);
+  });
+
+  for (const [time, at] of [
+    ['day', MORNING],
+    ['night', LATE_EVENING],
+  ] as const) {
+    test(`should have no accessibility or colour contrast violations with a tag filter by ${time}`, async ({
+      page,
+    }, testInfo) => {
+      // Given
+      await fixClock(page, at);
+      await openSamplePlants(page);
+      await page.getByRole('searchbox', { name: 'Search plants' }).fill('room');
+      await page.getByRole('button', { name: 'Show plants tagged Living room' }).first().click();
+      await expect(rowButtons(page)).toHaveCount(2);
+
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
+
+      await testInfo.attach(`plant filter by ${time}.png`, {
+        body: await page.screenshot({ fullPage: true }),
         contentType: 'image/png',
       });
     });
