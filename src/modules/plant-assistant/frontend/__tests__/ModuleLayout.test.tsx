@@ -1,4 +1,4 @@
-import { withProviders } from '#platform/frontend/testing';
+import { fakeApi, ok, withProviders } from '#platform/frontend/testing';
 import { render, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +7,18 @@ import { stubScreenWidth } from './screenWidth.ts';
 
 const PHONE_WIDTH_REM = 23.4375;
 const DESKTOP_WIDTH_REM = 80;
+
+const plantDueIn = (id: number, daysUntil: number) => ({
+  id,
+  name: `Plant ${String(id)}`,
+  description: null,
+  tags: [],
+  photoId: null,
+  lastWateredOn: '2026-11-10',
+  nextWateringOn: '2026-11-20',
+  daysUntil,
+  urgency: daysUntil < 0 ? 'overdue' : 'later',
+});
 
 const openLayout = () => {
   render(
@@ -52,5 +64,25 @@ describe('ModuleLayout', () => {
     );
 
     expect(screen.queryByRole('link', { name: 'Plants' })).toBeNull();
+  });
+
+  it('should count the plants due on the Today tab', async () => {
+    // Given
+    stubScreenWidth(PHONE_WIDTH_REM);
+
+    fakeApi({
+      'GET /api/m/plant-assistant/plants': ok({
+        today: '2026-11-20',
+        plants: [plantDueIn(1, -2), plantDueIn(2, 0), plantDueIn(3, 4)],
+      }),
+    });
+
+    // When
+    openLayout();
+
+    // Then
+    expect(
+      await screen.findByRole('link', { name: 'Today, 2 plants to water' }),
+    ).toBeInTheDocument();
   });
 });

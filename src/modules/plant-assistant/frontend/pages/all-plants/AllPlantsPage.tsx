@@ -2,6 +2,7 @@ import { Button, Dialog, LoadFailed, LoadingStatus } from '#platform/frontend';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
 import { Section } from '../../components/section/Section.tsx';
 import { useDeletePlant, usePlant, usePlants, useTags } from '../../features/plants/index.ts';
 import type { PlantSummary } from '../../features/plants/index.ts';
@@ -9,7 +10,6 @@ import { useText } from '../../locales/index.ts';
 import { AddPlantForm } from './components/AddPlantForm.tsx';
 import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
 import { EditPlantForm } from './components/EditPlantForm.tsx';
-import { PlantDetails } from './components/PlantDetails.tsx';
 import { PlantFilters } from './components/PlantFilters.tsx';
 import { PlantList } from './components/PlantList.tsx';
 import { filterPlants } from './internal/filterPlants.ts';
@@ -29,6 +29,7 @@ interface Opened {
 
 export const AllPlantsPage = () => {
   const text = useText('allPlants');
+  const common = useText('common');
   const { i18n } = useTranslation();
   const plants = usePlants();
   const tags = useTags();
@@ -143,42 +144,33 @@ export const AllPlantsPage = () => {
     }
 
     if (plants.isError) {
-      return <LoadFailed message={text.loadFailed} onRetry={retry} />;
+      return <LoadFailed message={common.plantsLoadFailed} onRetry={retry} />;
     }
 
     return <LoadingStatus />;
   };
 
-  const renderDetails = (plant: PlantSummary) => {
+  const editOpened = (): void => {
     if (openPlant.data !== undefined) {
-      const { plant: details, today } = openPlant.data;
-
-      return (
-        <PlantDetails
-          plant={details}
-          onEdit={() => {
-            editor.open(details, today);
-          }}
-          onDelete={() => {
-            askToDelete(plant);
-          }}
-          onSelectTag={showTagFromDetails}
-        />
-      );
+      editor.open(openPlant.data.plant, openPlant.data.today);
     }
-
-    if (openPlant.isError) {
-      return <LoadFailed message={text.plantLoadFailed} onRetry={retryOpenPlant} />;
-    }
-
-    return <LoadingStatus />;
   };
 
   const renderOpenedDialog = (view: Opened['view'], plant: PlantSummary) =>
     view === 'details' ? (
-      <Dialog key="details" open title={plant.name} onClose={close}>
-        {renderDetails(plant)}
-      </Dialog>
+      <PlantDetailsDialog
+        key="details"
+        title={plant.name}
+        plant={openPlant.data?.plant}
+        failed={openPlant.isError}
+        onRetry={retryOpenPlant}
+        onClose={close}
+        onEdit={editOpened}
+        onDelete={() => {
+          askToDelete(plant);
+        }}
+        onSelectTag={showTagFromDetails}
+      />
     ) : (
       <Dialog
         key="delete"

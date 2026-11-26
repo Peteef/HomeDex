@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
-import { PROJECTS } from './fixtures.ts';
+import { E2E_SECOND_USER, PROJECTS } from './fixtures.ts';
 import { PLANT_ASSISTANT_PATH, SAMPLE_PLANTS, stubPlants } from './plantAssistant.ts';
 import { E2E_GREETING, fixClock, LATE_EVENING, MORNING, signIn } from './session.ts';
 
@@ -9,6 +9,8 @@ const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile =
 
 const REAL_API_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopChrome];
 const FILTER_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopSafari];
+const LONG_AGO = '2025-01-01';
+const PLANTS_API = '/api/m/plant-assistant/plants';
 
 const title = (page: Page) => page.getByRole('heading', { level: 1, name: 'Plant Assistant' });
 const viewHeadings = (page: Page) => page.getByRole('heading', { level: 2 });
@@ -29,6 +31,36 @@ const finishAnimations = (element: Element) =>
       .getAnimations({ subtree: true })
       .map((animation) => animation.finished.catch(() => animation)),
   );
+
+const todayBoard = (page: Page) => page.getByRole('region', { name: 'To water today' });
+
+const createOverduePlant = async (page: Page, name: string): Promise<number> => {
+  const response = await page.request.post(PLANTS_API, {
+    data: {
+      name,
+      description: null,
+      tags: [],
+      summerIntervalDays: 7,
+      winterIntervalDays: 7,
+      lastWateredOn: LONG_AGO,
+    },
+  });
+
+  const { plant } = (await response.json()) as { plant: { id: number } };
+  return plant.id;
+};
+
+const deletePlant = async (page: Page, id: number): Promise<void> => {
+  await page.request.delete(`${PLANTS_API}/${String(id)}`, { data: {} });
+};
+
+const todayTabCount = async (page: Page): Promise<number> => {
+  const text = await tabBar(page)
+    .getByRole('link', { name: /^Today/ })
+    .textContent();
+
+  return Number(/(\d+) plants? to water/.exec(text ?? '')?.[1] ?? 0);
+};
 
 const openSamplePlants = async (page: Page): Promise<void> => {
   await stubPlants(page, SAMPLE_PLANTS);
@@ -398,6 +430,144 @@ test.describe('plant assistant', () => {
         body: await page.screenshot({ fullPage: true }),
         contentType: 'image/png',
       });
+    });
+  }
+
+  // Against the real API in one project only, so no other test changes the badge meanwhile.
+  test('should water, undo and postpone plants on the Today board', async ({
+    page,
+    browser,
+    baseURL,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== PROJECTS.iphone13Mini, 'Runs against the real API once');
+
+    // Given
+    const run = String(Date.now());
+    const fern = `Fern ${run}`;
+    const aloe = `Aloe ${run}`;
+    const ivy = `Ivy ${run}`;
+    await page.goto(PLANT_ASSISTANT_PATH);
+
+    const ids = [
+      await createOverduePlant(page, fern),
+      await createOverduePlant(page, aloe),
+      await createOverduePlant(page, ivy),
+    ];
+
+    await page.reload();
+    await expect(plantRows(page).filter({ hasText: ivy })).toHaveCount(1);
+    const dueBefore = await todayTabCount(page);
+    const card = (name: string) => todayBoard(page).getByRole('listitem').filter({ hasText: name });
+
+    // When
+    await tabBar(page)
+      .getByRole('link', { name: /^Today/ })
+      .click();
+
+    await card(fern)
+      .getByRole('button', { name: `Watered: ${fern}` })
+      .click();
+
+    // Then
+    await expect(card(fern)).toHaveCount(0);
+    await expect(page.getByText(`${fern} watered.`)).toBeVisible();
+
+    // When
+    await page.getByRole('button', { name: 'Undo' }).click();
+
+    // Then
+    await expect(card(fern)).toHaveCount(1);
+
+    // When
+    await card(fern)
+      .getByRole('button', { name: `Watered: ${fern}` })
+      .click();
+
+    await expect(page.getByText(`${fern} watered.`)).toBeVisible();
+
+    await card(aloe)
+      .getByRole('button', { name: `Postpone: ${aloe}` })
+      .click();
+
+    await page
+      .getByRole('dialog', { name: `Postpone ${aloe}` })
+      .getByRole('button', { name: '2 days' })
+      .click();
+
+    // Then
+    await expect(card(aloe)).toHaveCount(0);
+    await tabBar(page).getByRole('link', { name: 'Plants' }).click();
+    await expect.poll(() => todayTabCount(page)).toBe(dueBefore - 2);
+
+    // Given: a second user whose board still shows the ivy
+    const otherContext = await browser.newContext(baseURL === undefined ? {} : { baseURL });
+    const other = await otherContext.newPage();
+    await signIn(other, E2E_SECOND_USER);
+    await other.goto(`${PLANT_ASSISTANT_PATH}/today`);
+    const otherCard = todayBoard(other).getByRole('listitem').filter({ hasText: ivy });
+    await expect(otherCard).toHaveCount(1);
+
+    // When
+    await tabBar(page)
+      .getByRole('link', { name: /^Today/ })
+      .click();
+
+    await card(ivy)
+      .getByRole('button', { name: `Watered: ${ivy}` })
+      .click();
+
+    await expect(page.getByText(`${ivy} watered.`)).toBeVisible();
+    await otherCard.getByRole('button', { name: `Watered: ${ivy}` }).click();
+
+    // Then
+    await expect(other.getByText(`Someone already took care of ${ivy}.`)).toBeVisible();
+    await expect(otherCard).toHaveCount(0);
+
+    await otherContext.close();
+    await Promise.all(ids.map((id) => deletePlant(page, id)));
+  });
+
+  for (const [time, at] of [
+    ['day', MORNING],
+    ['night', LATE_EVENING],
+  ] as const) {
+    test(`should have no accessibility or colour contrast violations on the Today board by ${time}`, async ({
+      page,
+    }, testInfo) => {
+      // Given
+      await fixClock(page, at);
+      await stubPlants(page, SAMPLE_PLANTS);
+      await page.goto(`${PLANT_ASSISTANT_PATH}/today`);
+      await expect(todayBoard(page).getByRole('listitem')).toHaveCount(2);
+
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
+
+      await testInfo.attach(`today board by ${time}.png`, {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      });
+    });
+
+    test(`should have no accessibility or colour contrast violations in the postpone choice by ${time}`, async ({
+      page,
+    }) => {
+      // Given
+      await fixClock(page, at);
+      await stubPlants(page, SAMPLE_PLANTS);
+      await page.goto(`${PLANT_ASSISTANT_PATH}/today`);
+      await page.getByRole('button', { name: "Postpone: Bulbasaur's fern" }).click();
+      const dialog = page.getByRole('dialog', { name: "Postpone Bulbasaur's fern" });
+      await dialog.evaluate(finishAnimations);
+
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
     });
   }
 });

@@ -1,6 +1,5 @@
+import type { Season } from '../../components/plant-details/PlantDetails.tsx';
 import type { Urgency } from '../../components/urgency-label/UrgencyLabel.tsx';
-
-export type Season = 'summer' | 'winter';
 
 export interface PlantSummary {
   id: number;

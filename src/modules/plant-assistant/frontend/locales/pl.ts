@@ -20,6 +20,13 @@ export default {
       today: 'Do podlania dziś',
       calendar: 'Kalendarz',
     },
+    toWater_one: ', {{count}} roślina do podlania',
+    toWater_few: ', {{count}} rośliny do podlania',
+    toWater_many: ', {{count}} roślin do podlania',
+    toWater_other: ', {{count}} rośliny do podlania',
+  },
+  common: {
+    plantsLoadFailed: 'Nie udało się wczytać roślin.',
   },
   components: {
     urgencyLabel: {
@@ -38,21 +45,6 @@ export default {
       select: 'Pokaż rośliny z tagiem {{tag}}',
       remove: 'Usuń {{tag}}',
     },
-  },
-  allPlants: {
-    heading: 'Wszystkie rośliny',
-    loadFailed: 'Nie udało się wczytać roślin.',
-    add: 'Dodaj roślinę',
-    empty: 'Nie ma jeszcze roślin.',
-    emptyHint: 'Pierwszą dodasz przyciskiem „Dodaj roślinę”.',
-    noMatch: 'Żadna roślina nie pasuje.',
-    showAll: 'Pokaż wszystkie rośliny',
-    plantFilters: {
-      search: 'Szukaj roślin',
-      tag: 'Tag:',
-      clearTag: 'Wyczyść filtr tagu',
-    },
-    plantLoadFailed: 'Nie udało się wczytać tej rośliny.',
     plantDetails: {
       summer: 'Lato',
       winter: 'Zima',
@@ -66,6 +58,23 @@ export default {
       nextWatering: 'Następne podlewanie',
       edit: 'Edytuj',
       delete: 'Usuń',
+      loadFailed: 'Nie udało się wczytać tej rośliny.',
+    },
+    undoNotice: {
+      undo: 'Cofnij',
+    },
+  },
+  allPlants: {
+    heading: 'Wszystkie rośliny',
+    add: 'Dodaj roślinę',
+    empty: 'Nie ma jeszcze roślin.',
+    emptyHint: 'Pierwszą dodasz przyciskiem „Dodaj roślinę”.',
+    noMatch: 'Żadna roślina nie pasuje.',
+    showAll: 'Pokaż wszystkie rośliny',
+    plantFilters: {
+      search: 'Szukaj roślin',
+      tag: 'Tag:',
+      clearTag: 'Wyczyść filtr tagu',
     },
     addPlantForm: {
       title: 'Nowa roślina',
@@ -116,6 +125,35 @@ export default {
   },
   today: {
     heading: 'Do podlania dziś',
+    todayBoard: {
+      watered: 'Podlane',
+      wateredLabel: 'Podlane: {{name}}',
+      postpone: 'Przełóż',
+      postponeLabel: 'Przełóż: {{name}}',
+      nothingToWater: 'Dziś nie trzeba nic podlewać.',
+      next: 'Następna: {{name}},',
+      noPlantsPhone: 'Dodaj rośliny w zakładce Rośliny.',
+      noPlantsDesktop: 'Dodaj rośliny w widoku Wszystkie rośliny.',
+    },
+    notices: {
+      watered: '{{name}}: podlane.',
+      alreadyDone: 'Ktoś już się zajął: {{name}}.',
+      waterFailed: 'Nie udało się zapisać podlania: {{name}}. Spróbuj ponownie.',
+      undoConflict: 'Nie da się już cofnąć: roślina w międzyczasie się zmieniła.',
+      undoFailed: 'Nie udało się cofnąć. Spróbuj ponownie.',
+    },
+    postponeChoice: {
+      title: 'Przełóż: {{name}}',
+      quick: 'Przełóż o',
+      days_one: '{{count}} dzień',
+      days_few: '{{count}} dni',
+      days_many: '{{count}} dni',
+      days_other: '{{count}} dnia',
+      other: 'Inna liczba dni',
+      postpone: 'Przełóż',
+      invalid: 'Wpisz pełne dni, od 1 do 30.',
+      failed: 'Nie udało się przełożyć. Spróbuj ponownie.',
+    },
   },
   calendar: {
     heading: 'Najbliższe podlewanie',

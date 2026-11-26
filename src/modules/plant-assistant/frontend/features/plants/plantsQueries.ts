@@ -34,7 +34,7 @@ export const useTags = () =>
     queryFn: fetchTags,
   });
 
-const useRefreshModule = () => {
+export const useRefreshModule = () => {
   const queryClient = useQueryClient();
   return (): Promise<void> => queryClient.invalidateQueries({ queryKey: MODULE_QUERY_KEY });
 };

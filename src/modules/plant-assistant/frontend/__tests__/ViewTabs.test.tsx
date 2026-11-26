@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ViewTabs } from '../ViewTabs.tsx';
 
-const renderAt = (path: string) => {
-  render(withProviders(<ViewTabs />, { path }));
+const renderAt = (path: string, todayCount = 0) => {
+  render(withProviders(<ViewTabs todayCount={todayCount} />, { path }));
 };
 
 describe('ViewTabs', () => {
@@ -53,5 +53,25 @@ describe('ViewTabs', () => {
 
     expect(screen.getByRole('link', { name: 'All plants' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: 'Calendar' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('should show the plants to water on the Today tab while another view is open', () => {
+    // When
+    renderAt('/m/plant-assistant/calendar', 1);
+
+    // Then
+    expect(
+      screen.getByRole('link', { name: 'To water today, 1 plant to water' }),
+    ).toBeInTheDocument();
+  });
+
+  it('should show no badge on the Today tab while Today is open', () => {
+    // When
+    renderAt('/m/plant-assistant/today', 2);
+
+    // Then
+    expect(screen.getByRole('link', { name: 'To water today' })).toHaveTextContent(
+      /^To water today$/,
+    );
   });
 });
