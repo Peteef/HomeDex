@@ -5,6 +5,7 @@ export interface CalendarPlant {
   name: string;
   photoId: number | null;
   urgency: Urgency;
+  daysUntil: number;
 }
 
 export interface CalendarDay {

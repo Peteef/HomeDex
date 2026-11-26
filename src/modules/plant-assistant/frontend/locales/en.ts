@@ -146,5 +146,21 @@ export default {
   },
   calendar: {
     heading: 'Upcoming waterings',
+    loadFailed: "Can't load the calendar.",
+    monthHeader: {
+      previous: 'Previous month',
+      next: 'Next month',
+      today: 'Today',
+    },
+    monthGrid: {
+      today: 'today',
+      plants_one: '{{count}} plant to water',
+      plants_other: '{{count}} plants to water',
+      more: '+{{count}} more',
+      moreOn: ', on {{date}}',
+    },
+    dayPlants: {
+      nothing: 'Nothing to water on this day.',
+    },
   },
 } as const;

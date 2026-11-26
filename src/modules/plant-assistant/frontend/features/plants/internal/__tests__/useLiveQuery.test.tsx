@@ -88,4 +88,38 @@ describe('useLiveQuery', () => {
     expect(result.current.fetchStatus).toBe('idle');
     expect(result.current.data).toBeUndefined();
   });
+
+  it.each([
+    [true, 'fern'],
+    [false, undefined],
+  ])(
+    'should show the previous answer while another key loads when keepPrevious is %s',
+    async (keepPrevious, shown) => {
+      // Given
+      const loads: Record<string, () => Promise<string>> = {
+        first: () => Promise.resolve('fern'),
+        second: () => new Promise<string>(() => undefined),
+      };
+
+      const { result, rerender } = renderHook(
+        ({ key }) =>
+          useLiveQuery({
+            queryKey: [...QUERY_KEY, key],
+            queryFn: loads[key] ?? skipToken,
+            keepPrevious,
+          }),
+        { wrapper, initialProps: { key: 'first' } },
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toBe('fern');
+      });
+
+      // When
+      rerender({ key: 'second' });
+
+      // Then
+      expect(result.current.data).toBe(shown);
+    },
+  );
 });

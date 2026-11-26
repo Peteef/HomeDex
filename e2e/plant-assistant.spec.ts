@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { E2E_SECOND_USER, PROJECTS } from './fixtures.ts';
-import { PLANT_ASSISTANT_PATH, SAMPLE_PLANTS, stubPlants } from './plantAssistant.ts';
+import { PLANT_ASSISTANT_PATH, SAMPLE_PLANTS, stubCalendar, stubPlants } from './plantAssistant.ts';
 import { E2E_GREETING, fixClock, LATE_EVENING, MORNING, signIn } from './session.ts';
 
 const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile === true;
@@ -568,6 +568,92 @@ test.describe('plant assistant', () => {
 
       // Then
       expect(results.violations).toEqual([]);
+    });
+  }
+
+  test('should list the plants of a day and open one from the calendar', async ({
+    page,
+  }, testInfo) => {
+    // Given
+    await stubPlants(page, SAMPLE_PLANTS);
+    await stubCalendar(page, SAMPLE_PLANTS);
+    await page.goto(`${PLANT_ASSISTANT_PATH}/calendar`);
+    await expect(page.getByRole('heading', { name: 'November 2026' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 4 })).toHaveText('Friday, November 20');
+
+    // When
+    await page.getByRole('button', { name: /^Tuesday, November 24/ }).click();
+
+    // Then
+    await expect(page.getByRole('heading', { level: 4 })).toHaveText('Tuesday, November 24');
+
+    // When
+    if (isPhone(testInfo)) {
+      await page.getByRole('button', { name: /^Friday, November 20/ }).click();
+
+      await page
+        .getByRole('heading', { level: 4 })
+        .locator('..')
+        .getByRole('button', { name: /^Bulbasaur's fern/ })
+        .click();
+    } else {
+      await page
+        .getByRole('table')
+        .getByRole('button', { name: /^Bulbasaur's fern/ })
+        .first()
+        .click();
+    }
+
+    // Then
+    await expect(page.getByRole('dialog').getByText('Every 14 days')).toBeVisible();
+  });
+
+  test('should fit seven 44 pt days across the calendar on a phone', async ({ page }, testInfo) => {
+    test.skip(!isPhone(testInfo), 'Desktops have room');
+
+    // Given
+    await stubPlants(page, SAMPLE_PLANTS);
+    await stubCalendar(page, SAMPLE_PLANTS);
+
+    // When
+    await page.goto(`${PLANT_ASSISTANT_PATH}/calendar`);
+
+    // Then
+    const day = page.getByRole('button', { name: /^Tuesday, November 24/ });
+    const box = await day.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    const table = await page.getByRole('table').boundingBox();
+
+    expect((table?.x ?? 0) + (table?.width ?? 0)).toBeLessThanOrEqual(
+      page.viewportSize()?.width ?? 0,
+    );
+  });
+
+  for (const [time, at] of [
+    ['day', MORNING],
+    ['night', LATE_EVENING],
+  ] as const) {
+    test(`should have no accessibility or colour contrast violations in the calendar by ${time}`, async ({
+      page,
+    }, testInfo) => {
+      // Given
+      await fixClock(page, at);
+      await stubPlants(page, SAMPLE_PLANTS);
+      await stubCalendar(page, SAMPLE_PLANTS);
+      await page.goto(`${PLANT_ASSISTANT_PATH}/calendar`);
+      await expect(page.getByRole('heading', { name: 'November 2026' })).toBeVisible();
+
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
+
+      await testInfo.attach(`calendar by ${time}.png`, {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      });
     });
   }
 });

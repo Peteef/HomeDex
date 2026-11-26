@@ -159,5 +159,23 @@ export default {
   },
   calendar: {
     heading: 'Najbliższe podlewanie',
+    loadFailed: 'Nie udało się wczytać kalendarza.',
+    monthHeader: {
+      previous: 'Poprzedni miesiąc',
+      next: 'Następny miesiąc',
+      today: 'Dziś',
+    },
+    monthGrid: {
+      today: 'dziś',
+      plants_one: '{{count}} roślina do podlania',
+      plants_few: '{{count}} rośliny do podlania',
+      plants_many: '{{count}} roślin do podlania',
+      plants_other: '{{count}} rośliny do podlania',
+      more: '+{{count}} więcej',
+      moreOn: ', {{date}}',
+    },
+    dayPlants: {
+      nothing: 'Tego dnia nie trzeba nic podlewać.',
+    },
   },
 } as const satisfies Translation<typeof en>;
