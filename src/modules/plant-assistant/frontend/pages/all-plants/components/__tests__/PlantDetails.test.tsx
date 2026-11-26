@@ -1,6 +1,6 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { PlantDetails as Plant } from '../../../../features/plants/index.ts';
 import { PlantDetails } from '../PlantDetails.tsx';
 
@@ -24,7 +24,7 @@ const valueOf = (term: string) => screen.getByText(term).nextElementSibling?.tex
 describe('PlantDetails', () => {
   it('should show the description with its line breaks', () => {
     // When
-    render(<PlantDetails plant={FERN} />);
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     // Then
     const description = screen.getByText(/Likes shade/);
@@ -34,7 +34,7 @@ describe('PlantDetails', () => {
 
   it('should show the tags', () => {
     // When
-    render(<PlantDetails plant={FERN} />);
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     // Then
     expect(screen.getByText('Living room')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('PlantDetails', () => {
 
   it('should show both intervals and mark the current season', () => {
     // When
-    render(<PlantDetails plant={FERN} />);
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     // Then
     expect(valueOf('Summer')).toBe('Every 7 days');
@@ -52,7 +52,13 @@ describe('PlantDetails', () => {
 
   it('should say every day for an interval of one day', () => {
     // When
-    render(<PlantDetails plant={{ ...FERN, summerIntervalDays: 1, currentSeason: 'summer' }} />);
+    render(
+      <PlantDetails
+        plant={{ ...FERN, summerIntervalDays: 1, currentSeason: 'summer' }}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
 
     // Then
     expect(valueOf('Summer')).toBe('Every daynow');
@@ -60,7 +66,7 @@ describe('PlantDetails', () => {
 
   it('should show the last and the next watering with its urgency', () => {
     // When
-    render(<PlantDetails plant={FERN} />);
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     // Then
     expect(valueOf('Last watered')).toBe('Mon, Nov 16');
@@ -69,7 +75,13 @@ describe('PlantDetails', () => {
 
   it('should leave out the description and tags when the plant has none', () => {
     // When
-    render(<PlantDetails plant={{ ...FERN, description: null, tags: [] }} />);
+    render(
+      <PlantDetails
+        plant={{ ...FERN, description: null, tags: [] }}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
 
     // Then
     expect(screen.queryByText(/Likes shade/)).not.toBeInTheDocument();
@@ -81,12 +93,36 @@ describe('PlantDetails', () => {
     await act(() => i18next.changeLanguage('pl'));
 
     // When
-    render(<PlantDetails plant={FERN} />);
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} />);
 
     // Then
     expect(valueOf('Lato')).toBe('Co 7 dni');
     expect(valueOf('Zima')).toBe('Co 21 dniteraz');
     expect(valueOf('Ostatnie podlewanie')).toBe('pon., 16 lis');
     expect(valueOf('Następne podlewanie')).toBe('pon., 23 lisZa 3 dni');
+  });
+
+  it('should offer to edit the plant', () => {
+    // Given
+    const onEdit = vi.fn();
+    render(<PlantDetails plant={FERN} onEdit={onEdit} onDelete={vi.fn()} />);
+
+    // When
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    // Then
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it('should offer to delete the plant', () => {
+    // Given
+    const onDelete = vi.fn();
+    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={onDelete} />);
+
+    // When
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    // Then
+    expect(onDelete).toHaveBeenCalledOnce();
   });
 });

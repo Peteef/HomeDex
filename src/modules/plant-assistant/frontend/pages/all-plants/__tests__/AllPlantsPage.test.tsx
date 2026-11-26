@@ -8,6 +8,10 @@ import { AllPlantsPage } from '../AllPlantsPage.tsx';
 
 const PLANTS = 'GET /api/m/plant-assistant/plants';
 const FERN_PATH = 'GET /api/m/plant-assistant/plants/1';
+const TAGS = 'GET /api/m/plant-assistant/tags';
+const CREATE = 'POST /api/m/plant-assistant/plants';
+const EDIT = 'PUT /api/m/plant-assistant/plants/1';
+const DELETE = 'DELETE /api/m/plant-assistant/plants/1';
 const TODAY = '2026-11-20';
 
 const plant = (id: number, name: string, overrides: Partial<PlantSummary> = {}): PlantSummary => ({
@@ -40,12 +44,22 @@ type Routes = Parameters<typeof fakeApi>[0];
 const openPage = (plants: PlantSummary[] | Routes[string], routes: Routes = {}) => {
   const api = fakeApi({
     [PLANTS]: Array.isArray(plants) ? ok({ today: TODAY, plants }) : plants,
+    [TAGS]: ok({ tags: ['Living room', 'Shade'] }),
     ...routes,
   });
 
   render(withProviders(<AllPlantsPage />));
   return api;
 };
+
+const openDetails = async () => {
+  fireEvent.click(await screen.findByRole('button', { name: /Bulbasaur's fern/ }));
+  const dialog = screen.getByRole('dialog', { name: "Bulbasaur's fern" });
+  await within(dialog).findByText('Likes shade.');
+  return dialog;
+};
+
+const fieldIn = (dialog: HTMLElement, label: string) => within(dialog).getByLabelText(label);
 
 describe('AllPlantsPage', () => {
   it('should list the plants by name in the current language', async () => {
@@ -92,7 +106,7 @@ describe('AllPlantsPage', () => {
     await screen.findByText('No plants yet.');
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      "No plants yet.You'll be able to add plants here soon.",
+      'No plants yet.Add the first one with “Add plant”.',
     );
   });
 
@@ -236,5 +250,199 @@ describe('AllPlantsPage', () => {
     // Then
     expect(screen.getByRole('region', { name: 'Wszystkie rośliny' })).toBeInTheDocument();
     expect(screen.getByText('Nie ma jeszcze roślin.')).toBeInTheDocument();
+  });
+
+  describe('adding a plant', () => {
+    it('should add a plant and close the form', async () => {
+      // Given
+      const api = openPage([FERN], {
+        [CREATE]: { status: 201, body: { plant: { ...FERN_DETAILS, id: 4, name: 'Oddish' } } },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+
+      // When
+      fireEvent.change(fieldIn(form, 'Name'), { target: { value: ' Oddish ' } });
+      fireEvent.change(fieldIn(form, 'New tag'), { target: { value: 'Shade' } });
+      fireEvent.click(within(form).getByRole('button', { name: 'Add' }));
+      fireEvent.change(fieldIn(form, 'Summer'), { target: { value: '5' } });
+      fireEvent.change(fieldIn(form, 'Winter'), { target: { value: '10' } });
+      fireEvent.change(fieldIn(form, 'Last watered'), { target: { value: '2026-11-18' } });
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      expect(api.callsTo(CREATE)[0]?.body).toEqual({
+        name: 'Oddish',
+        description: null,
+        tags: ['Shade'],
+        summerIntervalDays: 5,
+        winterIntervalDays: 10,
+        lastWateredOn: '2026-11-18',
+      });
+
+      expect(api.callsTo(PLANTS)).toHaveLength(2);
+    });
+
+    it('should start last watered today and suggest the tags in use', async () => {
+      // Given
+      openPage([]);
+
+      // When
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+
+      // Then
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+      expect(fieldIn(form, 'Last watered')).toHaveValue('2026-11-20');
+
+      await waitFor(() => {
+        expect(form.querySelectorAll('datalist option')).toHaveLength(2);
+      });
+    });
+
+    it('should show what is wrong and send nothing', async () => {
+      // Given
+      const api = openPage([FERN]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+
+      // When
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      expect(fieldIn(form, 'Name')).toHaveAccessibleDescription('Enter a name.');
+      expect(api.callsTo(CREATE)).toHaveLength(0);
+    });
+
+    it('should keep the form open and say so when saving fails', async () => {
+      // Given
+      openPage([FERN], { [CREATE]: status(500) });
+      fireEvent.click(await screen.findByRole('button', { name: 'Add plant' }));
+      const form = screen.getByRole('dialog', { name: 'Add a plant' });
+      fireEvent.change(fieldIn(form, 'Name'), { target: { value: 'Oddish' } });
+      fireEvent.change(fieldIn(form, 'Summer'), { target: { value: '5' } });
+      fireEvent.change(fieldIn(form, 'Winter'), { target: { value: '10' } });
+
+      // When
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      expect(await within(form).findByRole('alert')).toHaveTextContent(
+        "Can't save the plant. Try again.",
+      );
+    });
+  });
+
+  describe('editing a plant', () => {
+    it('should open the form from the details, save the changes and go back to the details', async () => {
+      // Given
+      const api = openPage([FERN], {
+        [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }),
+        [EDIT]: { status: 204 },
+      });
+
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Edit' }));
+      const form = screen.getByRole('dialog', { name: "Edit Bulbasaur's fern" });
+      expect(fieldIn(form, 'Winter')).toHaveValue(21);
+
+      // When
+      fireEvent.change(fieldIn(form, 'Winter'), { target: { value: '28' } });
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      expect(await screen.findByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+
+      expect(api.callsTo(EDIT)[0]?.body).toEqual({
+        name: "Bulbasaur's fern",
+        description: 'Likes shade.',
+        tags: [],
+        summerIntervalDays: 7,
+        winterIntervalDays: 28,
+        nextWateringOn: '2026-11-25',
+      });
+
+      expect(api.callsTo(FERN_PATH)).toHaveLength(2);
+    });
+
+    it('should go back to the details when the form is closed', async () => {
+      // Given
+      openPage([FERN], { [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }) });
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Edit' }));
+
+      // When
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      // Then
+      expect(screen.getByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    });
+  });
+
+  describe('deleting a plant', () => {
+    it('should ask first, then delete the plant and close everything', async () => {
+      // Given
+      const api = openPage([FERN], {
+        [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }),
+        [DELETE]: { status: 204 },
+      });
+
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Delete' }));
+      const question = screen.getByRole('dialog', { name: "Delete Bulbasaur's fern?" });
+
+      // When
+      fireEvent.click(within(question).getByRole('button', { name: 'Delete' }));
+
+      // Then
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      expect(api.callsTo(DELETE)).toHaveLength(1);
+      expect(api.callsTo(PLANTS)).toHaveLength(2);
+      expect(document.documentElement.style.overflow).toBe('');
+    });
+
+    it('should go back to the details when deleting is cancelled', async () => {
+      // Given
+      const api = openPage([FERN], { [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }) });
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Delete' }));
+      const question = screen.getByRole('dialog', { name: "Delete Bulbasaur's fern?" });
+
+      // When
+      fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+
+      // Then
+      expect(screen.getByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
+      expect(api.callsTo(DELETE)).toHaveLength(0);
+    });
+
+    it('should keep the question open and say so when deleting fails', async () => {
+      // Given
+      openPage([FERN], {
+        [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }),
+        [DELETE]: status(500),
+      });
+
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Delete' }));
+      const question = screen.getByRole('dialog', { name: "Delete Bulbasaur's fern?" });
+
+      // When
+      fireEvent.click(within(question).getByRole('button', { name: 'Delete' }));
+
+      // Then
+      expect(await within(question).findByRole('alert')).toHaveTextContent(
+        "Can't delete the plant. Try again.",
+      );
+    });
   });
 });

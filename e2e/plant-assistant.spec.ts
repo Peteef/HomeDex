@@ -1,10 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
+import { PROJECTS } from './fixtures.ts';
 import { PLANT_ASSISTANT_PATH, SAMPLE_PLANTS, stubPlants } from './plantAssistant.ts';
 import { E2E_GREETING, fixClock, LATE_EVENING, MORNING, signIn } from './session.ts';
 
 const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile === true;
+
+const REAL_API_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopChrome];
 
 const title = (page: Page) => page.getByRole('heading', { level: 1, name: 'Plant Assistant' });
 const viewHeadings = (page: Page) => page.getByRole('heading', { level: 2 });
@@ -15,9 +18,14 @@ const plantRows = (page: Page) =>
 
 const details = (page: Page, name: string) => page.getByRole('dialog', { name });
 
-// The dialog fades in, and axe would measure the contrast of half-transparent text.
+// The dialog fades in, and axe would measure the contrast of half-transparent text. A cancelled
+// animation (Safari cancels transitions while the form changes) rejects, but it no longer runs.
 const finishAnimations = (element: Element) =>
-  Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished));
+  Promise.all(
+    element
+      .getAnimations({ subtree: true })
+      .map((animation) => animation.finished.catch(() => animation)),
+  );
 
 const openSamplePlants = async (page: Page): Promise<void> => {
   await stubPlants(page, SAMPLE_PLANTS);
@@ -223,6 +231,93 @@ test.describe('plant assistant', () => {
       expect(results.violations).toEqual([]);
 
       await testInfo.attach(`plant details by ${time}.png`, {
+        body: await page.screenshot(),
+        contentType: 'image/png',
+      });
+    });
+  }
+
+  // Checks the frontend and backend agree, against the real API, once on a phone and once on
+  // desktop. Projects share one server, so each run names its own plant.
+  test('should add, edit and delete a plant', async ({ page }, testInfo) => {
+    test.skip(
+      !REAL_API_PROJECTS.includes(testInfo.project.name),
+      'Runs against the real API once per device kind',
+    );
+
+    // Given
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const name = `Oddish ${testInfo.project.name} ${String(Date.now())}`;
+    const row = plantRows(page).filter({ hasText: name });
+    await page.goto(PLANT_ASSISTANT_PATH);
+
+    // When
+    await page.getByRole('button', { name: 'Add plant' }).click();
+    const form = page.getByRole('dialog', { name: 'Add a plant' });
+    await form.getByLabel('Name').fill(name);
+    await form.getByLabel('New tag').fill('Windowsill');
+    await form.getByLabel('New tag').press('Enter');
+    await form.getByLabel('New tag').fill('Sunny');
+    await form.getByRole('button', { name: 'Add', exact: true }).click();
+    await form.getByLabel('Summer').fill('5');
+    await form.getByLabel('Winter').fill('10');
+    await form.getByRole('button', { name: 'Save' }).click();
+
+    // Then
+    await expect(form).toBeHidden();
+    await expect(row).toContainText('WindowsillSunny');
+
+    // When
+    await row.getByRole('button').click();
+    const details = page.getByRole('dialog', { name });
+    await details.getByRole('button', { name: 'Edit' }).click();
+    const editForm = page.getByRole('dialog', { name: `Edit ${name}` });
+    await editForm.getByLabel('Winter').fill('21');
+    await editForm.getByRole('button', { name: 'Save' }).click();
+
+    // Then
+    await expect(details.getByText('Every 21 days')).toBeVisible();
+
+    // When
+    await details.getByRole('button', { name: 'Delete' }).click();
+    const question = page.getByRole('dialog', { name: `Delete ${name}?` });
+    await question.getByRole('button', { name: 'Delete' }).click();
+
+    // Then
+    await expect(question).toBeHidden();
+    await expect(row).toHaveCount(0);
+  });
+
+  for (const [time, at] of [
+    ['day', MORNING],
+    ['night', LATE_EVENING],
+  ] as const) {
+    test(`should have no accessibility or colour contrast violations in the plant form by ${time}`, async ({
+      page,
+    }, testInfo) => {
+      // Given
+      await fixClock(page, at);
+      await openSamplePlants(page);
+
+      await page.route('**/api/m/plant-assistant/tags', (route) =>
+        route.fulfill({ json: { tags: ['Living room', 'Shade'] } }),
+      );
+
+      await page.getByRole('button', { name: 'Add plant' }).click();
+      const form = page.getByRole('dialog', { name: 'Add a plant' });
+      await form.getByLabel('New tag').fill('Windowsill');
+      await form.getByLabel('New tag').press('Enter');
+      await form.getByRole('button', { name: 'Save' }).click();
+      await expect(form.getByText('Enter a name.')).toBeVisible();
+      await form.evaluate(finishAnimations);
+
+      // When
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Then
+      expect(results.violations).toEqual([]);
+
+      await testInfo.attach(`plant form by ${time}.png`, {
         body: await page.screenshot(),
         contentType: 'image/png',
       });
