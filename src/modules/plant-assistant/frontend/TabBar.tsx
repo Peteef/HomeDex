@@ -2,6 +2,7 @@ import { CalendarDays, Droplets, Sprout } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router';
+import { CountBadge } from './components/count-badge/CountBadge.tsx';
 import { useText } from './locales/index.ts';
 import { VIEW_PATHS } from './views.ts';
 import type { View } from './views.ts';
@@ -21,10 +22,34 @@ const OTHER_TAB_CLASSES = 'text-dex-ink-muted hover:text-dex-ink';
 const tabClasses = ({ isActive }: { isActive: boolean }): string =>
   `${TAB_CLASSES} ${isActive ? CURRENT_TAB_CLASSES : OTHER_TAB_CLASSES}`;
 
+export interface TabBarProps {
+  todayCount: number;
+}
+
 // The bar follows the whole page, footer included, in the document: it sticks to the bottom of
 // the screen, and at the end of the page it sits below the footer instead of covering it.
-export const TabBar = () => {
+export const TabBar = ({ todayCount }: TabBarProps) => {
   const text = useText('layout.tabBar');
+  const layoutText = useText('layout');
+
+  const tabContent =
+    (view: View, Icon: LucideIcon) =>
+    ({ isActive }: { isActive: boolean }) => {
+      const count = view === 'today' && !isActive ? todayCount : 0;
+
+      return (
+        <>
+          <span className="relative">
+            <Icon size={22} aria-hidden />
+            <span className="absolute -top-1.5 left-4">
+              <CountBadge count={count} />
+            </span>
+          </span>
+          {text[view]}
+          {count > 0 && <span className="sr-only">{layoutText.toWater({ count })}</span>}
+        </>
+      );
+    };
 
   return createPortal(
     <nav
@@ -35,8 +60,7 @@ export const TabBar = () => {
         {TABS.map(({ view, Icon }) => (
           <li key={view} className="flex-1">
             <NavLink to={VIEW_PATHS[view]} end className={tabClasses}>
-              <Icon size={22} aria-hidden />
-              {text[view]}
+              {tabContent(view, Icon)}
             </NavLink>
           </li>
         ))}

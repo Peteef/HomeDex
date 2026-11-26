@@ -17,6 +17,11 @@ export default {
       today: 'To water today',
       calendar: 'Calendar',
     },
+    toWater_one: ', {{count}} plant to water',
+    toWater_other: ', {{count}} plants to water',
+  },
+  common: {
+    plantsLoadFailed: "Can't load the plants.",
   },
   components: {
     urgencyLabel: {
@@ -31,21 +36,6 @@ export default {
       select: 'Show plants tagged {{tag}}',
       remove: 'Remove {{tag}}',
     },
-  },
-  allPlants: {
-    heading: 'All plants',
-    loadFailed: "Can't load the plants.",
-    add: 'Add plant',
-    empty: 'No plants yet.',
-    emptyHint: 'Add the first one with “Add plant”.',
-    noMatch: 'No plants match.',
-    showAll: 'Show all plants',
-    plantFilters: {
-      search: 'Search plants',
-      tag: 'Tag:',
-      clearTag: 'Clear the tag filter',
-    },
-    plantLoadFailed: "Can't load this plant.",
     plantDetails: {
       summer: 'Summer',
       winter: 'Winter',
@@ -57,6 +47,23 @@ export default {
       nextWatering: 'Next watering',
       edit: 'Edit',
       delete: 'Delete',
+      loadFailed: "Can't load this plant.",
+    },
+    undoNotice: {
+      undo: 'Undo',
+    },
+  },
+  allPlants: {
+    heading: 'All plants',
+    add: 'Add plant',
+    empty: 'No plants yet.',
+    emptyHint: 'Add the first one with “Add plant”.',
+    noMatch: 'No plants match.',
+    showAll: 'Show all plants',
+    plantFilters: {
+      search: 'Search plants',
+      tag: 'Tag:',
+      clearTag: 'Clear the tag filter',
     },
     addPlantForm: {
       title: 'Add a plant',
@@ -107,6 +114,33 @@ export default {
   },
   today: {
     heading: 'To water today',
+    todayBoard: {
+      watered: 'Watered',
+      wateredLabel: 'Watered: {{name}}',
+      postpone: 'Postpone',
+      postponeLabel: 'Postpone: {{name}}',
+      nothingToWater: 'Nothing to water today.',
+      next: 'Next: {{name}},',
+      noPlantsPhone: 'Add your plants on the Plants tab.',
+      noPlantsDesktop: 'Add your plants under All plants.',
+    },
+    notices: {
+      watered: '{{name}} watered.',
+      alreadyDone: 'Someone already took care of {{name}}.',
+      waterFailed: "Can't save that {{name}} was watered. Try again.",
+      undoConflict: "Can't undo any more: the plant changed meanwhile.",
+      undoFailed: "Can't undo. Try again.",
+    },
+    postponeChoice: {
+      title: 'Postpone {{name}}',
+      quick: 'Postpone by',
+      days_one: '{{count}} day',
+      days_other: '{{count}} days',
+      other: 'Other number of days',
+      postpone: 'Postpone',
+      invalid: 'Enter whole days from 1 to 30.',
+      failed: "Can't postpone. Try again.",
+    },
   },
   calendar: {
     heading: 'Upcoming waterings',

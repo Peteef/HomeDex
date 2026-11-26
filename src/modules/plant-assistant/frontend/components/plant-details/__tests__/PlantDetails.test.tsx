@@ -1,15 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
 import { describe, expect, it, vi } from 'vitest';
-import type { PlantDetails as Plant } from '../../../../features/plants/index.ts';
+import type { DetailedPlant } from '../PlantDetails.tsx';
 import { PlantDetails } from '../PlantDetails.tsx';
 
-const FERN: Plant = {
-  id: 1,
-  name: "Bulbasaur's fern",
+const FERN: DetailedPlant = {
   description: 'Likes shade.\nMist on hot days.',
   tags: ['Living room', 'Shade'],
-  photoId: null,
   lastWateredOn: '2026-11-16',
   nextWateringOn: '2026-11-23',
   daysUntil: 3,
@@ -144,5 +141,14 @@ describe('PlantDetails', () => {
 
     // Then
     expect(onSelectTag).toHaveBeenCalledWith('Shade');
+  });
+
+  it('should offer no actions and plain tags when it is only for reading', () => {
+    // When
+    render(<PlantDetails plant={FERN} />);
+
+    // Then
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByText('Shade')).toBeInTheDocument();
   });
 });

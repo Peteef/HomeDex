@@ -1,17 +1,32 @@
 import { Button } from '#platform/frontend';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PlantThumbnail } from '../../../components/plant-thumbnail/PlantThumbnail.tsx';
-import { SelectableTagChip } from '../../../components/tag-chip/SelectableTagChip.tsx';
-import { UrgencyLabel } from '../../../components/urgency-label/UrgencyLabel.tsx';
-import type { PlantDetails as Plant, Season } from '../../../features/plants/index.ts';
-import { useText } from '../../../locales/index.ts';
+import { PlantThumbnail } from '../plant-thumbnail/PlantThumbnail.tsx';
+import { SelectableTagChip } from '../tag-chip/SelectableTagChip.tsx';
+import { TagChip } from '../tag-chip/TagChip.tsx';
+import { UrgencyLabel } from '../urgency-label/UrgencyLabel.tsx';
+import type { Urgency } from '../urgency-label/UrgencyLabel.tsx';
+import { useText } from '../../locales/index.ts';
+
+export type Season = 'summer' | 'winter';
+
+export interface DetailedPlant {
+  description: string | null;
+  tags: string[];
+  summerIntervalDays: number;
+  winterIntervalDays: number;
+  currentSeason: Season;
+  lastWateredOn: string;
+  nextWateringOn: string;
+  daysUntil: number;
+  urgency: Urgency;
+}
 
 export interface PlantDetailsProps {
-  plant: Plant;
-  onEdit: () => void;
-  onDelete: () => void;
-  onSelectTag: (tag: string) => void;
+  plant: DetailedPlant;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onSelectTag?: (tag: string) => void;
 }
 
 // A calendar date parses as midnight UTC, so it is formatted in UTC to stay on the same day.
@@ -28,9 +43,10 @@ const TERM_CLASSES = 'text-dex-ink-muted text-sm font-bold';
 const VALUE_CLASSES = 'flex flex-wrap items-center gap-2 text-base font-bold';
 
 export const PlantDetails = ({ plant, onEdit, onDelete, onSelectTag }: PlantDetailsProps) => {
-  const text = useText('allPlants.plantDetails');
+  const text = useText('components.plantDetails');
   const { i18n } = useTranslation();
   const dateFormat = new Intl.DateTimeFormat(i18n.language, DATE_FORMAT);
+  const hasActions = onEdit !== undefined || onDelete !== undefined;
 
   const formatDate = (date: string): string => dateFormat.format(new Date(date));
 
@@ -53,9 +69,13 @@ export const PlantDetails = ({ plant, onEdit, onDelete, onSelectTag }: PlantDeta
       <PlantThumbnail photoUrl={null} size="large" />
       {plant.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {plant.tags.map((tag) => (
-            <SelectableTagChip key={tag} tag={tag} onSelect={onSelectTag} />
-          ))}
+          {plant.tags.map((tag) =>
+            onSelectTag === undefined ? (
+              <TagChip key={tag} tag={tag} />
+            ) : (
+              <SelectableTagChip key={tag} tag={tag} onSelect={onSelectTag} />
+            ),
+          )}
         </div>
       )}
       {plant.description !== null && (
@@ -72,16 +92,22 @@ export const PlantDetails = ({ plant, onEdit, onDelete, onSelectTag }: PlantDeta
           <UrgencyLabel urgency={plant.urgency} daysUntil={plant.daysUntil} />
         </dd>
       </dl>
-      <div className="flex gap-2">
-        <Button variant="secondary" className="flex-1" onClick={onEdit}>
-          <Pencil size={18} aria-hidden />
-          {text.edit}
-        </Button>
-        <Button variant="secondary" className="flex-1" onClick={onDelete}>
-          <Trash2 size={18} aria-hidden />
-          {text.delete}
-        </Button>
-      </div>
+      {hasActions && (
+        <div className="flex gap-2">
+          {onEdit !== undefined && (
+            <Button variant="secondary" className="flex-1" onClick={onEdit}>
+              <Pencil size={18} aria-hidden />
+              {text.edit}
+            </Button>
+          )}
+          {onDelete !== undefined && (
+            <Button variant="secondary" className="flex-1" onClick={onDelete}>
+              <Trash2 size={18} aria-hidden />
+              {text.delete}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
