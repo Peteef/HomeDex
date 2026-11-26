@@ -78,7 +78,7 @@ export const CalendarPage = () => {
             onOpen={setOpened}
           />
         </div>
-        {selectedDay === undefined ? null : <DayPlants day={selectedDay} onOpen={setOpened} />}
+        {selectedDay !== undefined && <DayPlants day={selectedDay} onOpen={setOpened} />}
       </>
     );
   };
@@ -98,7 +98,7 @@ export const CalendarPage = () => {
   return (
     <Section heading={text.heading}>
       {renderCalendar()}
-      {opened === null ? null : (
+      {opened !== null && (
         <PlantDetailsDialog
           title={openPlant.data?.plant.name ?? opened.name}
           plant={openPlant.data?.plant}
