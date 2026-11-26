@@ -178,7 +178,7 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
   };
 
   // A changed next watering must not be in the past; an unchanged one stays even when it is,
-  // so editing an overdue plant's name keeps it overdue (PRD R6).
+  // so editing an overdue plant's name keeps it overdue.
   const edit = (id: number, { nextWateringOn, ...fields }: PlantChanges): void => {
     const valid = validate(fields);
     const current = requirePlant(id);

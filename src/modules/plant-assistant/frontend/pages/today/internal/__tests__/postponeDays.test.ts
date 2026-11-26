@@ -1,18 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { parsePostponeDays } from '../postponeDays.ts';
+import { isPostponeDays } from '../postponeDays.ts';
 
-describe('parsePostponeDays', () => {
-  it.each([
-    ['1', 1],
-    ['30', 30],
-    [' 7 ', 7],
-  ])('should accept "%s"', (text, days) => {
+describe('isPostponeDays', () => {
+  it.each([1, 7, 30])('should accept %s days', (days) => {
     // When / Then
-    expect(parsePostponeDays(text)).toBe(days);
+    expect(isPostponeDays(days)).toBe(true);
   });
 
-  it.each(['0', '31', '1.5', '', '-2', 'two'])('should refuse "%s"', (text) => {
+  it.each([0, 31, 1.5, -2, Number.NaN])('should refuse %s days', (days) => {
     // When / Then
-    expect(parsePostponeDays(text)).toBeNull();
+    expect(isPostponeDays(days)).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { DetailedPlant } from '../PlantDetails.tsx';
 import { PlantDetails } from '../PlantDetails.tsx';
 
@@ -16,12 +16,16 @@ const FERN: DetailedPlant = {
   currentSeason: 'winter',
 };
 
+const renderDetails = (plant: DetailedPlant) => {
+  render(<PlantDetails plant={plant} renderTag={(tag) => <span>{tag}</span>} />);
+};
+
 const valueOf = (term: string) => screen.getByText(term).nextElementSibling?.textContent;
 
 describe('PlantDetails', () => {
   it('should show the description with its line breaks', () => {
     // When
-    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
+    renderDetails(FERN);
 
     // Then
     const description = screen.getByText(/Likes shade/);
@@ -31,7 +35,7 @@ describe('PlantDetails', () => {
 
   it('should show the tags', () => {
     // When
-    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
+    renderDetails(FERN);
 
     // Then
     expect(screen.getByText('Living room')).toBeInTheDocument();
@@ -40,7 +44,7 @@ describe('PlantDetails', () => {
 
   it('should show both intervals and mark the current season', () => {
     // When
-    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
+    renderDetails(FERN);
 
     // Then
     expect(valueOf('Summer')).toBe('Every 7 days');
@@ -49,14 +53,7 @@ describe('PlantDetails', () => {
 
   it('should say every day for an interval of one day', () => {
     // When
-    render(
-      <PlantDetails
-        plant={{ ...FERN, summerIntervalDays: 1, currentSeason: 'summer' }}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onSelectTag={vi.fn()}
-      />,
-    );
+    renderDetails({ ...FERN, summerIntervalDays: 1, currentSeason: 'summer' });
 
     // Then
     expect(valueOf('Summer')).toBe('Every daynow');
@@ -64,7 +61,7 @@ describe('PlantDetails', () => {
 
   it('should show the last and the next watering with its urgency', () => {
     // When
-    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
+    renderDetails(FERN);
 
     // Then
     expect(valueOf('Last watered')).toBe('Mon, Nov 16');
@@ -73,14 +70,7 @@ describe('PlantDetails', () => {
 
   it('should leave out the description and tags when the plant has none', () => {
     // When
-    render(
-      <PlantDetails
-        plant={{ ...FERN, description: null, tags: [] }}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onSelectTag={vi.fn()}
-      />,
-    );
+    renderDetails({ ...FERN, description: null, tags: [] });
 
     // Then
     expect(screen.queryByText(/Likes shade/)).not.toBeInTheDocument();
@@ -92,7 +82,7 @@ describe('PlantDetails', () => {
     await act(() => i18next.changeLanguage('pl'));
 
     // When
-    render(<PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
+    renderDetails(FERN);
 
     // Then
     expect(valueOf('Lato')).toBe('Co 7 dni');
@@ -101,54 +91,25 @@ describe('PlantDetails', () => {
     expect(valueOf('Następne podlewanie')).toBe('pon., 23 lisZa 3 dni');
   });
 
-  it('should offer to edit the plant', () => {
-    // Given
-    const onEdit = vi.fn();
-    render(<PlantDetails plant={FERN} onEdit={onEdit} onDelete={vi.fn()} onSelectTag={vi.fn()} />);
-
+  it('should render each tag the way it is given', () => {
     // When
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-
-    // Then
-    expect(onEdit).toHaveBeenCalledOnce();
-  });
-
-  it('should offer to delete the plant', () => {
-    // Given
-    const onDelete = vi.fn();
-
     render(
-      <PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={onDelete} onSelectTag={vi.fn()} />,
+      <PlantDetails
+        plant={FERN}
+        renderTag={(tag) => <button type="button">{`Pick ${tag}`}</button>}
+      />,
     );
 
-    // When
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-
     // Then
-    expect(onDelete).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Pick Living room' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pick Shade' })).toBeInTheDocument();
   });
 
-  it('should select a tag', () => {
-    // Given
-    const onSelectTag = vi.fn();
-
-    render(
-      <PlantDetails plant={FERN} onEdit={vi.fn()} onDelete={vi.fn()} onSelectTag={onSelectTag} />,
-    );
-
+  it('should offer no actions of its own', () => {
     // When
-    fireEvent.click(screen.getByRole('button', { name: 'Show plants tagged Shade' }));
-
-    // Then
-    expect(onSelectTag).toHaveBeenCalledWith('Shade');
-  });
-
-  it('should offer no actions and plain tags when it is only for reading', () => {
-    // When
-    render(<PlantDetails plant={FERN} />);
+    renderDetails(FERN);
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.getByText('Shade')).toBeInTheDocument();
   });
 });

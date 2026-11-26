@@ -14,7 +14,7 @@ export const editPlantValues = (plant: PlantDetails): EditPlantValues => ({
   nextWateringOn: plant.nextWateringOn,
 });
 
-// A changed next watering can't be in the past; an unchanged one stays even when it is (R6).
+// A changed next watering can't be in the past; an unchanged one stays even when it is.
 // Dates are ISO strings, so comparing them as text compares the days.
 const validateNextWatering = (
   date: string,

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { UndoNotice } from '../UndoNotice.tsx';
 
 const handlers = () => ({
+  onUndo: vi.fn(),
   onPause: vi.fn(),
   onResume: vi.fn(),
 });
@@ -10,7 +11,7 @@ const handlers = () => ({
 describe('UndoNotice', () => {
   it('should keep an empty live region while there is no message', () => {
     // When
-    render(<UndoNotice message={null} {...handlers()} />);
+    render(<UndoNotice message={null} canUndo={false} undoing={false} {...handlers()} />);
 
     // Then
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
@@ -18,8 +19,18 @@ describe('UndoNotice', () => {
 
   it('should show the message with Undo', () => {
     // Given
-    const onUndo = vi.fn();
-    render(<UndoNotice message="Bulbasaur's fern watered." onUndo={onUndo} {...handlers()} />);
+    const { onUndo, ...others } = handlers();
+
+    render(
+      <UndoNotice
+        message="Bulbasaur's fern watered."
+        canUndo
+        undoing={false}
+        onUndo={onUndo}
+        {...others}
+      />,
+    );
+
     expect(screen.getByRole('status')).toHaveTextContent("Bulbasaur's fern watered.");
 
     // When
@@ -29,9 +40,16 @@ describe('UndoNotice', () => {
     expect(onUndo).toHaveBeenCalledOnce();
   });
 
-  it('should show a message without Undo', () => {
+  it('should show a message without Undo when it cannot be undone', () => {
     // When
-    render(<UndoNotice message="Someone already took care of it." {...handlers()} />);
+    render(
+      <UndoNotice
+        message="Someone already took care of it."
+        canUndo={false}
+        undoing={false}
+        {...handlers()}
+      />,
+    );
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -39,7 +57,7 @@ describe('UndoNotice', () => {
 
   it('should disable Undo while undoing', () => {
     // When
-    render(<UndoNotice message="Watered." undoing onUndo={vi.fn()} {...handlers()} />);
+    render(<UndoNotice message="Watered." canUndo undoing {...handlers()} />);
 
     // Then
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
@@ -50,7 +68,14 @@ describe('UndoNotice', () => {
     const { onPause, onResume } = handlers();
 
     render(
-      <UndoNotice message="Watered." onUndo={vi.fn()} onPause={onPause} onResume={onResume} />,
+      <UndoNotice
+        message="Watered."
+        canUndo
+        undoing={false}
+        onUndo={vi.fn()}
+        onPause={onPause}
+        onResume={onResume}
+      />,
     );
 
     const undo = screen.getByRole('button', { name: 'Undo' });
