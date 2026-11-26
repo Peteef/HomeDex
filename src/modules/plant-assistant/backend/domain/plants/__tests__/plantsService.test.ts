@@ -494,9 +494,9 @@ describe('plants service', () => {
       ['not base64', 'not base64!', 'The photo is not base64'],
       ['not a JPEG', Buffer.from('a PNG, say').toString('base64'), 'The photo is not a JPEG'],
       [
-        'larger than 768 kB',
-        Buffer.concat([JPEG, Buffer.alloc(768 * 1024)]).toString('base64'),
-        'The photo is larger than 768 kB',
+        'larger than 1536 kB',
+        Buffer.concat([JPEG, Buffer.alloc(1536 * 1024)]).toString('base64'),
+        'The photo is larger than 1536 kB',
       ],
     ])('should refuse a photo that is %s and store nothing', (_kind, photo, message) => {
       // Given
@@ -511,16 +511,16 @@ describe('plants service', () => {
       expect(service.list().plants).toEqual([]);
     });
 
-    it('should accept a photo of exactly 768 kB', () => {
+    it('should accept a photo of exactly 1536 kB', () => {
       // Given
       const { service } = newService();
-      const photo = Buffer.concat([JPEG, Buffer.alloc(768 * 1024 - JPEG.length)]);
+      const photo = Buffer.concat([JPEG, Buffer.alloc(1536 * 1024 - JPEG.length)]);
 
       // When
       const plant = service.create({ ...FERN, photo: base64Of(photo) });
 
       // Then
-      expect(service.photo(plant.id).jpeg).toHaveLength(768 * 1024);
+      expect(service.photo(plant.id).jpeg).toHaveLength(1536 * 1024);
     });
 
     it('should not find a photo of an unknown plant', () => {

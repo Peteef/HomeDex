@@ -56,23 +56,24 @@ export const usePlantFormState = <
     );
   };
 
+  const takePhoto = (jpeg: string): void => {
+    setForm(
+      (current) =>
+        current && {
+          ...current,
+          values: { ...current.values, photo: { kind: 'replace', jpeg } },
+          photoUnreadable: false,
+        },
+    );
+  };
+
+  const markPhotoUnreadable = (): void => {
+    setForm((current) => current && { ...current, photoUnreadable: true });
+  };
+
   // A photo the browser can't decode (HEIC on desktop Chrome, say) leaves the current one.
   const choosePhoto = (file: File): void => {
-    resizePhoto(file).then(
-      (jpeg) => {
-        setForm(
-          (current) =>
-            current && {
-              ...current,
-              values: { ...current.values, photo: { kind: 'replace', jpeg } },
-              photoUnreadable: false,
-            },
-        );
-      },
-      () => {
-        setForm((current) => current && { ...current, photoUnreadable: true });
-      },
-    );
+    resizePhoto(file).then(takePhoto, markPhotoUnreadable);
   };
 
   const removePhoto = (): void => {
