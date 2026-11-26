@@ -14,7 +14,7 @@ export interface ModuleContext {
   // Today's date as YYYY-MM-DD in the household time zone (TZ).
   today: () => string;
   // The platform calls `count` on every tiles request, so it must be cheap and synchronous.
-  // Call it at most once, in `register`.
+  // A module sets its badge at most once, in `register`.
   setTileBadge: (count: () => number) => void;
 }
 
