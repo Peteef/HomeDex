@@ -10,6 +10,11 @@ const fixtures = path.resolve(
 
 const NOTES = path.join(fixtures, 'notes');
 
+const COUNTED = path.resolve(
+  import.meta.dirname,
+  '../../infrastructure/modules/__tests__/fixtures/badges/counted',
+);
+
 describe('module test kit', () => {
   describe('moduleTestStorage', () => {
     it("should create the module's tables", () => {
@@ -75,6 +80,20 @@ describe('module test kit', () => {
       // Then
       expect(first.body).toEqual({ today: '2026-04-01' });
       expect(second.body).toEqual({ today: '2026-04-02' });
+    });
+
+    it("should list the module's tile with the count on its badge", async () => {
+      // Given
+      const { app, signIn } = await moduleTestApp(COUNTED);
+      const cookie = await signIn('Misty');
+
+      // When
+      const response = await request(app).get('/api/tiles').set('Cookie', cookie);
+
+      // Then
+      expect(response.body).toEqual({
+        tiles: [expect.objectContaining({ kind: 'module', moduleId: 'counted', countOnBadge: 3 })],
+      });
     });
 
     it('should refuse a disabled module', async () => {

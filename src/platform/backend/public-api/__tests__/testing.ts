@@ -9,6 +9,7 @@ import {
   createTestUser,
   sessionCookieFor,
 } from '../../infrastructure/__tests__/helpers.ts';
+import { tilesService } from '../../domain/tiles/index.ts';
 import { loadModule } from '../../infrastructure/modules/loadModules.ts';
 import { migrateModules } from '../../infrastructure/modules/migrateModules.ts';
 import type { LoadedModule } from '../../infrastructure/modules/types.ts';
@@ -36,6 +37,12 @@ const noonUtcOn =
   () =>
     Date.parse(`${today()}${NOON_UTC}`);
 
+const addModuleTile = (db: Database.Database, { manifest }: LoadedModule): void => {
+  tilesService(db, { enabledModuleIds: [manifest.id] }).syncModuleTiles([
+    { moduleId: manifest.id, icon: manifest.icon },
+  ]);
+};
+
 const createModuleApp = (db: Database.Database, module: LoadedModule, today?: () => string) =>
   today === undefined
     ? createTestApp({}, { db, modules: [module] })
@@ -49,8 +56,8 @@ export const moduleTestStorage = (moduleDir: string): Storage => {
   return storage;
 };
 
-// The real app with only this module loaded and migrated, so its routes sit behind the real login
-// and request checks.
+// The real app with only this module loaded, migrated and on the home tiles, so its routes sit
+// behind the real login and request checks.
 export const moduleTestApp = async (
   moduleDir: string,
   { today }: ModuleTestAppOptions = {},
@@ -63,6 +70,7 @@ export const moduleTestApp = async (
 
   const db = createTestDatabase();
   migrateModules(db, [module]);
+  addModuleTile(db, module);
   const { app } = createModuleApp(db, module, today);
   const accounts = new Set<string>();
 
