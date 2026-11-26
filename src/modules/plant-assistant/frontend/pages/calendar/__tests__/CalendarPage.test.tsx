@@ -130,6 +130,25 @@ describe('CalendarPage', () => {
     expect(within(details).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 
+  it('should close the details of a plant someone else deletes', async () => {
+    // Given
+    let deleted = false;
+    const calendar = () => ok(deleted ? { ...NOVEMBER, weeks: novemberWeeks() } : NOVEMBER);
+    openPage({ [CALENDAR]: calendar, 'GET /api/m/plant-assistant/plants/1': status(404) });
+    await screen.findByRole('heading', { name: 'November 2026' });
+    fireEvent.click(desktopGrid().getByRole('button', { name: /^Bulbasaur's fern/ }));
+    expect(screen.getByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
+
+    // When
+    deleted = true;
+    fireEvent.focus(window);
+
+    // Then
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
   it('should offer to try again when the calendar cannot be loaded', async () => {
     // Given
     const api = openPage({ [CALENDAR]: status(400) });
