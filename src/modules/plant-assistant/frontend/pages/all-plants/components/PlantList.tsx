@@ -30,7 +30,7 @@ const PlantRow = ({ plant, onOpen }: PlantRowProps) => {
             <span className="text-dex-ink max-w-full text-base font-bold break-words">
               {plant.name}
             </span>
-            {plant.tags.length === 0 ? null : (
+            {plant.tags.length > 0 && (
               <span className="flex flex-wrap gap-1">
                 {plant.tags.map((tag) => (
                   <TagChip key={tag} tag={tag} />

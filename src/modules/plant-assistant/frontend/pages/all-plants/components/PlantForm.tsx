@@ -1,5 +1,5 @@
 import { Button, TextInput } from '#platform/frontend';
-import type { SubmitEvent } from 'react';
+import type { ReactNode, SubmitEvent } from 'react';
 import { TextArea } from '../../../components/text-area/TextArea.tsx';
 import { useText } from '../../../locales/index.ts';
 import {
@@ -8,45 +8,37 @@ import {
   MIN_INTERVAL_DAYS,
   NAME_MAX_LENGTH,
 } from '../internal/plantForm.ts';
-import type {
-  DateLimits,
-  PlantFormErrors,
-  PlantFormField,
-  PlantFormValues,
-  TagNote,
-} from '../types.ts';
+import type { FormErrors, PlantFormField, PlantFormValues, TagNote } from '../types.ts';
 import { TagsInput } from './TagsInput.tsx';
 
 export interface PlantFormProps {
-  mode: 'add' | 'edit';
   values: PlantFormValues;
-  errors: PlantFormErrors;
+  errors: FormErrors<PlantFormField>;
   tagNote: TagNote | null;
   tagSuggestions: string[];
-  dateLimits: DateLimits;
   saving: boolean;
   failed: boolean;
   onChange: (field: PlantFormField, value: string) => void;
   onAddTag: () => void;
   onRemoveTag: (tag: string) => void;
   onSubmit: () => void;
+  dateField: ReactNode;
 }
 
 type IntervalField = 'summerIntervalDays' | 'winterIntervalDays';
 
 export const PlantForm = ({
-  mode,
   values,
   errors,
   tagNote,
   tagSuggestions,
-  dateLimits,
   saving,
   failed,
   onChange,
   onAddTag,
   onRemoveTag,
   onSubmit,
+  dateField,
 }: PlantFormProps) => {
   const text = useText('allPlants.plantForm');
 
@@ -127,21 +119,12 @@ export const PlantForm = ({
           {interval('winterIntervalDays', text.winter)}
         </div>
       </fieldset>
-      <TextInput
-        label={mode === 'add' ? text.lastWatered : text.nextWatering}
-        type="date"
-        value={values.date}
-        {...dateLimits}
-        {...errorOf('date')}
-        onChange={(event) => {
-          onChange('date', event.target.value);
-        }}
-      />
-      {failed ? (
+      {dateField}
+      {failed && (
         <p role="alert" className="text-dex-red-text px-5 text-base font-bold">
           {text.failed}
         </p>
-      ) : null}
+      )}
       <Button type="submit" disabled={saving}>
         {saving ? text.saving : text.save}
       </Button>

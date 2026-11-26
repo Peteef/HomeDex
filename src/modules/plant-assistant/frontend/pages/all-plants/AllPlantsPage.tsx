@@ -8,10 +8,12 @@ import type { PlantSummary } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
 import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
 import { PlantDetails } from './components/PlantDetails.tsx';
-import { PlantForm } from './components/PlantForm.tsx';
+import { AddPlantForm } from './components/AddPlantForm.tsx';
+import { EditPlantForm } from './components/EditPlantForm.tsx';
 import { PlantList } from './components/PlantList.tsx';
 import { sortByName } from './internal/sortByName.ts';
-import { usePlantEditor } from './internal/usePlantEditor.ts';
+import { useAddPlantForm } from './internal/useAddPlantForm.ts';
+import { useEditPlantForm } from './internal/useEditPlantForm.ts';
 
 const MESSAGE_CLASSES = 'text-dex-ink-muted py-4 text-center text-base font-bold';
 const NO_TAGS: string[] = [];
@@ -20,7 +22,7 @@ const NO_TAGS: string[] = [];
 // and so does the delete question when it is cancelled.
 interface Opened {
   view: 'details' | 'delete';
-  plant: PlantSummary;
+  plantId: number;
 }
 
 export const AllPlantsPage = () => {
@@ -29,14 +31,18 @@ export const AllPlantsPage = () => {
   const plants = usePlants();
   const tags = useTags();
   const [opened, setOpened] = useState<Opened | null>(null);
-  const openPlant = usePlant(opened?.plant.id ?? null);
-  const editor = usePlantEditor();
+  const openPlant = usePlant(opened?.plantId ?? null);
+  const adder = useAddPlantForm();
+  const editor = useEditPlantForm();
   const remove = useDeletePlant();
-  // The row's name titles the dialogs while the details load, and after someone else deletes the plant.
-  const openName = openPlant.data?.plant.name ?? opened?.plant.name ?? '';
+  const formOpen = adder.form !== null || editor.form !== null;
+
+  // The list names the open plant, so a plant deleted elsewhere closes its dialog.
+  const openedPlant =
+    opened === null ? undefined : plants.data?.plants.find(({ id }) => id === opened.plantId);
 
   const open = (plant: PlantSummary): void => {
-    setOpened({ view: 'details', plant });
+    setOpened({ view: 'details', plantId: plant.id });
   };
 
   const close = (): void => {
@@ -45,7 +51,7 @@ export const AllPlantsPage = () => {
 
   const askToDelete = (plant: PlantSummary): void => {
     remove.reset();
-    setOpened({ view: 'delete', plant });
+    setOpened({ view: 'delete', plantId: plant.id });
   };
 
   const deleteOpened = (plant: PlantSummary): void => {
@@ -69,7 +75,7 @@ export const AllPlantsPage = () => {
           <Button
             className="self-stretch sm:self-end"
             onClick={() => {
-              editor.openAdd(today);
+              adder.open(today);
             }}
           >
             <Plus size={18} aria-hidden />
@@ -102,7 +108,7 @@ export const AllPlantsPage = () => {
         <PlantDetails
           plant={details}
           onEdit={() => {
-            editor.openEdit(details, today);
+            editor.open(details, today);
           }}
           onDelete={() => {
             askToDelete(plant);
@@ -118,16 +124,16 @@ export const AllPlantsPage = () => {
     return <LoadingStatus />;
   };
 
-  const renderOpened = ({ view, plant }: Opened) =>
+  const renderOpenedDialog = (view: Opened['view'], plant: PlantSummary) =>
     view === 'details' ? (
-      <Dialog key="details" open title={openName} onClose={close}>
+      <Dialog key="details" open title={plant.name} onClose={close}>
         {renderDetails(plant)}
       </Dialog>
     ) : (
       <Dialog
         key="delete"
         open
-        title={text.deleteConfirmation.title({ name: openName })}
+        title={text.deleteConfirmation.title({ name: plant.name })}
         onClose={() => {
           open(plant);
         }}
@@ -145,25 +151,44 @@ export const AllPlantsPage = () => {
       </Dialog>
     );
 
-  const renderForm = () => {
-    const { editing } = editor;
-
-    if (editing === null) {
+  const renderOpened = () => {
+    if (formOpen || opened === null || openedPlant === undefined) {
       return null;
     }
 
-    const title =
-      editing.target.mode === 'add'
-        ? text.plantForm.addTitle
-        : text.plantForm.editTitle({ name: editing.target.plant.name });
+    return renderOpenedDialog(opened.view, openedPlant);
+  };
 
-    return (
-      <Dialog open title={title} onClose={editor.close}>
-        <PlantForm
-          mode={editing.target.mode}
-          values={editing.values}
+  const renderAddForm = () =>
+    adder.form !== null && (
+      <Dialog open title={text.addPlantForm.title} onClose={adder.close}>
+        <AddPlantForm
+          values={adder.form.values}
+          errors={adder.errors}
+          tagNote={adder.form.tagNote}
+          tagSuggestions={tags.data?.tags ?? NO_TAGS}
+          dateLimits={adder.dateLimits}
+          saving={adder.saving}
+          failed={adder.failed}
+          onChange={adder.change}
+          onAddTag={adder.addTag}
+          onRemoveTag={adder.removeTag}
+          onSubmit={adder.save}
+        />
+      </Dialog>
+    );
+
+  const renderEditForm = () =>
+    editor.form !== null && (
+      <Dialog
+        open
+        title={text.editPlantForm.title({ name: editor.form.context.plant.name })}
+        onClose={editor.close}
+      >
+        <EditPlantForm
+          values={editor.form.values}
           errors={editor.errors}
-          tagNote={editing.tagNote}
+          tagNote={editor.form.tagNote}
           tagSuggestions={tags.data?.tags ?? NO_TAGS}
           dateLimits={editor.dateLimits}
           saving={editor.saving}
@@ -175,13 +200,13 @@ export const AllPlantsPage = () => {
         />
       </Dialog>
     );
-  };
 
   return (
     <Section heading={text.heading}>
       {renderList()}
-      {opened === null || editor.editing !== null ? null : renderOpened(opened)}
-      {renderForm()}
+      {renderOpened()}
+      {renderAddForm()}
+      {renderEditForm()}
     </Section>
   );
 };

@@ -1,3 +1,5 @@
+import type { PlantDetails } from '../../features/plants/index.ts';
+
 export interface PlantFormValues {
   name: string;
   description: string;
@@ -5,10 +7,19 @@ export interface PlantFormValues {
   tagDraft: string;
   summerIntervalDays: string;
   winterIntervalDays: string;
-  date: string;
+}
+
+export interface AddPlantValues extends PlantFormValues {
+  lastWateredOn: string;
+}
+
+export interface EditPlantValues extends PlantFormValues {
+  nextWateringOn: string;
 }
 
 export type PlantFormField = Exclude<keyof PlantFormValues, 'tags'>;
+export type AddPlantField = PlantFormField | 'lastWateredOn';
+export type EditPlantField = PlantFormField | 'nextWateringOn';
 
 export type FieldError =
   | 'nameRequired'
@@ -19,11 +30,21 @@ export type FieldError =
   | 'dateInFuture'
   | 'dateInPast';
 
-export type PlantFormErrors = Partial<Record<PlantFormField, FieldError>>;
+export type FormErrors<Field extends string> = Partial<Record<Field, FieldError>>;
+export type ErrorEntry<Field extends string> = [Field, FieldError | undefined];
 
 export type TagNote = 'tagTooLong' | 'tagDuplicate' | 'tooManyTags';
 
 export interface DateLimits {
   min?: string;
   max?: string;
+}
+
+export interface AddPlantContext {
+  today: string;
+}
+
+export interface EditPlantContext {
+  plant: PlantDetails;
+  today: string;
 }
