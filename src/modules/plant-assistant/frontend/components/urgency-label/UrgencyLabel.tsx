@@ -34,7 +34,7 @@ export const UrgencyLabel = ({ urgency, daysUntil }: UrgencyLabelProps) => {
 
   return (
     <span className={`inline-flex items-center gap-1 text-sm ${URGENCY_CLASSES[urgency]}`}>
-      {urgency === 'overdue' ? <TriangleAlert size={16} aria-hidden /> : null}
+      {urgency === 'overdue' && <TriangleAlert size={16} aria-hidden />}
       {label()}
     </span>
   );

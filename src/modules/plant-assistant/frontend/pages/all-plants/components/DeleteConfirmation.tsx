@@ -19,11 +19,11 @@ export const DeleteConfirmation = ({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-base">{text.warning}</p>
-      {failed ? (
+      {failed && (
         <p role="alert" className="text-dex-red-text text-base font-bold">
           {text.failed}
         </p>
-      ) : null}
+      )}
       <div className="flex gap-2">
         <Button variant="secondary" className="flex-1" disabled={deleting} onClick={onCancel}>
           {text.cancel}

@@ -188,7 +188,7 @@ describe('AllPlantsPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('should keep the title of the open plant when someone else deletes it', async () => {
+  it('should close the dialog of a plant someone else deletes', async () => {
     // Given
     let deleted = false;
     const listPlants = () => ok({ today: TODAY, plants: deleted ? [] : [FERN] });
@@ -209,7 +209,7 @@ describe('AllPlantsPage', () => {
     });
 
     expect(await screen.findByText('No plants yet.')).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: "Bulbasaur's fern" })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should refresh the plants when the window gets focus', async () => {
@@ -368,6 +368,33 @@ describe('AllPlantsPage', () => {
       });
 
       expect(api.callsTo(FERN_PATH)).toHaveLength(2);
+    });
+
+    it('should title the details with the new name after a rename', async () => {
+      // Given
+      let renamed = false;
+
+      const listPlants = () =>
+        ok({ today: TODAY, plants: [renamed ? { ...FERN, name: 'Ivysaur fern' } : FERN] });
+
+      openPage(listPlants, {
+        [FERN_PATH]: ok({ today: TODAY, plant: FERN_DETAILS }),
+        [EDIT]: () => {
+          renamed = true;
+          return { status: 204 };
+        },
+      });
+
+      const details = await openDetails();
+      fireEvent.click(within(details).getByRole('button', { name: 'Edit' }));
+      const form = screen.getByRole('dialog', { name: "Edit Bulbasaur's fern" });
+
+      // When
+      fireEvent.change(fieldIn(form, 'Name'), { target: { value: 'Ivysaur fern' } });
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+
+      // Then
+      expect(await screen.findByRole('dialog', { name: 'Ivysaur fern' })).toBeInTheDocument();
     });
 
     it('should go back to the details when the form is closed', async () => {

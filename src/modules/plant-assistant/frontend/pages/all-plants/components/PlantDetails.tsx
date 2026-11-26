@@ -38,11 +38,11 @@ export const PlantDetails = ({ plant, onEdit, onDelete }: PlantDetailsProps) => 
       <dt className={TERM_CLASSES}>{text[season]}</dt>
       <dd className={VALUE_CLASSES}>
         {days === DAILY_INTERVAL_DAYS ? text.everyDay : text.every({ count: days })}
-        {plant.currentSeason === season ? (
+        {plant.currentSeason === season && (
           <span className="bg-dex-green-soft text-dex-green-text rounded-full px-2 py-0.5 text-sm font-extrabold">
             {text.now}
           </span>
-        ) : null}
+        )}
       </dd>
     </>
   );
@@ -50,14 +50,14 @@ export const PlantDetails = ({ plant, onEdit, onDelete }: PlantDetailsProps) => 
   return (
     <div className="flex flex-col gap-4">
       <PlantThumbnail photoUrl={null} size="large" />
-      {plant.tags.length === 0 ? null : (
+      {plant.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {plant.tags.map((tag) => (
             <TagChip key={tag} tag={tag} />
           ))}
         </div>
       )}
-      {plant.description === null ? null : (
+      {plant.description !== null && (
         <p className="text-base break-words whitespace-pre-line">{plant.description}</p>
       )}
       <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">

@@ -1,7 +1,7 @@
 import { Button, TextInput } from '#platform/frontend';
 import { useId } from 'react';
 import type { KeyboardEvent } from 'react';
-import { TagChip } from '../../../components/tag-chip/TagChip.tsx';
+import { RemovableTagChip } from '../../../components/tag-chip/RemovableTagChip.tsx';
 import { useText } from '../../../locales/index.ts';
 import { TAG_MAX_LENGTH } from '../internal/plantForm.ts';
 import type { TagNote } from '../types.ts';
@@ -41,11 +41,11 @@ export const TagsInput = ({
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-dex-ink-muted mb-1 px-5 text-sm font-bold">{text.label}</legend>
-      {tags.length === 0 ? null : (
+      {tags.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {tags.map((tag) => (
             <li key={tag} className="max-w-full">
-              <TagChip tag={tag} onRemove={onRemove} />
+              <RemovableTagChip tag={tag} onRemove={onRemove} />
             </li>
           ))}
         </ul>
@@ -76,7 +76,7 @@ export const TagsInput = ({
         ))}
       </datalist>
       <p role="status" className="text-dex-ink-muted px-5 text-sm font-bold">
-        {note === null ? null : text.notes[note]}
+        {note !== null && text.notes[note]}
       </p>
     </fieldset>
   );

@@ -1,14 +1,9 @@
 import { foldText } from '#platform/shared';
+import type { PlantFields } from '../../../features/plants/index.ts';
 import type {
-  NewPlant,
-  PlantChanges,
-  PlantDetails,
-  PlantFields,
-} from '../../../features/plants/index.ts';
-import type {
-  DateLimits,
+  ErrorEntry,
   FieldError,
-  PlantFormErrors,
+  FormErrors,
   PlantFormField,
   PlantFormValues,
   TagNote,
@@ -23,34 +18,30 @@ export const MAX_INTERVAL_DAYS = 365;
 
 const WHOLE_NUMBER = /^\d+$/;
 
-export type FormTarget = { mode: 'add' } | { mode: 'edit'; plant: PlantDetails };
-
-export interface TagAdded {
-  values: PlantFormValues;
+export interface TagAdded<Values extends PlantFormValues> {
+  values: Values;
   tagNote: TagNote | null;
 }
 
-export const newPlantValues = (today: string): PlantFormValues => ({
+export const emptyFormValues = (): PlantFormValues => ({
   name: '',
   description: '',
   tags: [],
   tagDraft: '',
   summerIntervalDays: '',
   winterIntervalDays: '',
-  date: today,
 });
 
-export const plantValues = (plant: PlantDetails): PlantFormValues => ({
+export const formValuesOf = (plant: PlantFields): PlantFormValues => ({
   name: plant.name,
   description: plant.description ?? '',
   tags: plant.tags,
   tagDraft: '',
   summerIntervalDays: String(plant.summerIntervalDays),
   winterIntervalDays: String(plant.winterIntervalDays),
-  date: plant.nextWateringOn,
 });
 
-const nameError = (name: string): FieldError | undefined => {
+const validateName = (name: string): FieldError | undefined => {
   const trimmed = name.trim();
 
   if (trimmed === '') {
@@ -60,10 +51,10 @@ const nameError = (name: string): FieldError | undefined => {
   return trimmed.length > NAME_MAX_LENGTH ? 'nameTooLong' : undefined;
 };
 
-const descriptionError = (description: string): FieldError | undefined =>
+const validateDescription = (description: string): FieldError | undefined =>
   description.trim().length > DESCRIPTION_MAX_LENGTH ? 'descriptionTooLong' : undefined;
 
-const intervalError = (days: string): FieldError | undefined => {
+const validateInterval = (days: string): FieldError | undefined => {
   const value = Number(days);
 
   return WHOLE_NUMBER.test(days) && value >= MIN_INTERVAL_DAYS && value <= MAX_INTERVAL_DAYS
@@ -71,45 +62,20 @@ const intervalError = (days: string): FieldError | undefined => {
     : 'intervalInvalid';
 };
 
-// Dates are ISO strings, so comparing them as text compares the days.
-const dateError = (date: string, target: FormTarget, today: string): FieldError | undefined => {
-  if (date === '') {
-    return 'dateRequired';
-  }
+export const validateFormFields = (values: PlantFormValues): ErrorEntry<PlantFormField>[] => [
+  ['name', validateName(values.name)],
+  ['description', validateDescription(values.description)],
+  ['summerIntervalDays', validateInterval(values.summerIntervalDays)],
+  ['winterIntervalDays', validateInterval(values.winterIntervalDays)],
+];
 
-  if (target.mode === 'add') {
-    return date > today ? 'dateInFuture' : undefined;
-  }
+export const errorsOf = <Field extends string>(entries: ErrorEntry<Field>[]): FormErrors<Field> =>
+  entries.reduce<FormErrors<Field>>(
+    (errors, [field, error]) => (error === undefined ? errors : { ...errors, [field]: error }),
+    {},
+  );
 
-  return date !== target.plant.nextWateringOn && date < today ? 'dateInPast' : undefined;
-};
-
-export const validatePlant = (
-  values: PlantFormValues,
-  target: FormTarget,
-  today: string,
-): PlantFormErrors => {
-  const errors: [PlantFormField, FieldError | undefined][] = [
-    ['name', nameError(values.name)],
-    ['description', descriptionError(values.description)],
-    ['summerIntervalDays', intervalError(values.summerIntervalDays)],
-    ['winterIntervalDays', intervalError(values.winterIntervalDays)],
-    ['date', dateError(values.date, target, today)],
-  ];
-
-  return Object.fromEntries(errors.filter(([, error]) => error !== undefined));
-};
-
-export const hasErrors = (errors: PlantFormErrors): boolean => Object.keys(errors).length > 0;
-
-// A changed next watering can't be in the past; an unchanged one stays even when it is (R6).
-export const dateLimitsOf = (target: FormTarget, today: string, date: string): DateLimits => {
-  if (target.mode === 'add') {
-    return { max: today };
-  }
-
-  return date === target.plant.nextWateringOn ? {} : { min: today };
-};
+export const hasErrors = (errors: FormErrors<string>): boolean => Object.keys(errors).length > 0;
 
 const tagNoteOf = (tags: string[], tag: string): TagNote | null => {
   if (tag.length > TAG_MAX_LENGTH) {
@@ -123,13 +89,27 @@ const tagNoteOf = (tags: string[], tag: string): TagNote | null => {
   return tags.length >= MAX_TAGS ? 'tooManyTags' : null;
 };
 
-// A duplicate is dropped from the field; a tag that is too long, or one too many, stays there
-// to be fixed.
-export const addTag = (values: PlantFormValues): TagAdded => {
+export const addTag = <Values extends PlantFormValues>(values: Values): TagAdded<Values> => {
   const tag = values.tagDraft.trim();
-  const tagNote = tag === '' ? null : tagNoteOf(values.tags, tag);
 
-  if (tag === '' || (tagNote !== null && tagNote !== 'tagDuplicate')) {
+  if (tag === '') {
+    return {
+      values,
+      tagNote: null,
+    };
+  }
+
+  const tagNote = tagNoteOf(values.tags, tag);
+
+  if (tagNote === 'tagDuplicate') {
+    return {
+      values: { ...values, tagDraft: '' },
+      tagNote,
+    };
+  }
+
+  // A tag that is too long, or one too many, stays in the field to be fixed.
+  if (tagNote !== null) {
     return {
       values,
       tagNote,
@@ -137,21 +117,20 @@ export const addTag = (values: PlantFormValues): TagAdded => {
   }
 
   return {
-    values: {
-      ...values,
-      tags: tagNote === null ? [...values.tags, tag] : values.tags,
-      tagDraft: '',
-    },
+    values: { ...values, tags: [...values.tags, tag], tagDraft: '' },
     tagNote,
   };
 };
 
-export const removeTag = (values: PlantFormValues, removed: string): PlantFormValues => ({
+export const removeTag = <Values extends PlantFormValues>(
+  values: Values,
+  removed: string,
+): Values => ({
   ...values,
   tags: values.tags.filter((tag) => tag !== removed),
 });
 
-const toFields = (values: PlantFormValues): PlantFields => {
+export const toFields = (values: PlantFormValues): PlantFields => {
   const description = values.description.trim();
 
   return {
@@ -162,13 +141,3 @@ const toFields = (values: PlantFormValues): PlantFields => {
     winterIntervalDays: Number(values.winterIntervalDays),
   };
 };
-
-export const toNewPlant = (values: PlantFormValues): NewPlant => ({
-  ...toFields(values),
-  lastWateredOn: values.date,
-});
-
-export const toPlantChanges = (values: PlantFormValues): PlantChanges => ({
-  ...toFields(values),
-  nextWateringOn: values.date,
-});

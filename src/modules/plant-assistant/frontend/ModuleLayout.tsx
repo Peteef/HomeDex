@@ -11,9 +11,9 @@ export const ModuleLayout = () => {
 
   return (
     <ModulePage title={text.title} wide>
-      {mobile ? null : <ViewTabs />}
+      {!mobile && <ViewTabs />}
       <Outlet />
-      {mobile ? <TabBar /> : null}
+      {mobile && <TabBar />}
     </ModulePage>
   );
 };

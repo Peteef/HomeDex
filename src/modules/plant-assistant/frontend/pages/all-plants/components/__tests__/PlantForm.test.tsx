@@ -11,7 +11,6 @@ const VALUES = {
   tagDraft: '',
   summerIntervalDays: '7',
   winterIntervalDays: '14',
-  date: '2026-11-20',
 };
 
 const renderForm = (props: Partial<PlantFormProps> = {}) => {
@@ -24,12 +23,11 @@ const renderForm = (props: Partial<PlantFormProps> = {}) => {
 
   render(
     <PlantForm
-      mode="add"
       values={VALUES}
       errors={{}}
       tagNote={null}
       tagSuggestions={[]}
-      dateLimits={{ max: '2026-11-20' }}
+      dateField={<input aria-label="Watering date" />}
       saving={false}
       failed={false}
       {...handlers}
@@ -53,26 +51,14 @@ describe('PlantForm', () => {
     expect(screen.getByRole('button', { name: 'Remove Shade' })).toBeInTheDocument();
     expect(field('Summer')).toHaveValue(7);
     expect(field('Winter')).toHaveValue(14);
-    expect(field('Last watered')).toHaveValue('2026-11-20');
   });
 
-  it('should ask when the plant was last watered, not after today, when adding', () => {
+  it('should show the date field it is given', () => {
     // When
     renderForm();
 
     // Then
-    expect(field('Last watered')).toHaveAttribute('type', 'date');
-    expect(field('Last watered')).toHaveAttribute('max', '2026-11-20');
-    expect(screen.queryByLabelText('Next watering')).not.toBeInTheDocument();
-  });
-
-  it('should ask for the next watering when editing', () => {
-    // When
-    renderForm({ mode: 'edit', dateLimits: { min: '2026-11-20' } });
-
-    // Then
-    expect(field('Next watering')).toHaveAttribute('min', '2026-11-20');
-    expect(screen.queryByLabelText('Last watered')).not.toBeInTheDocument();
+    expect(field('Watering date')).toBeInTheDocument();
   });
 
   it('should ask for the intervals as whole days in a group', () => {
@@ -91,7 +77,6 @@ describe('PlantForm', () => {
     ['Description', 'description', 'Sunny spot.'],
     ['Summer', 'summerIntervalDays', '5'],
     ['Winter', 'winterIntervalDays', '10'],
-    ['Last watered', 'date', '2026-11-18'],
   ])('should pass on a change of %s', (label, name, value) => {
     // Given
     const { onChange } = renderForm();
@@ -121,7 +106,6 @@ describe('PlantForm', () => {
         name: 'nameRequired',
         description: 'descriptionTooLong',
         summerIntervalDays: 'intervalInvalid',
-        date: 'dateInFuture',
       },
     });
 
@@ -130,7 +114,6 @@ describe('PlantForm', () => {
     expect(field('Description')).toHaveAccessibleDescription('Use at most 1000 characters.');
     expect(field('Summer')).toHaveAccessibleDescription('Enter whole days from 1 to 365.');
     expect(field('Winter')).toBeValid();
-    expect(field('Last watered')).toHaveAccessibleDescription("This date can't be in the future.");
   });
 
   it('should limit the length of the name and the description', () => {
@@ -179,6 +162,5 @@ describe('PlantForm', () => {
     // Then
     expect(field('Nazwa')).toHaveAccessibleDescription('Wpisz nazwę.');
     expect(screen.getByRole('group', { name: 'Podlewanie co' })).toBeInTheDocument();
-    expect(field('Ostatnie podlewanie')).toBeInTheDocument();
   });
 });
