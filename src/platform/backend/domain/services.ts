@@ -3,7 +3,7 @@ import type { AccountsService, Argon2Params } from './accounts/index.ts';
 import { sessionService } from './auth/index.ts';
 import type { SessionService } from './auth/index.ts';
 import { tilesService } from './tiles/index.ts';
-import type { TilesService } from './tiles/index.ts';
+import type { TileBadge, TilesService } from './tiles/index.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
 import { definedProps } from '../../shared/objects/definedProps.ts';
 
@@ -17,6 +17,7 @@ export interface DomainServicesOptions {
   sessionTtlDays: number;
   argon2Params?: Argon2Params;
   enabledModuleIds?: readonly string[];
+  tileBadge?: TileBadge;
   now?: () => number;
 }
 
@@ -25,7 +26,7 @@ export interface DomainServicesOptions {
 // them are made here.
 export const domainServices = (
   storage: Storage,
-  { sessionTtlDays, argon2Params, enabledModuleIds = [], now }: DomainServicesOptions,
+  { sessionTtlDays, argon2Params, enabledModuleIds = [], tileBadge, now }: DomainServicesOptions,
 ): DomainServices => {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
@@ -39,7 +40,7 @@ export const domainServices = (
     ...definedProps({ argon2Params, now }),
   });
 
-  const tiles = tilesService(storage, { enabledModuleIds, ...definedProps({ now }) });
+  const tiles = tilesService(storage, { enabledModuleIds, ...definedProps({ tileBadge, now }) });
 
   return {
     accounts,

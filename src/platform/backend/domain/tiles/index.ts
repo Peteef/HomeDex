@@ -1,5 +1,5 @@
 export { tilesService } from './tilesService.ts';
-export type { TilesService } from './tilesService.ts';
+export type { TileBadge, TilesService } from './tilesService.ts';
 export { TileError } from './errors.ts';
 export { TILE_SCOPES } from './types.ts';
 export type {

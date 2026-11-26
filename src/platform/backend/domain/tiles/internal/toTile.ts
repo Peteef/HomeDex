@@ -1,7 +1,12 @@
 import type { Tile } from '../types.ts';
 import type { UserTileRow } from './tileRepository.ts';
 
-export const toTile = (row: UserTileRow, editable: boolean): Tile => ({
+interface UserView {
+  editable: boolean;
+  badge: number | null;
+}
+
+export const toTile = (row: UserTileRow, { editable, badge }: UserView): Tile => ({
   id: row.id,
   dexNo: row.dex_no,
   kind: row.kind,
@@ -12,4 +17,5 @@ export const toTile = (row: UserTileRow, editable: boolean): Tile => ({
   scope: row.scope,
   pinned: row.pinned === 1,
   editable,
+  badge,
 });

@@ -7,10 +7,15 @@ import { toTile } from './internal/toTile.ts';
 import { linkTileSchema, validate } from './internal/validation.ts';
 import type { EnabledModule, NewLinkTile, Tile, TileEdit, TileScope } from './types.ts';
 
+export type TileBadge = (moduleId: string) => number | null;
+
 interface TilesOptions {
   enabledModuleIds: readonly string[];
+  tileBadge?: TileBadge;
   now?: () => number;
 }
+
+const NO_BADGE: TileBadge = () => null;
 
 export interface TilesService {
   list(userId: number): Tile[];
@@ -45,7 +50,7 @@ const toLinkTileRecord = (row: LinkTileRow): LinkTileRecord => ({
 
 export const tilesService = (
   db: Storage,
-  { enabledModuleIds, now = Date.now }: TilesOptions,
+  { enabledModuleIds, tileBadge = NO_BADGE, now = Date.now }: TilesOptions,
 ): TilesService => {
   const tiles = tileRepository(db);
   const pins = pinRepository(db);
@@ -82,16 +87,20 @@ export const tilesService = (
     }
   };
 
-  const tileFor = (userId: number, id: number): Tile => {
-    const row = requireVisible(userId, id);
-    return toTile(row, isEditable(row, userId));
-  };
+  const badgeOf = (row: UserTileRow): number | null =>
+    row.module_id === null ? null : tileBadge(row.module_id);
+
+  const toUserTile = (row: UserTileRow, userId: number): Tile =>
+    toTile(row, { editable: isEditable(row, userId), badge: badgeOf(row) });
+
+  const tileFor = (userId: number, id: number): Tile =>
+    toUserTile(requireVisible(userId, id), userId);
 
   const list = (userId: number): Tile[] =>
     tiles
       .listForUser(userId)
       .filter(isShown)
-      .map((row) => toTile(row, isEditable(row, userId)));
+      .map((row) => toUserTile(row, userId));
 
   const create = (userId: number, tile: NewLinkTile): Tile => {
     const record = validate(linkTileSchema, tile);
