@@ -3,6 +3,7 @@ import type { SubmitEvent } from 'react';
 import { TILE_URL_MAX_LENGTH } from '../../../../shared/tiles/linkTileRules.ts';
 import type { IconName } from '../../../../shared/icons/iconNames.ts';
 import { definedProps } from '../../../../shared/objects/definedProps.ts';
+import { lookup } from '../../../../shared/objects/lookup.ts';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
 import type { TileScope } from '../../../features/tiles/index.ts';
@@ -102,7 +103,7 @@ export const TileForm = ({
         placeholder={messages.urlPlaceholder}
         maxLength={TILE_URL_MAX_LENGTH}
         value={values.url}
-        {...(errors.url ? { error: messages.errors[errors.url] } : {})}
+        {...definedProps({ error: lookup(messages.errors, errors.url) })}
         onChange={(event) => {
           onUrlChange(event.target.value);
         }}
