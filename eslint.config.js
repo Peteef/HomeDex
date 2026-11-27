@@ -306,7 +306,7 @@ export const uiTextRules = {
 };
 
 // src/platform/shared/ holds what frontend and backend both need (status codes, icon names,
-// languages, tile rules, the manifest schema).
+// languages, tile rules, the manifest schema, small object helpers).
 // It stands on its own, so both sides can import it without depending on each other.
 /** @type {import('eslint').Linter.Config} */
 export const sharedRules = {

@@ -1,4 +1,5 @@
 import { Button, TextInput } from '#platform/frontend';
+import { includeIf } from '#platform/shared';
 import { useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useText } from '../../../locales/index.ts';
@@ -37,7 +38,7 @@ export const AddItemForm = ({ adding, failed, onAdd }: AddItemFormProps) => {
       return;
     }
 
-    onAdd({ text: itemText, ...(amount.trim() === '' ? {} : { amount }) }, clear);
+    onAdd({ text: itemText, ...includeIf(amount.trim() !== '', { amount }) }, clear);
   };
 
   return (
