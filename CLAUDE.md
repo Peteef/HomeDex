@@ -34,7 +34,7 @@ The current stack, not a limit: when a task needs something it lacks, look for a
 src/platform/          the core
   frontend/            components/, pages/, features/, lib/, locales/, app skeleton, public-api/
   backend/             domain/, routes/, infrastructure/, public-api/
-  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema, `includeIf`, `valueIf`, `definedProps`); imports neither side
+  shared/              code both sides use (status codes, icon names, languages, tile types and rules, manifest schema, `includeIf`, `valueIf`, `definedProps`, `lookup`); imports neither side
 src/modules/<id>/      one module, laid out like the platform (guide: src/modules/README.md)
 e2e/                   Playwright tests
 tests/                 tests of the repository itself (lint boundaries, module contract)
@@ -73,6 +73,7 @@ assets/                art, loaded at runtime from ASSETS_DIR
 - An optional key is left out, not set to `undefined` (`exactOptionalPropertyTypes`): spread `...includeIf(cond, { key: value })` rather than `...(cond ? { key: value } : {})`.
 - An optional value is `valueIf(cond, value)` (`shared/objects/valueIf.ts`), not `cond ? value : undefined`. Keep the ternary only when the value needs the condition to narrow its type.
 - A value that may be `undefined` goes into an optional key through `...definedProps({ key })` (`shared/objects/definedProps.ts`), which leaves out the keys whose value is `undefined`, rather than `...(key === undefined ? {} : { key })`.
+- Look up by a key that may be `undefined` with `lookup(record, key)` (`shared/objects/lookup.ts`), so the result is `undefined` too: `...definedProps({ error: lookup(messages.errors, error) })`.
 - Types stay in the file that owns them. Model types shared within a folder go to its `types.ts`, error classes to `errors.ts`; prop types stay with their component. No global `types.ts`.
 - Only a function with a one-statement body may be inlined (a JSX handler, a callback argument); anything longer becomes a named `const` (`onChange={pick}`). Five idioms may stay inline at any length: Express route handlers in `routes/`, React hook bodies (`useEffect`, `useMemo`), a `new Promise` executor, a `db.transaction` body (so the transaction visibly wraps its queries), and test callbacks (`describe`, `it`, hooks, mocks).
 - Lint and `npm run fix` handle the rest: arrow functions only, concise bodies, braces everywhere, blank lines around multi-line statements, one property per line in returned objects, `{cond && <X />}` with a boolean condition.

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SubmitEvent } from 'react';
+import { definedProps } from '../../../../shared/objects/definedProps.ts';
+import { lookup } from '../../../../shared/objects/lookup.ts';
 import { Avatar } from '../../../components/avatar/Avatar.tsx';
 import { Button } from '../../../components/button/Button.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
@@ -83,7 +85,7 @@ export const PasswordStep = ({
           onChange={(event) => {
             setPassword(event.target.value);
           }}
-          {...(error && { error: errors[error] })}
+          {...definedProps({ error: lookup(errors, error) })}
         />
         {failure !== null && (
           <p role="alert" className="text-dex-red-text text-base font-bold">
