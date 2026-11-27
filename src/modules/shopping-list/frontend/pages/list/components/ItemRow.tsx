@@ -31,7 +31,7 @@ export const ItemRow = ({ item, onToggle, onDelete }: ItemRowProps) => {
           aria-hidden
           className="border-dex-field-border peer-checked:bg-dex-red peer-checked:border-dex-red peer-focus-visible:outline-dex-ink bg-dex-surface flex size-7 shrink-0 items-center justify-center rounded-lg border-2 text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2"
         >
-          {checked ? <Check size={18} strokeWidth={3} /> : null}
+          {checked && <Check size={18} strokeWidth={3} />}
         </span>
         <span className="flex min-w-0 flex-col">
           <span
@@ -42,7 +42,7 @@ export const ItemRow = ({ item, onToggle, onDelete }: ItemRowProps) => {
             }
           >
             {text}
-            {amount === null ? null : (
+            {amount !== null && (
               <span className="text-dex-ink-muted font-semibold"> · {amount}</span>
             )}
           </span>

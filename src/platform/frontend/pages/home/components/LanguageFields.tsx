@@ -34,14 +34,14 @@ export const LanguageFields = ({
       <p aria-hidden className="flex min-h-11 items-center px-2 text-sm font-extrabold">
         {`${flag} ${code}`}
       </p>
-      {removable ? (
+      {removable && (
         <IconButton
           className="absolute top-3 right-3"
           icon={<Trash2 size={20} />}
           label={messages.removeLanguage({ language: code })}
           onClick={onRemove}
         />
-      ) : null}
+      )}
       <TextInput
         label={messages.title}
         lang={text.language}

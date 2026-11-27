@@ -8,6 +8,7 @@ import globals from 'globals';
 import i18next from 'eslint-plugin-i18next';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import ts from 'typescript';
 
 // Platform never imports modules. A module imports only its own files and the platform public
 // APIs (#platform/*), never another module. Inside a module, the layers mirror the platform:
@@ -369,6 +370,148 @@ const returnedObjectOnePerLine = {
   },
 };
 
+// A conditional JSX child is written `{condition && <X />}`, never with a `null` branch.
+const isJsxChild = (container) =>
+  container.type === 'JSXExpressionContainer' &&
+  (container.parent.type === 'JSXElement' || container.parent.type === 'JSXFragment');
+
+const isNull = (node) => node.type === 'Literal' && node.raw === 'null';
+
+// Operators that bind more loosely than `&&` (or, for `??`, may not be mixed with it).
+const LOOSER_THAN_AND = new Set([
+  'ConditionalExpression',
+  'AssignmentExpression',
+  'SequenceExpression',
+  'ArrowFunctionExpression',
+  'YieldExpression',
+]);
+
+const bindsLooserThanAnd = (node) =>
+  LOOSER_THAN_AND.has(node.type) ||
+  (node.type === 'LogicalExpression' && (node.operator === '||' || node.operator === '??'));
+
+const NEGATED_OPERATORS = { '===': '!==', '!==': '===', '==': '!=', '!=': '==' };
+
+const NEGATABLE_WITHOUT_PARENTHESES = new Set([
+  'Identifier',
+  'MemberExpression',
+  'CallExpression',
+  'ChainExpression',
+]);
+
+const noNullJsxBranch = {
+  meta: {
+    type: 'suggestion',
+    fixable: 'code',
+    schema: [],
+    messages: {
+      useAnd: 'Write a conditional JSX child as `{condition && <X />}` instead of a `null` branch.',
+    },
+  },
+  create(context) {
+    const { sourceCode } = context;
+    const textBetween = (start, end) => sourceCode.text.slice(start, end).trim();
+
+    const isPunctuator = (value) => (token) => token.type === 'Punctuator' && token.value === value;
+
+    const condition = (test) =>
+      bindsLooserThanAnd(test) ? `(${sourceCode.getText(test)})` : sourceCode.getText(test);
+
+    const negatedComparison = (test) => {
+      const operator = sourceCode.getTokenAfter(test.left, {
+        filter: isPunctuator(test.operator),
+      });
+
+      return `${textBetween(test.range[0], operator.range[0])} ${NEGATED_OPERATORS[test.operator]} ${textBetween(operator.range[1], test.range[1])}`;
+    };
+
+    const negatedCondition = (test) => {
+      if (test.type === 'BinaryExpression' && test.operator in NEGATED_OPERATORS) {
+        return negatedComparison(test);
+      }
+
+      if (test.type === 'UnaryExpression' && test.operator === '!') {
+        return textBetween(sourceCode.getFirstToken(test).range[1], test.range[1]);
+      }
+
+      if (NEGATABLE_WITHOUT_PARENTHESES.has(test.type)) {
+        return `!${sourceCode.getText(test)}`;
+      }
+
+      return `!(${sourceCode.getText(test)})`;
+    };
+
+    const keptWhenTrue = (node) => {
+      const question = sourceCode.getTokenAfter(node.test, { filter: isPunctuator('?') });
+      const colon = sourceCode.getTokenAfter(node.consequent, { filter: isPunctuator(':') });
+      return textBetween(question.range[1], colon.range[0]);
+    };
+
+    const keptWhenFalse = (node) => {
+      const colon = sourceCode.getTokenAfter(node.consequent, { filter: isPunctuator(':') });
+      return textBetween(colon.range[1], node.range[1]);
+    };
+
+    const andForm = (node) =>
+      isNull(node.alternate)
+        ? `${condition(node.test)} && ${keptWhenTrue(node)}`
+        : `${negatedCondition(node.test)} && ${keptWhenFalse(node)}`;
+
+    return {
+      ConditionalExpression(node) {
+        const hasNullBranch = isNull(node.consequent) || isNull(node.alternate);
+
+        if (!isJsxChild(node.parent) || !hasNullBranch) {
+          return;
+        }
+
+        context.report({
+          node,
+          messageId: 'useAnd',
+          fix: (fixer) => fixer.replaceText(node, andForm(node)),
+        });
+      },
+    };
+  },
+};
+
+// The left side of `&&` in a JSX child must be a boolean, because React renders a falsy number
+// (`{count && <X />}` shows `0`). Files linted without type information are skipped.
+const isBooleanType = (type) =>
+  (type.isUnion() ? type.types : [type]).every(
+    (member) => (member.flags & ts.TypeFlags.BooleanLike) !== 0,
+  );
+
+const booleanJsxCondition = {
+  meta: {
+    type: 'problem',
+    schema: [],
+    messages: {
+      notBoolean:
+        'The condition before `&&` in JSX must be a boolean, for example `items.length > 0` or `value !== undefined`.',
+    },
+  },
+  create(context) {
+    return {
+      LogicalExpression(node) {
+        if (node.operator !== '&&' || !isJsxChild(node.parent)) {
+          return;
+        }
+
+        const services = context.sourceCode.parserServices;
+
+        if (!services?.program) {
+          return;
+        }
+
+        if (!isBooleanType(services.getTypeAtLocation(node.left))) {
+          context.report({ node: node.left, messageId: 'notBoolean' });
+        }
+      },
+    };
+  },
+};
+
 // Functions are arrow functions. Methods of classes and objects stay methods, because they are
 // part of a type's shape (and ESLint rules themselves are objects with a `create` method).
 const notMethod =
@@ -386,11 +529,19 @@ const MULTILINE_STATEMENTS = [
 /** @type {import('eslint').Linter.Config} */
 export const styleRules = {
   plugins: {
-    homedex: { rules: { 'returned-object-one-per-line': returnedObjectOnePerLine } },
+    homedex: {
+      rules: {
+        'returned-object-one-per-line': returnedObjectOnePerLine,
+        'no-null-jsx-branch': noNullJsxBranch,
+        'boolean-jsx-condition': booleanJsxCondition,
+      },
+    },
     '@stylistic': stylistic,
   },
   rules: {
     'homedex/returned-object-one-per-line': 'error',
+    'homedex/no-null-jsx-branch': 'error',
+    'homedex/boolean-jsx-condition': 'error',
     '@stylistic/padding-line-between-statements': [
       'error',
       { blankLine: 'always', prev: MULTILINE_STATEMENTS, next: '*' },
