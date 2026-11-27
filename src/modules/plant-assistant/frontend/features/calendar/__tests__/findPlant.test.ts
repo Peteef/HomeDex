@@ -5,7 +5,6 @@ import { findPlant } from '../index.ts';
 const FERN: CalendarPlant = {
   id: 1,
   name: "Bulbasaur's fern",
-  photoId: null,
   urgency: 'later',
   daysUntil: 3,
 };

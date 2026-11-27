@@ -3,7 +3,6 @@ import type { Urgency } from '../schedule/index.ts';
 export interface CalendarPlant {
   id: number;
   name: string;
-  photoId: number | null;
   urgency: Urgency;
   daysUntil: number;
 }

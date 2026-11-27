@@ -81,11 +81,11 @@ describe('calendar service', () => {
 
     // Then
     expect(dayOf(calendar, '2026-06-03')?.plants).toEqual([
-      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'today', daysUntil: 0 },
+      { id, name: "Bulbasaur's fern", urgency: 'today', daysUntil: 0 },
     ]);
 
     expect(dayOf(calendar, '2026-06-10')?.plants).toEqual([
-      { id, name: "Bulbasaur's fern", photoId: null, urgency: 'later', daysUntil: 7 },
+      { id, name: "Bulbasaur's fern", urgency: 'later', daysUntil: 7 },
     ]);
 
     expect(dayOf(calendar, '2026-06-04')?.plants).toEqual([]);

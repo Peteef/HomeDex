@@ -52,7 +52,7 @@ export const calendarService = (
     plants.list().flatMap((plant) =>
       projectWaterings(plant, day, lastDay).map(({ date, urgency, daysUntil }) => ({
         date,
-        plant: { id: plant.id, name: plant.name, photoId: null, urgency, daysUntil },
+        plant: { id: plant.id, name: plant.name, urgency, daysUntil },
       })),
     );
 

@@ -48,14 +48,13 @@ describe('DayPlants', () => {
     expect(screen.getByText('Nothing to water on this day.')).toBeInTheDocument();
   });
 
-  it('should show the photo of a plant that has one', () => {
+  it('should show no photo or placeholder for the plants', () => {
     // When
-    render(<DayPlants day={todayWith([{ ...FERN, photoId: 4 }])} onOpen={vi.fn()} />);
+    render(<DayPlants day={todayWith([FERN])} onOpen={vi.fn()} />);
 
     // Then
-    expect(document.querySelector('img')).toHaveAttribute(
-      'src',
-      '/api/m/plant-assistant/plants/1/photo?v=4',
-    );
+    const row = screen.getByRole('button', { name: /Bulbasaur's fern/ });
+    expect(row.querySelector('img')).toBeNull();
+    expect(row.querySelector('.lucide-sprout')).toBeNull();
   });
 });
