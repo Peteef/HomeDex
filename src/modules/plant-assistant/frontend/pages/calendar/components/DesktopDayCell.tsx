@@ -7,10 +7,9 @@ import { DayLabel } from './DayLabel.tsx';
 
 export interface DesktopDayCellProps {
   day: CalendarDay;
-  selected: boolean;
   format: CalendarFormat;
-  onSelect: (date: string) => void;
   onOpen: (plant: CalendarPlant) => void;
+  onShowDay: (date: string) => void;
 }
 
 const NAMES_PER_DAY = 3;
@@ -18,39 +17,29 @@ const NAMES_PER_DAY = 3;
 const FOCUS_CLASSES =
   'focus-visible:outline-dex-ink focus-visible:outline-3 focus-visible:outline-offset-2';
 
-const numberClasses = ({ inMonth, isToday }: CalendarDay, selected: boolean): string =>
+const numberClasses = ({ inMonth, isToday }: CalendarDay): string =>
   [
-    `${FOCUS_CLASSES} flex size-11 items-center justify-center rounded-full text-base font-bold transition-colors`,
+    'flex size-11 items-center justify-center rounded-full text-base font-bold',
     inMonth ? 'text-dex-ink' : 'text-dex-ink-muted',
-    selected ? 'bg-dex-surface' : 'hover:bg-dex-surface/60',
     isToday ? 'ring-dex-red ring-2 ring-inset' : '',
   ].join(' ');
 
-export const DesktopDayCell = ({
-  day,
-  selected,
-  format,
-  onSelect,
-  onOpen,
-}: DesktopDayCellProps) => {
+// The names are small buttons, below the 44 pt rule, so a day holds three of them and each opens
+// its plant in one click.
+export const DesktopDayCell = ({ day, format, onOpen, onShowDay }: DesktopDayCellProps) => {
   const text = useText('calendar.monthGrid');
   const hiddenCount = day.plants.length - NAMES_PER_DAY;
 
-  const select = (): void => {
-    onSelect(day.date);
+  const showDay = (): void => {
+    onShowDay(day.date);
   };
 
   return (
     <td className="border-dex-line h-32 border p-1 align-top">
-      <button
-        type="button"
-        aria-pressed={selected}
-        onClick={select}
-        className={numberClasses(day, selected)}
-      >
+      <span className={numberClasses(day)}>
         <span aria-hidden>{format.dayNumber(day.date)}</span>
         <DayLabel day={day} format={format} />
-      </button>
+      </span>
       <ul className="flex flex-col">
         {day.plants.slice(0, NAMES_PER_DAY).map((plant) => (
           <li key={plant.id}>
@@ -77,7 +66,7 @@ export const DesktopDayCell = ({
       {hiddenCount > 0 && (
         <button
           type="button"
-          onClick={select}
+          onClick={showDay}
           className={`${FOCUS_CLASSES} text-dex-ink-muted hover:text-dex-ink min-h-7 rounded-md px-1 text-xs font-bold underline underline-offset-2`}
         >
           {text.more({ count: hiddenCount })}

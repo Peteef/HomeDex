@@ -10,6 +10,7 @@ const isPhone = (testInfo: TestInfo): boolean => testInfo.project.use.isMobile =
 const REAL_API_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopChrome];
 const FILTER_PROJECTS: string[] = [PROJECTS.iphone13Mini, PROJECTS.desktopSafari];
 const LONG_AGO = '2025-01-01';
+const MIN_TOUCH_TARGET = 44;
 const PLANTS_API = '/api/m/plant-assistant/plants';
 
 const title = (page: Page) => page.getByRole('heading', { level: 1, name: 'Plant Assistant' });
@@ -646,9 +647,11 @@ test.describe('plant assistant', () => {
     });
   }
 
-  test('should list the plants of a day and open one from the calendar', async ({
+  test('should list the plants of a day under the grid and open one on a phone', async ({
     page,
   }, testInfo) => {
+    test.skip(!isPhone(testInfo), 'Desktops open plants from the grid');
+
     // Given
     await stubPlants(page, SAMPLE_PLANTS);
     await stubCalendar(page, SAMPLE_PLANTS);
@@ -663,24 +666,78 @@ test.describe('plant assistant', () => {
     await expect(page.getByRole('heading', { level: 4 })).toHaveText('Tuesday, November 24');
 
     // When
-    if (isPhone(testInfo)) {
-      await page.getByRole('button', { name: /^Friday, November 20/ }).click();
+    await page.getByRole('button', { name: /^Friday, November 20/ }).click();
 
-      await page
-        .getByRole('heading', { level: 4 })
-        .locator('..')
-        .getByRole('button', { name: /^Bulbasaur's fern/ })
-        .click();
-    } else {
-      await page
-        .getByRole('table')
-        .getByRole('button', { name: /^Bulbasaur's fern/ })
-        .first()
-        .click();
-    }
+    await page
+      .getByRole('heading', { level: 4 })
+      .locator('..')
+      .getByRole('button', { name: /^Bulbasaur's fern/ })
+      .click();
 
     // Then
     await expect(page.getByRole('dialog').getByText('Every 14 days')).toBeVisible();
+  });
+
+  test('should open a plant from the grid and a whole day from more on desktop', async ({
+    page,
+  }, testInfo) => {
+    test.skip(isPhone(testInfo), 'Phones list a day under the grid');
+
+    // Given
+    await stubPlants(page, SAMPLE_PLANTS);
+    await stubCalendar(page, SAMPLE_PLANTS);
+    await page.goto(`${PLANT_ASSISTANT_PATH}/calendar`);
+    await expect(page.getByRole('heading', { name: 'November 2026' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 4 })).toBeHidden();
+
+    // When
+    await page
+      .getByRole('table')
+      .getByRole('button', { name: /^Bulbasaur's fern ?, 3 days overdue/ })
+      .click();
+
+    // Then
+    await expect(page.getByRole('dialog').getByText('Every 14 days')).toBeVisible();
+
+    // When
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /^\+\d+ more ?, on Tuesday, November 24/ }).click();
+
+    // Then
+    const day = page.getByRole('dialog', { name: 'Tuesday, November 24' });
+    await expect(day.getByRole('listitem')).toHaveCount(SAMPLE_PLANTS.length);
+  });
+
+  // The grid's names and "+N more" stay small, so a day holds three names and each opens its
+  // plant in one click. Every other control keeps the 44 pt rule.
+  test('should make every other control of the calendar at least 44 pt on desktop', async ({
+    page,
+  }, testInfo) => {
+    test.skip(isPhone(testInfo), 'Phones have their own grid, checked below');
+
+    // Given
+    await stubPlants(page, SAMPLE_PLANTS);
+    await stubCalendar(page, SAMPLE_PLANTS);
+
+    // When
+    await page.goto(`${PLANT_ASSISTANT_PATH}/calendar`);
+    await expect(page.getByRole('heading', { name: 'November 2026' })).toBeVisible();
+
+    // Then
+    const small = await page.evaluate((min) => {
+      const controls = document.querySelectorAll('main button, main a');
+      return [...controls]
+        .filter((element) => element.closest('table') === null)
+        .map((element) => ({
+          name: element.textContent.slice(0, 40),
+          box: element.getBoundingClientRect(),
+        }))
+        .filter(({ box }) => box.width > 1 && box.height > 1)
+        .filter(({ box }) => box.width < min || box.height < min)
+        .map(({ name }) => name);
+    }, MIN_TOUCH_TARGET);
+
+    expect(small).toEqual([]);
   });
 
   test('should fit seven 44 pt days across the calendar on a phone', async ({ page }, testInfo) => {

@@ -15,6 +15,7 @@ import {
 import type { CalendarMonth, CalendarPlant } from '../../features/calendar/index.ts';
 import { photoUrl, usePlant } from '../../features/plants/index.ts';
 import { useText } from '../../locales/index.ts';
+import { DayDialog } from './components/DayDialog.tsx';
 import { DayPlants } from './components/DayPlants.tsx';
 import { DesktopMonthGrid } from './components/DesktopMonthGrid.tsx';
 import { MonthHeader } from './components/MonthHeader.tsx';
@@ -29,6 +30,7 @@ export const CalendarPage = () => {
   // Until one is picked, the server's current month and today are shown.
   const [pickedMonth, setPickedMonth] = useState<string | null>(null);
   const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const [shownDay, setShownDay] = useState<string | null>(null);
   const [openedId, setOpenedId] = useState<number | null>(null);
   const calendar = useCalendarMonth(pickedMonth);
   const openPlant = usePlant(openedId);
@@ -46,6 +48,15 @@ export const CalendarPage = () => {
 
   const openDetails = (plant: CalendarPlant): void => {
     setOpenedId(plant.id);
+  };
+
+  const openFromDay = (plant: CalendarPlant): void => {
+    setShownDay(null);
+    setOpenedId(plant.id);
+  };
+
+  const closeDay = (): void => {
+    setShownDay(null);
   };
 
   const showToday = (): void => {
@@ -71,6 +82,7 @@ export const CalendarPage = () => {
     const days = weeks.flat();
     const selectedDate = pickedDay ?? days.find((day) => day.isToday)?.date ?? null;
     const selectedDay = days.find((day) => day.date === selectedDate);
+    const dayInDialog = days.find((day) => day.date === shownDay);
 
     return (
       <>
@@ -90,14 +102,16 @@ export const CalendarPage = () => {
           <PhoneMonthGrid weeks={weeks} selected={selectedDate} onSelect={setPickedDay} />
         </div>
         <div className="hidden lg:block">
-          <DesktopMonthGrid
-            weeks={weeks}
-            selected={selectedDate}
-            onSelect={setPickedDay}
-            onOpen={openDetails}
-          />
+          <DesktopMonthGrid weeks={weeks} onOpen={openDetails} onShowDay={setShownDay} />
         </div>
-        {selectedDay !== undefined && <DayPlants day={selectedDay} onOpen={openDetails} />}
+        {selectedDay !== undefined && (
+          <div className="lg:hidden">
+            <DayPlants day={selectedDay} onOpen={openDetails} />
+          </div>
+        )}
+        {dayInDialog !== undefined && (
+          <DayDialog day={dayInDialog} onOpen={openFromDay} onClose={closeDay} />
+        )}
       </>
     );
   };

@@ -1,18 +1,17 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { BUSY_NOVEMBER, FERN, novemberWeeks, TODAY } from '../../__tests__/calendarFixtures.ts';
+import { BUSY_NOVEMBER, FERN, novemberWeeks } from '../../__tests__/calendarFixtures.ts';
 import { DesktopMonthGrid } from '../DesktopMonthGrid.tsx';
 
 const renderGrid = () => {
-  const handlers = { onSelect: vi.fn(), onOpen: vi.fn() };
+  const handlers = { onOpen: vi.fn(), onShowDay: vi.fn() };
 
-  render(<DesktopMonthGrid weeks={novemberWeeks(BUSY_NOVEMBER)} selected={TODAY} {...handlers} />);
+  render(<DesktopMonthGrid weeks={novemberWeeks(BUSY_NOVEMBER)} {...handlers} />);
 
   return handlers;
 };
 
-const cellOf = (dayName: RegExp) =>
-  screen.getByRole('button', { name: dayName }).closest('td') ?? document.body;
+const cellOf = (dayName: RegExp) => screen.getByText(dayName).closest('td') ?? document.body;
 
 describe('DesktopMonthGrid', () => {
   it('should show the names of the plants in their day, with their urgency for screen readers', () => {
@@ -42,16 +41,15 @@ describe('DesktopMonthGrid', () => {
     ).toBeInTheDocument();
   });
 
-  it('should select the day with its number or with more', () => {
+  it('should show a whole day with more', () => {
     // Given
-    const { onSelect } = renderGrid();
+    const { onShowDay } = renderGrid();
 
     // When
-    fireEvent.click(screen.getByRole('button', { name: /^Tuesday, November 24/ }));
     fireEvent.click(screen.getByRole('button', { name: /^\+2 more/ }));
 
     // Then
-    expect(onSelect.mock.calls).toEqual([['2026-11-24'], ['2026-11-24']]);
+    expect(onShowDay).toHaveBeenCalledWith('2026-11-24');
   });
 
   it('should open a plant by its name', () => {
@@ -65,21 +63,21 @@ describe('DesktopMonthGrid', () => {
     expect(onOpen).toHaveBeenCalledWith(FERN);
   });
 
-  it('should mark today and the selected day', () => {
+  it('should mark today', () => {
     // When
     renderGrid();
 
     // Then
-    const today = screen.getByRole('button', { name: /^Friday, November 20, today/ });
-    expect(today).toHaveClass('ring-dex-red');
-    expect(today).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/^Friday, November 20, today/).parentElement).toHaveClass(
+      'ring-dex-red',
+    );
   });
 
-  it('should not offer past days', () => {
+  it('should offer nothing to click on past days', () => {
     // When
     renderGrid();
 
     // Then
-    expect(screen.queryByRole('button', { name: /November 16/ })).not.toBeInTheDocument();
+    expect(within(cellOf(/^Monday, November 16/)).queryAllByRole('button')).toHaveLength(0);
   });
 });
