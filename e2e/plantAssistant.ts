@@ -88,7 +88,6 @@ const DAYS_IN_WEEK = 7;
 const calendarPlant = (plant: E2EPlant, daysUntil: number) => ({
   id: plant.id,
   name: plant.name,
-  photoId: null,
   urgency: plant.urgency,
   daysUntil,
 });

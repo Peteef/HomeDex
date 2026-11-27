@@ -1,7 +1,5 @@
-import { PlantThumbnail } from '../../../components/plant-thumbnail/PlantThumbnail.tsx';
 import { UrgencyLabel } from '../../../components/urgency-label/UrgencyLabel.tsx';
 import type { CalendarPlant } from '../../../features/calendar/index.ts';
-import { photoUrl } from '../../../features/plants/index.ts';
 
 export interface DayPlantRowProps {
   plant: CalendarPlant;
@@ -19,7 +17,6 @@ export const DayPlantRow = ({ plant, onOpen }: DayPlantRowProps) => {
   return (
     <li>
       <button type="button" onClick={open} className={ROW_CLASSES}>
-        <PlantThumbnail photoUrl={photoUrl(plant)} size="small" />
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <span className="text-dex-ink max-w-full text-base font-bold break-words">
             {plant.name}

@@ -40,7 +40,6 @@ export const plantOn = (
 ): CalendarPlant => ({
   id,
   name,
-  photoId: null,
   urgency,
   daysUntil,
 });
