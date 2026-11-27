@@ -3,7 +3,6 @@ import {
   TILE_DESCRIPTION_MAX_LENGTH,
   TILE_TITLE_MAX_LENGTH,
 } from '../../../../shared/tiles/linkTileRules.ts';
-import { definedProps } from '../../../../shared/objects/definedProps.ts';
 import { IconButton } from '../../../components/icon-button/IconButton.tsx';
 import { TextInput } from '../../../components/text-input/TextInput.tsx';
 import { useText } from '../../../lib/i18n/index.ts';
@@ -48,7 +47,7 @@ export const LanguageFields = ({
         lang={text.language}
         maxLength={TILE_TITLE_MAX_LENGTH}
         value={text.title}
-        {...definedProps({ error: error && messages.errors[error] })}
+        {...(error ? { error: messages.errors[error] } : {})}
         onChange={(event) => {
           onChange({ ...text, title: event.target.value });
         }}

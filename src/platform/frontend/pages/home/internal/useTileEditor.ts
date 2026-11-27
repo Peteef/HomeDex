@@ -165,7 +165,7 @@ export const useTileEditor = () => {
     onIconChange: changeIcon,
     onScopeChange: changeScope,
     onSubmit: save,
-    ...definedProps({ deletion: editedTile && deletionOf(editedTile) }),
+    ...(editedTile === undefined ? {} : { deletion: deletionOf(editedTile) }),
   };
 
   return {

@@ -102,7 +102,7 @@ export const TileForm = ({
         placeholder={messages.urlPlaceholder}
         maxLength={TILE_URL_MAX_LENGTH}
         value={values.url}
-        {...definedProps({ error: errors.url && messages.errors[errors.url] })}
+        {...(errors.url ? { error: messages.errors[errors.url] } : {})}
         onChange={(event) => {
           onUrlChange(event.target.value);
         }}
