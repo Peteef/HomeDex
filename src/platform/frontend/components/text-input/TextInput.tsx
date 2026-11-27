@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import type { ComponentProps } from 'react';
+import { valueIf } from '../../../shared/objects/valueIf.ts';
 import { classNames } from '../classNames.ts';
 
 export interface TextInputProps extends ComponentProps<'input'> {
@@ -24,7 +25,7 @@ export const TextInput = ({ label, hideLabel, error, id, className, ...rest }: T
       <input
         id={inputId}
         aria-invalid={invalid}
-        aria-describedby={invalid ? errorId : undefined}
+        aria-describedby={valueIf(invalid, errorId)}
         className={classNames(
           'border-dex-field-border text-dex-ink placeholder:text-dex-ink-muted focus-visible:outline-dex-ink aria-invalid:border-dex-red-text bg-dex-surface/95 min-h-11 rounded-full border px-5 text-base focus-visible:outline-3 focus-visible:outline-offset-2 aria-invalid:border-2',
           className,

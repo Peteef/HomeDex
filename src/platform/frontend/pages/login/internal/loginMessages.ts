@@ -1,4 +1,5 @@
 import { TOO_MANY_REQUESTS, UNAUTHORIZED } from '../../../../shared/http/status.ts';
+import { valueIf } from '../../../../shared/objects/valueIf.ts';
 import { ApiError } from '../../../lib/http/index.ts';
 import type en from '../../../locales/en.ts';
 
@@ -10,7 +11,7 @@ const FAILURES: Record<number, LoginError> = {
 };
 
 export const passwordError = (password: string): LoginError | undefined =>
-  password === '' ? 'passwordRequired' : undefined;
+  valueIf(password === '', 'passwordRequired');
 
 export const loginFailure = (error: unknown): LoginError =>
   (error instanceof ApiError ? FAILURES[error.status] : undefined) ?? 'unexpected';
