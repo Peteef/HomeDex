@@ -5,6 +5,7 @@ import type { SessionService } from './auth/index.ts';
 import { tilesService } from './tiles/index.ts';
 import type { TilesService } from './tiles/index.ts';
 import type { Storage } from '../infrastructure/storage/index.ts';
+import { definedProps } from '../../shared/objects/definedProps.ts';
 
 export interface DomainServices {
   accounts: AccountsService;
@@ -28,18 +29,17 @@ export const domainServices = (
 ): DomainServices => {
   const sessions = sessionService(storage, {
     ttlDays: sessionTtlDays,
-    ...(now && { now }),
+    ...definedProps({ now }),
   });
 
   const accounts = accountsService(storage, {
     revokeSessions: (userId) => {
       sessions.revokeAllFor(userId);
     },
-    ...(argon2Params && { argon2Params }),
-    ...(now && { now }),
+    ...definedProps({ argon2Params, now }),
   });
 
-  const tiles = tilesService(storage, { enabledModuleIds, ...(now && { now }) });
+  const tiles = tilesService(storage, { enabledModuleIds, ...definedProps({ now }) });
 
   return {
     accounts,

@@ -1,6 +1,7 @@
 import type { Account, AccountsService } from '../../domain/accounts/index.ts';
 import { UsageError } from './errors.ts';
 import type { TerminalPrompts } from './prompt.ts';
+import { definedProps } from '../../../shared/objects/definedProps.ts';
 
 const DATE_LOCALE = 'sv-SE';
 
@@ -113,12 +114,7 @@ export const userCommands = (
       return;
     }
 
-    const changes = {
-      ...(username !== undefined && { username }),
-      ...(password !== undefined && { password }),
-    };
-
-    const account = await accounts.edit(target, changes);
+    const account = await accounts.edit(target, definedProps({ username, password }));
     console.log(`Updated account "${account.username}".`);
 
     if (password !== undefined) {

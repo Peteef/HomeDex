@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { IconName } from '../../../../shared/icons/iconNames.ts';
 import { FORBIDDEN, NOT_FOUND } from '../../../../shared/http/status.ts';
+import { definedProps } from '../../../../shared/objects/definedProps.ts';
 import {
   displayText,
   useCreateTile,
@@ -156,7 +157,7 @@ export const useTileEditor = () => {
     missingLanguages: missingLanguages(values),
     scopeLocked: editedTile?.scope === 'shared',
     saving: create.isPending || update.isPending,
-    ...(failure === undefined ? {} : { failure }),
+    ...definedProps({ failure }),
     onTextChange: changeText,
     onAddLanguage: addLanguage,
     onRemoveLanguage: removeLanguage,
@@ -164,7 +165,7 @@ export const useTileEditor = () => {
     onIconChange: changeIcon,
     onScopeChange: changeScope,
     onSubmit: save,
-    ...(editedTile === undefined ? {} : { deletion: deletionOf(editedTile) }),
+    ...definedProps({ deletion: editedTile && deletionOf(editedTile) }),
   };
 
   return {

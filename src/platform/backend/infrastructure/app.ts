@@ -16,6 +16,7 @@ import { requestGuard } from './http/requestGuard.ts';
 import type { LoadedModule } from './modules/types.ts';
 import type { Storage } from './storage/index.ts';
 import { NOT_FOUND } from '../../shared/http/status.ts';
+import { definedProps } from '../../shared/objects/definedProps.ts';
 
 const INDEX_FILE = 'index.html';
 const HASHED_ASSETS_PATH = '/assets';
@@ -68,7 +69,7 @@ export const createApp = ({
     sessionTtlDays: config.SESSION_TTL_DAYS,
     enabledModuleIds: modules.map(({ manifest }) => manifest.id),
     now,
-    ...(argon2Params && { argon2Params }),
+    ...definedProps({ argon2Params }),
   });
 
   const cookies = sessionCookies(https, now);
