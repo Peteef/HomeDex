@@ -13,7 +13,7 @@ export const TextArea = ({ label, error, id, ...rest }: TextAreaProps) => {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const errorId = `${fieldId}-error`;
-  const invalid = error !== undefined;
+  const invalid = !!error;
 
   return (
     <div className="flex flex-col gap-1">
@@ -22,7 +22,7 @@ export const TextArea = ({ label, error, id, ...rest }: TextAreaProps) => {
       </label>
       <textarea
         id={fieldId}
-        aria-invalid={invalid ? true : undefined}
+        aria-invalid={invalid}
         aria-describedby={invalid ? errorId : undefined}
         className={FIELD_CLASSES}
         {...rest}
