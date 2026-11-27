@@ -40,6 +40,15 @@ describe('TextInput', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('should not be invalid when the error is empty', () => {
+    // When
+    render(<TextInput label="Username" error="" />);
+
+    // Then
+    expect(screen.getByLabelText('Username')).toBeValid();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('should pass input attributes through', () => {
     // When
     render(<TextInput label="Password" type="password" placeholder="Secret" />);
