@@ -87,6 +87,13 @@ const todayTabCount = async (page: Page): Promise<number> => {
   return Number(/(\d+) plants? to water/.exec(text ?? '')?.[1] ?? 0);
 };
 
+const homeTile = (page: Page) => page.getByRole('link', { name: /^No\. \d+ Plant Assistant/ });
+
+const homeTileCount = async (page: Page): Promise<number> => {
+  const text = await homeTile(page).textContent();
+  return Number(/(\d+) waiting/.exec(text ?? '')?.[1] ?? 0);
+};
+
 const openSamplePlants = async (page: Page): Promise<void> => {
   await stubPlants(page, SAMPLE_PLANTS);
   await page.goto(PLANT_ASSISTANT_PATH);
@@ -458,98 +465,141 @@ test.describe('plant assistant', () => {
     });
   }
 
-  // Against the real API in one project only, so no other test changes the badge meanwhile.
-  test('should water, undo and postpone plants on the Today board', async ({
-    page,
-    browser,
-    baseURL,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== PROJECTS.iphone13Mini, 'Runs against the real API once');
+  // Against the real API in one project only and one at a time, so no other test changes the
+  // counts of due plants meanwhile.
+  test.describe('due plants against the real API', () => {
+    test.describe.configure({ mode: 'serial' });
 
-    // Given
-    const run = String(Date.now());
-    const fern = `Fern ${run}`;
-    const aloe = `Aloe ${run}`;
-    const ivy = `Ivy ${run}`;
-    await page.goto(PLANT_ASSISTANT_PATH);
+    test('should water, undo and postpone plants on the Today board', async ({
+      page,
+      browser,
+      baseURL,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== PROJECTS.iphone13Mini, 'Runs against the real API once');
 
-    const ids = [
-      await createOverduePlant(page, fern),
-      await createOverduePlant(page, aloe),
-      await createOverduePlant(page, ivy),
-    ];
+      // Given
+      const run = String(Date.now());
+      const fern = `Fern ${run}`;
+      const aloe = `Aloe ${run}`;
+      const ivy = `Ivy ${run}`;
+      await page.goto(PLANT_ASSISTANT_PATH);
 
-    await page.reload();
-    await expect(plantRows(page).filter({ hasText: ivy })).toHaveCount(1);
-    const dueBefore = await todayTabCount(page);
-    const card = (name: string) => todayBoard(page).getByRole('listitem').filter({ hasText: name });
+      const ids = [
+        await createOverduePlant(page, fern),
+        await createOverduePlant(page, aloe),
+        await createOverduePlant(page, ivy),
+      ];
 
-    // When
-    await tabBar(page)
-      .getByRole('link', { name: /^Today/ })
-      .click();
+      await page.reload();
+      await expect(plantRows(page).filter({ hasText: ivy })).toHaveCount(1);
+      const dueBefore = await todayTabCount(page);
 
-    await card(fern)
-      .getByRole('button', { name: `Watered: ${fern}` })
-      .click();
+      const card = (name: string) =>
+        todayBoard(page).getByRole('listitem').filter({ hasText: name });
 
-    // Then
-    await expect(card(fern)).toHaveCount(0);
-    await expect(page.getByText(`${fern} watered.`)).toBeVisible();
+      // When
+      await tabBar(page)
+        .getByRole('link', { name: /^Today/ })
+        .click();
 
-    // When
-    await page.getByRole('button', { name: 'Undo' }).click();
+      await card(fern)
+        .getByRole('button', { name: `Watered: ${fern}` })
+        .click();
 
-    // Then
-    await expect(card(fern)).toHaveCount(1);
+      // Then
+      await expect(card(fern)).toHaveCount(0);
+      await expect(page.getByText(`${fern} watered.`)).toBeVisible();
 
-    // When
-    await card(fern)
-      .getByRole('button', { name: `Watered: ${fern}` })
-      .click();
+      // When
+      await page.getByRole('button', { name: 'Undo' }).click();
 
-    await expect(page.getByText(`${fern} watered.`)).toBeVisible();
+      // Then
+      await expect(card(fern)).toHaveCount(1);
 
-    await card(aloe)
-      .getByRole('button', { name: `Postpone: ${aloe}` })
-      .click();
+      // When
+      await card(fern)
+        .getByRole('button', { name: `Watered: ${fern}` })
+        .click();
 
-    await page
-      .getByRole('dialog', { name: `Postpone ${aloe}` })
-      .getByRole('button', { name: '2 days' })
-      .click();
+      await expect(page.getByText(`${fern} watered.`)).toBeVisible();
 
-    // Then
-    await expect(card(aloe)).toHaveCount(0);
-    await tabBar(page).getByRole('link', { name: 'Plants' }).click();
-    await expect.poll(() => todayTabCount(page)).toBe(dueBefore - 2);
+      await card(aloe)
+        .getByRole('button', { name: `Postpone: ${aloe}` })
+        .click();
 
-    // Given: a second user whose board still shows the ivy
-    const otherContext = await browser.newContext(baseURL === undefined ? {} : { baseURL });
-    const other = await otherContext.newPage();
-    await signIn(other, E2E_SECOND_USER);
-    await other.goto(`${PLANT_ASSISTANT_PATH}/today`);
-    const otherCard = todayBoard(other).getByRole('listitem').filter({ hasText: ivy });
-    await expect(otherCard).toHaveCount(1);
+      await page
+        .getByRole('dialog', { name: `Postpone ${aloe}` })
+        .getByRole('button', { name: '2 days' })
+        .click();
 
-    // When
-    await tabBar(page)
-      .getByRole('link', { name: /^Today/ })
-      .click();
+      // Then
+      await expect(card(aloe)).toHaveCount(0);
+      await tabBar(page).getByRole('link', { name: 'Plants' }).click();
+      await expect.poll(() => todayTabCount(page)).toBe(dueBefore - 2);
 
-    await card(ivy)
-      .getByRole('button', { name: `Watered: ${ivy}` })
-      .click();
+      // Given: a second user whose board still shows the ivy
+      const otherContext = await browser.newContext(baseURL === undefined ? {} : { baseURL });
+      const other = await otherContext.newPage();
+      await signIn(other, E2E_SECOND_USER);
+      await other.goto(`${PLANT_ASSISTANT_PATH}/today`);
+      const otherCard = todayBoard(other).getByRole('listitem').filter({ hasText: ivy });
+      await expect(otherCard).toHaveCount(1);
 
-    await expect(page.getByText(`${ivy} watered.`)).toBeVisible();
-    await otherCard.getByRole('button', { name: `Watered: ${ivy}` }).click();
+      // When
+      await tabBar(page)
+        .getByRole('link', { name: /^Today/ })
+        .click();
 
-    // Then
-    await expect(other.getByText(`Someone already took care of ${ivy}.`)).toBeVisible();
-    await expect(otherCard).toHaveCount(0);
+      await card(ivy)
+        .getByRole('button', { name: `Watered: ${ivy}` })
+        .click();
 
-    await otherContext.close();
-    await Promise.all(ids.map((id) => deletePlant(page, id)));
+      await expect(page.getByText(`${ivy} watered.`)).toBeVisible();
+      await otherCard.getByRole('button', { name: `Watered: ${ivy}` }).click();
+
+      // Then
+      await expect(other.getByText(`Someone already took care of ${ivy}.`)).toBeVisible();
+      await expect(otherCard).toHaveCount(0);
+
+      await otherContext.close();
+      await Promise.all(ids.map((id) => deletePlant(page, id)));
+    });
+
+    test('should show the plants due today on the home tile and count one less once watered', async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== PROJECTS.iphone13Mini, 'Runs against the real API once');
+
+      // Given
+      const name = `Weepinbell ${String(Date.now())}`;
+      const id = await createOverduePlant(page, name);
+      await page.goto('/');
+      await expect(homeTile(page)).toBeVisible();
+      const dueBefore = await homeTileCount(page);
+      expect(dueBefore).toBeGreaterThanOrEqual(1);
+
+      await testInfo.attach('home tile badge.png', {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      });
+
+      // When
+      await page.goto(`${PLANT_ASSISTANT_PATH}/today`);
+
+      await todayBoard(page)
+        .getByRole('listitem')
+        .filter({ hasText: name })
+        .getByRole('button', { name: `Watered: ${name}` })
+        .click();
+
+      await expect(page.getByText(`${name} watered.`)).toBeVisible();
+      await page.goto('/');
+      await expect(homeTile(page)).toBeVisible();
+
+      // Then
+      await expect.poll(() => homeTileCount(page)).toBe(dueBefore - 1);
+      await deletePlant(page, id);
+    });
   });
 
   for (const [time, at] of [

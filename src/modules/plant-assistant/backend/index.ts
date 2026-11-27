@@ -7,8 +7,9 @@ import { plantsRoutes } from './routes/plants.ts';
 import { tagsRoutes } from './routes/tags.ts';
 import { wateringRoutes } from './routes/watering.ts';
 
-export const register: RegisterModule = ({ router, storage, today, currentUser }) => {
+export const register: RegisterModule = ({ router, storage, today, currentUser, setTileBadge }) => {
   const plants = plantsService(storage, { today });
+  setTileBadge(() => plants.countDue());
   router.use(plantsRoutes({ plants }));
   router.use(tagsRoutes({ plants }));
   router.use(calendarRoutes({ calendar: calendarService(storage, { today }) }));

@@ -37,6 +37,7 @@ export interface PlantsService {
   remove(id: number): void;
   tags(): string[];
   photo(id: number): StoredPhoto;
+  countDue(): number;
 }
 
 export interface PlantsServiceOptions {
@@ -245,6 +246,8 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
 
   const tags = (): string[] => plants.tags();
 
+  const countDue = (): number => plants.countDue(today());
+
   const photo = (id: number): StoredPhoto => {
     requirePlant(id);
     const stored = photos.find(id);
@@ -264,5 +267,6 @@ export const plantsService = (db: Storage, { today }: PlantsServiceOptions): Pla
     remove,
     tags,
     photo,
+    countDue,
   };
 };

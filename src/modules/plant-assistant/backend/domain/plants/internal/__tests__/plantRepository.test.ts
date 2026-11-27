@@ -179,6 +179,43 @@ describe('plant repository', () => {
     });
   });
 
+  describe('countDue', () => {
+    it('should count nothing when no plant is due', () => {
+      // Given
+      const { plants } = newRepository();
+      plants.insert({ ...FERN, nextWateringOn: '2026-06-09' });
+
+      // When / Then
+      expect(plants.countDue('2026-06-08')).toBe(0);
+    });
+
+    it('should count the plants due on the day or before it', () => {
+      // Given
+      const { plants } = newRepository();
+      plants.insert({ ...FERN, nextWateringOn: '2026-06-01' });
+      plants.insert({ ...FERN, nextWateringOn: '2026-06-08' });
+      plants.insert({ ...CACTUS, nextWateringOn: '2026-06-09' });
+
+      // When / Then
+      expect(plants.countDue('2026-06-08')).toBe(2);
+    });
+
+    it('should count every plant when all are due', () => {
+      // Given
+      const { plants } = newRepository();
+      plants.insert({ ...FERN, nextWateringOn: '2026-05-30' });
+      plants.insert({ ...CACTUS, nextWateringOn: '2026-06-08' });
+
+      // When / Then
+      expect(plants.countDue('2026-06-08')).toBe(2);
+    });
+
+    it('should count nothing without plants', () => {
+      // When / Then
+      expect(newRepository().plants.countDue('2026-06-08')).toBe(0);
+    });
+  });
+
   describe('tags', () => {
     it('should list each tag once by its folded form, in its first spelling, sorted', () => {
       // Given

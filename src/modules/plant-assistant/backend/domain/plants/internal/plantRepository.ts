@@ -29,6 +29,7 @@ export interface PlantRepository {
   setDates(id: number, dates: PlantDates): void;
   remove(id: number): void;
   tags(): string[];
+  countDue(today: string): number;
 }
 
 interface PlantRow {
@@ -95,6 +96,10 @@ export const plantRepository = (db: Storage): PlantRepository => {
   );
 
   const deletePlant = db.prepare('DELETE FROM plant_assistant_plants WHERE id = ?');
+
+  const countDueOn = db.prepare<[string], { count: number }>(
+    'SELECT COUNT(*) AS count FROM plant_assistant_plants WHERE next_watering_on <= ?',
+  );
 
   const insertTag = db.prepare(
     'INSERT INTO plant_assistant_tags (plant_id, tag, tag_key) VALUES (?, ?, ?)',
@@ -167,6 +172,8 @@ export const plantRepository = (db: Storage): PlantRepository => {
 
   const tags = (): string[] => selectDistinctTags.all().map(({ tag }) => tag);
 
+  const countDue = (today: string): number => countDueOn.get(today)?.count ?? 0;
+
   return {
     list,
     find,
@@ -175,5 +182,6 @@ export const plantRepository = (db: Storage): PlantRepository => {
     setDates,
     remove,
     tags,
+    countDue,
   };
 };
