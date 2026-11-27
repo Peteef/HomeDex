@@ -61,6 +61,8 @@ export const TileList = ({
     );
   }
 
+  const showHoldHint = !searching && entries.some(({ editable }) => editable);
+
   const tile = (entry: TileEntry) => {
     const { id, editable, ...props } = entry;
 
@@ -84,18 +86,18 @@ export const TileList = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {entries.length === 0 ? (
+      {entries.length === 0 && (
         <p role="status" className={MESSAGE_CLASSES}>
           {text.empty}
         </p>
-      ) : null}
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {entries.map(tile)}
-        {searching ? null : <AddTile onAdd={onAdd} />}
+        {!searching && <AddTile onAdd={onAdd} />}
       </div>
-      {!searching && entries.some(({ editable }) => editable) ? (
+      {showHoldHint && (
         <p className="text-dex-ink-muted can-hover:hidden text-center text-sm">{text.holdToEdit}</p>
-      ) : null}
+      )}
     </div>
   );
 };

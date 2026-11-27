@@ -36,7 +36,7 @@ export const ItemList = ({ items, onToggle, onDelete, onClearChecked }: ItemList
           <ul className="flex flex-col gap-2">{toBuy.map(row)}</ul>
         )}
       </section>
-      {inCart.length === 0 ? null : (
+      {inCart.length > 0 && (
         <section className="flex flex-col gap-2" aria-labelledby="in-cart">
           <div className="flex items-center justify-between gap-3">
             <h2 id="in-cart" className={HEADING_CLASSES}>

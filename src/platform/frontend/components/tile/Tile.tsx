@@ -58,9 +58,9 @@ export const Tile = ({
         {text.dexNumber({ number: padDexNo(dexNo) })}
       </span>
       <span className="text-dex-ink text-base leading-tight font-extrabold">{title}</span>
-      {description ? (
+      {description !== undefined && (
         <span className="text-dex-ink-muted line-clamp-2 text-sm">{description}</span>
-      ) : null}
+      )}
     </>
   );
 
@@ -92,14 +92,14 @@ export const Tile = ({
         pressed={pinned}
         onClick={onTogglePin}
       />
-      {onEdit ? (
+      {onEdit !== undefined && (
         <IconButton
           className={EDIT_BUTTON_CLASSES}
           icon={<Pencil size={20} />}
           label={text.edit({ title })}
           onClick={onEdit}
         />
-      ) : null}
+      )}
     </article>
   );
 };

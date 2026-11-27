@@ -85,11 +85,11 @@ export const PasswordStep = ({
           }}
           {...(error && { error: errors[error] })}
         />
-        {failure ? (
+        {failure !== null && (
           <p role="alert" className="text-dex-red-text text-base font-bold">
             {failure}
           </p>
-        ) : null}
+        )}
         <Button type="submit" disabled={pending}>
           {pending ? text.submitting : text.submit}
         </Button>

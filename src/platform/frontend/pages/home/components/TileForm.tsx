@@ -74,7 +74,7 @@ export const TileForm = ({
           }}
         />
       ))}
-      {missingLanguages.length > 0 ? (
+      {missingLanguages.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {missingLanguages.map((language) => (
             <Button
@@ -90,7 +90,7 @@ export const TileForm = ({
             </Button>
           ))}
         </div>
-      ) : null}
+      )}
       <TextInput
         label={messages.url}
         type="url"
@@ -108,15 +108,15 @@ export const TileForm = ({
       />
       <IconPicker value={values.icon} onChange={onIconChange} />
       <ScopeChoice value={values.scope} locked={scopeLocked} onChange={onScopeChange} />
-      {failure ? (
+      {failure !== undefined && (
         <p role="alert" className="text-dex-red-text px-5 text-base font-bold">
           {messages.errors[failure]}
         </p>
-      ) : null}
+      )}
       <Button type="submit" disabled={saving}>
         {saving ? messages.saving : messages.save}
       </Button>
-      {deletion ? <DeleteTile {...deletion} /> : null}
+      {deletion !== undefined && <DeleteTile {...deletion} />}
     </form>
   );
 };

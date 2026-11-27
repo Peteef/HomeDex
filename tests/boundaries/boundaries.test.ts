@@ -13,27 +13,39 @@ import {
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
-const violationsOf = async (file: string): Promise<string[]> => {
-  const eslint = new ESLint({
-    cwd: fixtures,
-    overrideConfigFile: true,
-    overrideConfig: [
-      {
-        ...boundaryRules,
-        files: ['**/*.ts'],
-        languageOptions: { parser: tseslint.parser },
-        settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
+const options: ESLint.Options = {
+  cwd: fixtures,
+  overrideConfigFile: true,
+  overrideConfig: [
+    {
+      ...boundaryRules,
+      files: ['**/*.ts'],
+      languageOptions: { parser: tseslint.parser },
+      settings: { ...boundaryRules.settings, 'boundaries/root-path': fixtures },
+    },
+    {
+      files: ['**/*.tsx'],
+      languageOptions: {
+        parser: tseslint.parser,
+        parserOptions: { project: './tsconfig.json', tsconfigRootDir: fixtures },
       },
-      ...domainRules,
-      ...frontendRules,
-      sharedRules,
-      moduleTestKitRules,
-      styleRules,
-    ],
-  });
+    },
+    ...domainRules,
+    ...frontendRules,
+    sharedRules,
+    moduleTestKitRules,
+    styleRules,
+  ],
+};
 
-  const [result] = await eslint.lintFiles([file]);
+const violationsOf = async (file: string): Promise<string[]> => {
+  const [result] = await new ESLint(options).lintFiles([file]);
   return (result?.messages ?? []).map((message) => message.ruleId ?? message.message);
+};
+
+const fixedOutputOf = async (file: string): Promise<string | undefined> => {
+  const [result] = await new ESLint({ ...options, fix: true }).lintFiles([file]);
+  return result?.output;
 };
 
 describe('lint rules', () => {
@@ -219,5 +231,72 @@ describe('lint rules', () => {
       // When / Then
       expect(await violationsOf(file)).toContain(rule);
     });
+  });
+
+  describe('conditional JSX', () => {
+    it('should allow boolean conditions, two-branch ternaries and null outside JSX children', async () => {
+      // When / Then
+      expect(await violationsOf('src/jsx/ok-conditional.tsx')).toEqual([]);
+    });
+
+    it('should rewrite a null alternate as && when a JSX child has one', async () => {
+      // Given
+      const file = 'src/jsx/bad-null-alternate.tsx';
+
+      // When
+      const violations = await violationsOf(file);
+      const output = await fixedOutputOf(file);
+
+      // Then
+      expect(violations).toEqual(['homedex/no-null-jsx-branch', 'homedex/no-null-jsx-branch']);
+
+      expect(output).toBe(
+        `export const NullAlternate = ({ open, hint }: { open: boolean; hint: boolean }) => (
+  <div>
+    {open && <p>open</p>}
+    {(open || hint) && (
+      <p>
+        hint
+      </p>
+    )}
+  </div>
+);
+`,
+      );
+    });
+
+    it('should rewrite a null consequent as && with the negated condition when a JSX child has one', async () => {
+      // Given
+      const file = 'src/jsx/bad-null-consequent.tsx';
+
+      // When
+      const violations = await violationsOf(file);
+      const output = await fixedOutputOf(file);
+
+      // Then
+      expect(violations).toEqual(['homedex/no-null-jsx-branch', 'homedex/no-null-jsx-branch']);
+
+      expect(output).toBe(
+        `export const NullConsequent = ({ amount, searching }: { amount: number | null; searching: boolean }) => (
+  <div>
+    {amount !== null && (
+      <span>
+        {amount}
+      </span>
+    )}
+    {!searching && <p>add</p>}
+  </div>
+);
+`,
+      );
+    });
+
+    it.each(['src/jsx/bad-number-condition.tsx', 'src/jsx/bad-string-condition.tsx'])(
+      'should reject %s',
+      async (file) => {
+        // When / Then
+        expect(await violationsOf(file)).toEqual(['homedex/boolean-jsx-condition']);
+      },
+    );
   });
 });

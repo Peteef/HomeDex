@@ -81,7 +81,7 @@ export const Dialog = ({ open, title, onClose, children }: DialogProps) => {
           </h2>
           <IconButton icon={<X size={20} />} label={text.close} onClick={onClose} />
         </div>
-        {open ? children : null}
+        {open && children}
       </div>
     </dialog>
   );

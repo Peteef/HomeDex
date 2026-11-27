@@ -19,7 +19,7 @@ export const CrashedPage = ({ scope, onReload }: CrashedPageProps) => {
       <Button className="self-start" onClick={onReload}>
         {text.reload}
       </Button>
-      {scope === 'module' ? <TextLink to={HOME_PATH}>{actions.backToDex}</TextLink> : null}
+      {scope === 'module' && <TextLink to={HOME_PATH}>{actions.backToDex}</TextLink>}
     </MessagePanel>
   );
 };

@@ -12,6 +12,7 @@ export const TextInput = ({ label, hideLabel, error, id, className, ...rest }: T
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const errorId = `${inputId}-error`;
+  const invalid = error !== undefined;
   return (
     <div className="flex flex-col gap-1">
       <label
@@ -22,19 +23,19 @@ export const TextInput = ({ label, hideLabel, error, id, className, ...rest }: T
       </label>
       <input
         id={inputId}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-invalid={invalid ? true : undefined}
+        aria-describedby={invalid ? errorId : undefined}
         className={classNames(
           'border-dex-field-border text-dex-ink placeholder:text-dex-ink-muted focus-visible:outline-dex-ink aria-invalid:border-dex-red-text bg-dex-surface/95 min-h-11 rounded-full border px-5 text-base focus-visible:outline-3 focus-visible:outline-offset-2 aria-invalid:border-2',
           className,
         )}
         {...rest}
       />
-      {error ? (
+      {invalid && (
         <p id={errorId} role="alert" className="text-dex-red-text px-5 text-sm font-bold">
           {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 };
