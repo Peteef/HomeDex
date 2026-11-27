@@ -193,6 +193,7 @@ describe('App', () => {
         'put',
         'textHook',
         'useCurrentUser',
+        'useLiveQuery',
       ]);
     });
   });

@@ -15,3 +15,4 @@ export type { Translation } from '../lib/i18n/index.ts';
 export { useCurrentUser } from '../features/auth/index.ts';
 export type { CurrentUser } from '../features/auth/index.ts';
 export { del, getJson, postForJson, put } from '../lib/http/index.ts';
+export { useLiveQuery } from '../lib/live-query/index.ts';
