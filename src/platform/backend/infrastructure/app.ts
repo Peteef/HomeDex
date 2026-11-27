@@ -114,7 +114,7 @@ export const createApp = ({
     app.use(express.static(webDir));
 
     app.use((_req, res) => {
-      res.sendFile(path.join(webDir, INDEX_FILE));
+      res.sendFile(INDEX_FILE, { root: webDir });
     });
   }
 
