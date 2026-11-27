@@ -161,6 +161,56 @@ describe('app', () => {
       expect(response.status).toBe(200);
       expect(response.headers['cache-control']).not.toContain('immutable');
     });
+
+    describe('when the app folder sits under a dot folder', () => {
+      let tempDir: string;
+      let dottedWebDir: string;
+
+      beforeAll(() => {
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'homedex-dotted-'));
+        dottedWebDir = path.join(tempDir, '.worktrees', 'web');
+        fs.mkdirSync(dottedWebDir, { recursive: true });
+        fs.writeFileSync(path.join(dottedWebDir, 'index.html'), '<title>fake app</title>');
+        fs.writeFileSync(path.join(dottedWebDir, '.env'), 'FAKE_SECRET=fake');
+      });
+
+      afterAll(() => {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      });
+
+      const dottedApp = () =>
+        createApp({
+          config: loadConfig({ NODE_ENV: 'production' }),
+          storage: createTestDatabase(),
+          modules: [],
+          webDir: dottedWebDir,
+          assetsDir,
+        });
+
+      it('should serve the app page for a deep link', async () => {
+        // Given
+        const production = dottedApp();
+
+        // When
+        const response = await request(production).get('/some/deep/link');
+
+        // Then
+        expect(response.status).toBe(200);
+        expect(response.text).toContain('fake app');
+      });
+
+      it('should serve the app page instead of a dotfile', async () => {
+        // Given
+        const production = dottedApp();
+
+        // When
+        const response = await request(production).get('/.env');
+
+        // Then
+        expect(response.text).toContain('fake app');
+        expect(response.text).not.toContain('FAKE_SECRET');
+      });
+    });
   });
 
   describe('native TypeScript execution', () => {
