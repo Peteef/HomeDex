@@ -421,6 +421,44 @@ describe('plants service', () => {
     });
   });
 
+  describe('countDue', () => {
+    it('should count the plants due today or before', () => {
+      // Given
+      const { service } = newService('2026-06-03');
+      service.create(FERN);
+      service.create({ ...FERN, name: "Oddish's ivy", lastWateredOn: '2026-05-20' });
+
+      // When / Then
+      expect(service.countDue()).toBe(1);
+    });
+
+    it('should count again when today moves on', () => {
+      // Given
+      const { service, moveTo } = newService('2026-06-03');
+      service.create(FERN);
+      service.create({ ...FERN, name: "Oddish's ivy", lastWateredOn: '2026-05-20' });
+
+      // When
+      moveTo('2026-06-08');
+
+      // Then
+      expect(service.countDue()).toBe(2);
+    });
+
+    it('should not count a plant whose next watering moved later', () => {
+      // Given
+      const { service } = newService('2026-06-03');
+      const ivy = { ...FERN, name: "Oddish's ivy", lastWateredOn: '2026-05-20' };
+      const { id } = service.create(ivy);
+
+      // When
+      service.edit(id, changesOf(ivy, '2026-06-05'));
+
+      // Then
+      expect(service.countDue()).toBe(0);
+    });
+  });
+
   describe('photo', () => {
     const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x01]);
     const OTHER_JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0x02]);
