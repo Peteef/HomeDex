@@ -26,6 +26,7 @@ describe('defineModule', () => {
       'NOT_FOUND',
       'NO_CONTENT',
       'defineModule',
+      'includeIf',
     ]);
   });
 });

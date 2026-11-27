@@ -198,6 +198,16 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 - A merged migration is final: never edit it, add a new one. The server refuses to start when an applied migration's file has changed.
 - Removing or disabling a module leaves its tables and data. Deleting data is a separate, deliberate step.
 
+## Optional props
+
+The typecheck runs with `exactOptionalPropertyTypes`: an optional key must be left out, not set to `undefined`. To add a key only when a condition holds, spread `includeIf` from `#platform/shared`:
+
+```ts
+import { includeIf } from '#platform/shared';
+
+onAdd({ text: itemText, ...includeIf(amount.trim() !== '', { amount }) }, clear);
+```
+
 ## Rules
 
 - A module imports only its own files and the platform's public APIs: `manifest.ts` only `#platform/shared`, `frontend/` only `#platform/frontend` and `#platform/shared`, `backend/` only `#platform/backend` and `#platform/shared`. Never another module, never the platform's internals. Packages from `package.json` (React, React Router, TanStack Query, zod) are fine.

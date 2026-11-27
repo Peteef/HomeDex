@@ -1,3 +1,4 @@
+import { includeIf } from '../../../../shared/objects/includeIf.ts';
 import { Button } from '../../../components/button/Button.tsx';
 import { LoadingStatus } from '../../../components/loading-status/LoadingStatus.tsx';
 import { AddTile } from '../../../components/tile/AddTile.tsx';
@@ -66,6 +67,10 @@ export const TileList = ({
   const tile = (entry: TileEntry) => {
     const { id, editable, ...props } = entry;
 
+    const editEntry = (): void => {
+      onEdit(entry);
+    };
+
     return (
       <Tile
         key={id}
@@ -73,13 +78,7 @@ export const TileList = ({
         onTogglePin={() => {
           onTogglePin(entry);
         }}
-        {...(editable
-          ? {
-              onEdit: () => {
-                onEdit(entry);
-              },
-            }
-          : {})}
+        {...includeIf(editable, { onEdit: editEntry })}
       />
     );
   };
