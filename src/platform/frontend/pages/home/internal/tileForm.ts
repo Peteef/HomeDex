@@ -1,4 +1,5 @@
 import { isIconName } from '../../../../shared/icons/iconNames.ts';
+import { valueIf } from '../../../../shared/objects/valueIf.ts';
 import { isWebUrl } from '../../../../shared/tiles/linkTileRules.ts';
 import type { Tile, TileDraft, TileTexts } from '../../../features/tiles/index.ts';
 import { LANGUAGES } from '../../../lib/i18n/index.ts';
@@ -92,7 +93,7 @@ const urlError = (url: string): TileFormErrors['url'] => {
     return 'urlRequired';
   }
 
-  return isWebUrl(url.trim()) ? undefined : 'urlInvalid';
+  return valueIf(!isWebUrl(url.trim()), 'urlInvalid');
 };
 
 export const validateTile = ({ texts, url }: TileFormValues): TileFormErrors => {
