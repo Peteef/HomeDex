@@ -27,7 +27,9 @@ describe('TextArea', () => {
     render(<TextArea label="Description" />);
 
     // Then
-    expect(screen.getByRole('textbox', { name: 'Description' })).toBeValid();
+    const field = screen.getByRole('textbox', { name: 'Description' });
+    expect(field).toBeValid();
+    expect(field).toHaveAttribute('aria-invalid', 'false');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
