@@ -49,6 +49,10 @@ describe('CalendarPage', () => {
     await screen.findByRole('heading', { name: 'November 2026' });
     expect(screen.getAllByRole('table')[0]?.parentElement).toHaveClass('lg:hidden');
     expect(screen.getAllByRole('table')[1]?.parentElement).toHaveClass('hidden lg:block');
+
+    expect(screen.getByRole('heading', { level: 4 }).parentElement?.parentElement).toHaveClass(
+      'lg:hidden',
+    );
   });
 
   it("should list another day's plants when it is selected", async () => {
@@ -128,6 +132,54 @@ describe('CalendarPage', () => {
     const details = screen.getByRole('dialog', { name: "Bulbasaur's fern" });
     expect(await within(details).findByText('Likes shade.')).toBeInTheDocument();
     expect(within(details).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+  });
+
+  it('should show a whole day in a dialog from more on desktop', async () => {
+    // Given
+    openPage();
+    await screen.findByRole('heading', { name: 'November 2026' });
+
+    // When
+    fireEvent.click(desktopGrid().getByRole('button', { name: /^\+2 more/ }));
+
+    // Then
+    const day = screen.getByRole('dialog', { name: 'Tuesday, November 24' });
+    expect(within(day).getAllByRole('listitem')).toHaveLength(5);
+  });
+
+  it('should close the day and open the details of a plant picked in it', async () => {
+    // Given
+    openPage({
+      'GET /api/m/plant-assistant/plants/7': ok({
+        today: TODAY,
+        plant: {
+          id: 7,
+          name: "Paras's moss",
+          description: 'Likes shade.',
+          tags: [],
+          photoId: null,
+          lastWateredOn: '2026-11-17',
+          nextWateringOn: '2026-11-24',
+          daysUntil: 4,
+          urgency: 'later',
+          summerIntervalDays: 7,
+          winterIntervalDays: 7,
+          currentSeason: 'winter',
+        },
+      }),
+    });
+
+    await screen.findByRole('heading', { name: 'November 2026' });
+    fireEvent.click(desktopGrid().getByRole('button', { name: /^\+2 more/ }));
+    const day = screen.getByRole('dialog', { name: 'Tuesday, November 24' });
+
+    // When
+    fireEvent.click(within(day).getByRole('button', { name: /^Paras's moss/ }));
+
+    // Then
+    expect(screen.queryByRole('dialog', { name: 'Tuesday, November 24' })).not.toBeInTheDocument();
+    const details = screen.getByRole('dialog', { name: "Paras's moss" });
+    expect(await within(details).findByText('Likes shade.')).toBeInTheDocument();
   });
 
   it('should close the details of a plant someone else deletes', async () => {

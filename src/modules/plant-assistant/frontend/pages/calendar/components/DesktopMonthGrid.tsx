@@ -7,12 +7,11 @@ import { WeekdayRow } from './WeekdayRow.tsx';
 
 export interface DesktopMonthGridProps {
   weeks: CalendarDay[][];
-  selected: string | null;
-  onSelect: (date: string) => void;
   onOpen: (plant: CalendarPlant) => void;
+  onShowDay: (date: string) => void;
 }
 
-export const DesktopMonthGrid = ({ weeks, selected, onSelect, onOpen }: DesktopMonthGridProps) => {
+export const DesktopMonthGrid = ({ weeks, onOpen, onShowDay }: DesktopMonthGridProps) => {
   const { i18n } = useTranslation();
   const format = calendarFormat(i18n.language);
   const [firstWeek = []] = weeks;
@@ -30,10 +29,9 @@ export const DesktopMonthGrid = ({ weeks, selected, onSelect, onOpen }: DesktopM
                 <DesktopDayCell
                   key={day.date}
                   day={day}
-                  selected={day.date === selected}
                   format={format}
-                  onSelect={onSelect}
                   onOpen={onOpen}
+                  onShowDay={onShowDay}
                 />
               ),
             )}

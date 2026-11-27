@@ -13,19 +13,14 @@ const DAY: CalendarDay = {
   plants: [FERN, ALOE],
 };
 
-const renderCell = (day: CalendarDay = DAY, selected = false) => {
-  const handlers = { onSelect: vi.fn(), onOpen: vi.fn() };
+const renderCell = (day: CalendarDay = DAY) => {
+  const handlers = { onOpen: vi.fn(), onShowDay: vi.fn() };
 
   render(
     <table>
       <tbody>
         <tr>
-          <DesktopDayCell
-            day={day}
-            selected={selected}
-            format={calendarFormat('en')}
-            {...handlers}
-          />
+          <DesktopDayCell day={day} format={calendarFormat('en')} {...handlers} />
         </tr>
       </tbody>
     </table>,
@@ -62,15 +57,27 @@ describe('DesktopDayCell', () => {
     ).toBeInTheDocument();
   });
 
-  it('should select the day with its number', () => {
+  it('should show the whole day when more is clicked', () => {
     // Given
-    const { onSelect } = renderCell();
+    const { onShowDay } = renderCell({
+      ...DAY,
+      plants: [FERN, ALOE, IVY, plantOn(4, 'Four', 'later', 4)],
+    });
 
     // When
-    fireEvent.click(screen.getByRole('button', { name: /^Tuesday, November 24/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^\+1 more/ }));
 
     // Then
-    expect(onSelect).toHaveBeenCalledWith('2026-11-24');
+    expect(onShowDay).toHaveBeenCalledWith('2026-11-24');
+  });
+
+  it('should say its date without being a button', () => {
+    // When
+    renderCell();
+
+    // Then
+    expect(screen.getByText('Tuesday, November 24, 2 plants to water')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Tuesday/ })).not.toBeInTheDocument();
   });
 
   it('should open a plant by its name', () => {
@@ -84,13 +91,12 @@ describe('DesktopDayCell', () => {
     expect(onOpen).toHaveBeenCalledWith(FERN);
   });
 
-  it('should mark today and the selected day', () => {
+  it('should mark today', () => {
     // When
-    renderCell({ ...DAY, isToday: true }, true);
+    renderCell({ ...DAY, isToday: true });
 
     // Then
-    const day = screen.getByRole('button', { name: /^Tuesday, November 24, today/ });
-    expect(day).toHaveClass('ring-dex-red');
-    expect(day).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Tuesday, November 24, today, 2 plants to water')).toBeInTheDocument();
+    expect(screen.getByText('24').parentElement).toHaveClass('ring-dex-red');
   });
 });
