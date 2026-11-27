@@ -6,13 +6,16 @@ import { useLiveQuery } from '../index.ts';
 
 const QUERY_KEY = ['live-query', 'test'];
 
-const renderLoaded = async (load: () => Promise<string>) => {
+const renderLoaded = async (
+  load: () => Promise<string>,
+  interval: { refreshIntervalMs?: number } = {},
+) => {
   const queryClient = testQueryClient();
 
   const wrapper = ({ children }: { children: ReactNode }) =>
     withProviders(children, { queryClient });
 
-  const hook = renderHook(() => useLiveQuery({ queryKey: QUERY_KEY, queryFn: load }), {
+  const hook = renderHook(() => useLiveQuery({ queryKey: QUERY_KEY, queryFn: load, ...interval }), {
     wrapper,
   });
 
@@ -44,6 +47,19 @@ describe('useLiveQuery', () => {
 
     // When
     await act(() => vi.advanceTimersByTimeAsync(15_000));
+
+    // Then
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('should load again after the given interval when one is passed', async () => {
+    // Given
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const load = vi.fn(() => Promise.resolve('milk'));
+    await renderLoaded(load, { refreshIntervalMs: 5_000 });
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(5_000));
 
     // Then
     expect(load).toHaveBeenCalledTimes(2);
