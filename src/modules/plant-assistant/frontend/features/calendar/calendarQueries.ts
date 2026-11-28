@@ -1,4 +1,5 @@
-import { MODULE_QUERY_KEY, useLiveQuery } from '../plants/index.ts';
+import { useLiveQuery } from '#platform/frontend';
+import { MODULE_QUERY_KEY } from '../plants/index.ts';
 import { fetchCalendarMonth } from './internal/calendarApi.ts';
 
 export const useCalendarMonth = (month: string | null) =>

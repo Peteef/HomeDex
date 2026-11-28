@@ -1,6 +1,5 @@
 export { isDue } from './due.ts';
 export { resizePhoto } from './internal/resizePhoto.ts';
-export { useLiveQuery } from './internal/useLiveQuery.ts';
 export { photoUrl } from './photoUrl.ts';
 export {
   MODULE_QUERY_KEY,

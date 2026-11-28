@@ -8,7 +8,7 @@ import {
   fetchPlants,
   fetchTags,
 } from './internal/plantsApi.ts';
-import { useLiveQuery } from './internal/useLiveQuery.ts';
+import { useLiveQuery } from '#platform/frontend';
 
 export const MODULE_QUERY_KEY = ['plant-assistant'] as const;
 const PLANTS_QUERY_KEY = [...MODULE_QUERY_KEY, 'plants'] as const;
