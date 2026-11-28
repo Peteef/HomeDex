@@ -231,13 +231,22 @@ export const register: RegisterModule = ({ router, storage, currentUser, logger 
 
 ## Optional props
 
-The typecheck runs with `exactOptionalPropertyTypes`: an optional key must be left out, not set to `undefined`. To add a key only when a condition holds, spread `includeIf` from `#platform/shared`:
+The typecheck runs with `exactOptionalPropertyTypes`: an optional key must be left out, not set to `undefined`. `#platform/shared` has four helpers for it:
 
-```ts
-import { includeIf } from '#platform/shared';
+- `includeIf(condition, props)` spreads the props only when the condition holds.
+- `definedProps({ key })` spreads only the keys whose value is not `undefined` (`null` stays).
+- `valueIf(condition, value)` is the value or `undefined`, in place of `condition ? value : undefined`.
+- `lookup(record, key)` is `record[key]`, or `undefined` when the key is `undefined`.
+
+```tsx
+import { definedProps, includeIf, lookup } from '#platform/shared';
 
 onAdd({ text: itemText, ...includeIf(amount.trim() !== '', { amount }) }, clear);
+
+<TextInput label={text.name} {...definedProps({ error: lookup(text.errors, error) })} />;
 ```
+
+Keep a ternary when the value needs the condition to narrow its type, is built by calling a function on an optional value, or is `null`.
 
 ## Rules
 

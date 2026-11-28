@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import i18next from 'i18next';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
+import { definedProps } from '../../../../shared/objects/definedProps.ts';
 import { Tile } from '../Tile.tsx';
 import type { TileProps } from '../Tile.tsx';
 
@@ -97,7 +98,7 @@ describe('Tile', () => {
 
   it.each([undefined, 0])('should show no badge when the count is %s', (countOnBadge) => {
     // When
-    renderTile(countOnBadge === undefined ? {} : { countOnBadge });
+    renderTile(definedProps({ countOnBadge }));
 
     // Then
     expect(screen.getByRole('link')).not.toHaveAccessibleName(/waiting/);

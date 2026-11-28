@@ -27,8 +27,11 @@ describe('defineModule', () => {
       'NOT_FOUND',
       'NO_CONTENT',
       'defineModule',
+      'definedProps',
       'foldText',
       'includeIf',
+      'lookup',
+      'valueIf',
     ]);
   });
 });
