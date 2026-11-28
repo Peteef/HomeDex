@@ -6,7 +6,6 @@ export type { PlantDates, PlantRepository, StoredPlant } from './internal/plantR
 export type { StoredPhoto } from './internal/photoRepository.ts';
 export type {
   NewPlant,
-  PhotoInput,
   PlantChanges,
   PlantDetails,
   PlantErrorCode,

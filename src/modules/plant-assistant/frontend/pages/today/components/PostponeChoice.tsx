@@ -1,4 +1,5 @@
 import { Button, TextInput } from '#platform/frontend';
+import { includeIf } from '#platform/shared';
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useText } from '../../../locales/index.ts';
@@ -57,7 +58,7 @@ export const PostponeChoice = ({ postponing, failed, onPostpone }: PostponeChoic
             max={MAX_POSTPONE_DAYS}
             step={1}
             value={otherDays}
-            {...(invalid ? { error: text.invalid } : {})}
+            {...includeIf(invalid, { error: text.invalid })}
             onChange={(event) => {
               setOtherDays(event.target.value);
             }}

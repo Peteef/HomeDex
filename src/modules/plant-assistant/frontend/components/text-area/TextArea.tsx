@@ -1,3 +1,4 @@
+import { valueIf } from '#platform/shared';
 import { useId } from 'react';
 import type { ComponentProps } from 'react';
 
@@ -23,7 +24,7 @@ export const TextArea = ({ label, error, id, ...rest }: TextAreaProps) => {
       <textarea
         id={fieldId}
         aria-invalid={invalid}
-        aria-describedby={invalid ? errorId : undefined}
+        aria-describedby={valueIf(invalid, errorId)}
         className={FIELD_CLASSES}
         {...rest}
       />

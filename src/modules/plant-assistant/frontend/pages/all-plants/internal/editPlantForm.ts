@@ -1,3 +1,4 @@
+import { includeIf, valueIf } from '#platform/shared';
 import type { PlantChanges, PlantDetails } from '../../../features/plants/index.ts';
 import type {
   DateLimits,
@@ -25,7 +26,7 @@ const validateNextWatering = (
     return 'dateRequired';
   }
 
-  return date !== plant.nextWateringOn && date < today ? 'dateInPast' : undefined;
+  return valueIf(date !== plant.nextWateringOn && date < today, 'dateInPast');
 };
 
 export const validatePlantEdit = (
@@ -38,7 +39,7 @@ export const validatePlantEdit = (
   ]);
 
 export const nextWateringLimits = (date: string, { plant, today }: EditPlantContext): DateLimits =>
-  date === plant.nextWateringOn ? {} : { min: today };
+  includeIf(date !== plant.nextWateringOn, { min: today });
 
 const photoChange = (photo: PhotoChoice): { photo?: string | null } => {
   switch (photo.kind) {

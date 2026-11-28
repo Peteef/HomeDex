@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
+import { definedProps } from '../src/platform/shared/objects/definedProps.ts';
 import { E2E_SECOND_USER, PROJECTS } from './fixtures.ts';
 import { PLANT_ASSISTANT_PATH, SAMPLE_PLANTS, stubCalendar, stubPlants } from './plantAssistant.ts';
 import { E2E_GREETING, fixClock, LATE_EVENING, MORNING, signIn } from './session.ts';
@@ -539,7 +540,7 @@ test.describe('plant assistant', () => {
       await expect.poll(() => todayTabCount(page)).toBe(dueBefore - 2);
 
       // Given: a second user whose board still shows the ivy
-      const otherContext = await browser.newContext(baseURL === undefined ? {} : { baseURL });
+      const otherContext = await browser.newContext(definedProps({ baseURL }));
       const other = await otherContext.newPage();
       await signIn(other, E2E_SECOND_USER);
       await other.goto(`${PLANT_ASSISTANT_PATH}/today`);

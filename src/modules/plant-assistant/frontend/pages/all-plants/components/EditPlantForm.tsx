@@ -1,4 +1,5 @@
 import { TextInput } from '#platform/frontend';
+import { definedProps, lookup } from '#platform/shared';
 import { useText } from '../../../locales/index.ts';
 import type { DateLimits, EditPlantField, EditPlantValues, FormErrors } from '../types.ts';
 import { PlantForm } from './PlantForm.tsx';
@@ -23,7 +24,6 @@ export const EditPlantForm = ({
 }: EditPlantFormProps) => {
   const text = useText('allPlants.editPlantForm');
   const errorTexts = useText('allPlants.plantForm.errors');
-  const error = errors.nextWateringOn;
 
   const dateField = (
     <TextInput
@@ -31,7 +31,7 @@ export const EditPlantForm = ({
       type="date"
       value={values.nextWateringOn}
       {...dateLimits}
-      {...(error === undefined ? {} : { error: errorTexts[error] })}
+      {...definedProps({ error: lookup(errorTexts, errors.nextWateringOn) })}
       onChange={(event) => {
         onChange('nextWateringOn', event.target.value);
       }}

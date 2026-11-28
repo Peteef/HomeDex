@@ -1,3 +1,4 @@
+import { valueIf } from '#platform/shared';
 import type { NewPlant } from '../../../features/plants/index.ts';
 import type {
   AddPlantContext,
@@ -20,7 +21,7 @@ const validateLastWatered = (date: string, today: string): FieldError | undefine
     return 'dateRequired';
   }
 
-  return date > today ? 'dateInFuture' : undefined;
+  return valueIf(date > today, 'dateInFuture');
 };
 
 export const validateNewPlant = (

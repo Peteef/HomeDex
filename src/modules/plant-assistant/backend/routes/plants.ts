@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { domainErrorHandler } from '#platform/backend';
-import { BAD_REQUEST, CREATED, NO_CONTENT } from '#platform/shared';
+import { BAD_REQUEST, CREATED, definedProps, NO_CONTENT } from '#platform/shared';
 import { PlantError } from '../domain/plants/index.ts';
-import type { PhotoInput, PlantsService } from '../domain/plants/index.ts';
+import type { PlantsService } from '../domain/plants/index.ts';
 import { isCalendarDate } from '../domain/schedule/index.ts';
 import { rejectUnknownPlantId } from './params.ts';
 
@@ -25,9 +25,6 @@ const plantFieldsSchema = z.object({
 
 const newPlantSchema = plantFieldsSchema.extend({ lastWateredOn: dateSchema });
 const plantChangesSchema = plantFieldsSchema.extend({ nextWateringOn: dateSchema });
-
-const withPhoto = (photo: string | null | undefined): PhotoInput =>
-  photo === undefined ? {} : { photo };
 
 export interface PlantsRoutesOptions {
   plants: PlantsService;
@@ -54,7 +51,7 @@ export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
     }
 
     const { photo, ...plant } = body.data;
-    res.status(CREATED).json({ plant: plants.create({ ...plant, ...withPhoto(photo) }) });
+    res.status(CREATED).json({ plant: plants.create({ ...plant, ...definedProps({ photo }) }) });
   });
 
   router.put('/plants/:id', (req, res) => {
@@ -66,7 +63,7 @@ export const plantsRoutes = ({ plants }: PlantsRoutesOptions): Router => {
     }
 
     const { photo, ...changes } = body.data;
-    plants.edit(Number(req.params.id), { ...changes, ...withPhoto(photo) });
+    plants.edit(Number(req.params.id), { ...changes, ...definedProps({ photo }) });
     res.status(NO_CONTENT).end();
   });
 

@@ -1,4 +1,4 @@
-import { foldText } from '#platform/shared';
+import { foldText, valueIf } from '#platform/shared';
 import type { PlantFields } from '../../../features/plants/index.ts';
 import type {
   ErrorEntry,
@@ -53,18 +53,19 @@ const validateName = (name: string): FieldError | undefined => {
     return 'nameRequired';
   }
 
-  return trimmed.length > NAME_MAX_LENGTH ? 'nameTooLong' : undefined;
+  return valueIf(trimmed.length > NAME_MAX_LENGTH, 'nameTooLong');
 };
 
 const validateDescription = (description: string): FieldError | undefined =>
-  description.trim().length > DESCRIPTION_MAX_LENGTH ? 'descriptionTooLong' : undefined;
+  valueIf(description.trim().length > DESCRIPTION_MAX_LENGTH, 'descriptionTooLong');
 
 const validateInterval = (days: string): FieldError | undefined => {
   const value = Number(days);
 
-  return WHOLE_NUMBER.test(days) && value >= MIN_INTERVAL_DAYS && value <= MAX_INTERVAL_DAYS
-    ? undefined
-    : 'intervalInvalid';
+  const validInterval =
+    WHOLE_NUMBER.test(days) && value >= MIN_INTERVAL_DAYS && value <= MAX_INTERVAL_DAYS;
+
+  return valueIf(!validInterval, 'intervalInvalid');
 };
 
 export const validateFormFields = (values: PlantFormValues): ErrorEntry<PlantFormField>[] => [

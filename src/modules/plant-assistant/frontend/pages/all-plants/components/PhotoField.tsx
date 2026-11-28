@@ -1,4 +1,5 @@
 import { Button } from '#platform/frontend';
+import { valueIf } from '#platform/shared';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useId } from 'react';
 import type { ChangeEvent } from 'react';
@@ -41,7 +42,7 @@ export const PhotoField = ({ photoUrl, unreadable, onChoose, onRemove }: PhotoFi
             type="file"
             accept="image/*"
             className="sr-only"
-            aria-describedby={unreadable ? errorId : undefined}
+            aria-describedby={valueIf(unreadable, errorId)}
             onChange={choose}
           />
         </label>

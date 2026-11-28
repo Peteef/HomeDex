@@ -1,4 +1,5 @@
 import { Button, TextInput } from '#platform/frontend';
+import { definedProps, lookup } from '#platform/shared';
 import type { ReactNode, SubmitEvent } from 'react';
 import { TextArea } from '../../../components/text-area/TextArea.tsx';
 import { useText } from '../../../locales/index.ts';
@@ -51,10 +52,8 @@ export const PlantForm = ({
 }: PlantFormProps) => {
   const text = useText('allPlants.plantForm');
 
-  const errorOf = (field: PlantFormField): { error?: string } => {
-    const error = errors[field];
-    return error === undefined ? {} : { error: text.errors[error] };
-  };
+  const errorOf = (field: PlantFormField): { error?: string } =>
+    definedProps({ error: lookup(text.errors, errors[field]) });
 
   const changeTagDraft = (draft: string): void => {
     onChange('tagDraft', draft);
