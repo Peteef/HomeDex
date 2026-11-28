@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import i18next from 'i18next';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
+import { definedProps } from '../../../../shared/objects/definedProps.ts';
 import { Tile } from '../Tile.tsx';
 import type { TileProps } from '../Tile.tsx';
 
@@ -58,6 +60,49 @@ describe('Tile', () => {
 
     // Then
     expect(screen.getByRole('link')).toHaveTextContent(/^No\. 007Finances/);
+  });
+
+  it('should show the badge and say its count in the link name when there is a badge', () => {
+    // When
+    renderTile({ countOnBadge: 3 });
+
+    // Then
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByRole('link')).toHaveAccessibleName(/Finances, 3 waiting/);
+  });
+
+  it('should say the full count in the link name when the badge shows 99+', () => {
+    // When
+    renderTile({ countOnBadge: 100 });
+
+    // Then
+    expect(screen.getByText('99+')).toBeInTheDocument();
+    expect(screen.getByRole('link')).toHaveAccessibleName(/Finances, 100 waiting/);
+  });
+
+  it.each([
+    [1, '1 czeka'],
+    [3, '3 czekają'],
+    [5, '5 czeka'],
+    [22, '22 czekają'],
+  ])('should say %i in Polish as "%s" when the language is Polish', async (countOnBadge, words) => {
+    // Given
+    await i18next.changeLanguage('pl');
+
+    // When
+    renderTile({ countOnBadge });
+
+    // Then
+    expect(screen.getByRole('link')).toHaveAccessibleName(new RegExp(`Finances, ${words}`));
+  });
+
+  it.each([undefined, 0])('should show no badge when the count is %s', (countOnBadge) => {
+    // When
+    renderTile(definedProps({ countOnBadge }));
+
+    // Then
+    expect(screen.getByRole('link')).not.toHaveAccessibleName(/waiting/);
+    expect(screen.queryByText(/^\d+\+?$/)).not.toBeInTheDocument();
   });
 
   it('should open an external link in a new tab without leaking the opener', () => {

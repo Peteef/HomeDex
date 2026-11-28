@@ -25,4 +25,5 @@ export interface Tile {
   scope: TileScope;
   pinned: boolean;
   editable: boolean;
+  countOnBadge: number;
 }

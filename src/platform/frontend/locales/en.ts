@@ -24,6 +24,8 @@ const en = {
       pin: 'Pin {{title}}',
       edit: 'Edit {{title}}',
       add: 'Add tile',
+      badge_one: '{{count}} waiting',
+      badge_other: '{{count}} waiting',
     },
   },
   login: {
@@ -124,6 +126,7 @@ const en = {
         food: 'Food',
         work: 'Work',
         star: 'Star',
+        plant: 'Plant',
       },
     },
   },

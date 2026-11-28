@@ -29,6 +29,10 @@ const pl = {
       pin: 'Przypnij: {{title}}',
       edit: 'Edytuj: {{title}}',
       add: 'Dodaj kafelek',
+      badge_one: '{{count}} czeka',
+      badge_few: '{{count}} czekają',
+      badge_many: '{{count}} czeka',
+      badge_other: '{{count}} czeka',
     },
   },
   login: {
@@ -129,6 +133,7 @@ const pl = {
         food: 'Jedzenie',
         work: 'Praca',
         star: 'Gwiazdka',
+        plant: 'Roślina',
       },
     },
   },

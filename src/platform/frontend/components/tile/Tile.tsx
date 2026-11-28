@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useText } from '../../lib/i18n/index.ts';
 import { IconButton } from '../icon-button/IconButton.tsx';
 import { Icon } from '../icon/Icon.tsx';
+import { TileBadge } from './TileBadge.tsx';
 import { useLongPress } from './useLongPress.ts';
 
 export interface TileProps {
@@ -12,6 +13,7 @@ export interface TileProps {
   description?: string;
   href: string;
   external?: boolean;
+  countOnBadge?: number;
   pinned: boolean;
   onTogglePin: () => void;
   onEdit?: () => void;
@@ -41,6 +43,7 @@ export const Tile = ({
   description,
   href,
   external = false,
+  countOnBadge = 0,
   pinned,
   onTogglePin,
   onEdit,
@@ -48,16 +51,21 @@ export const Tile = ({
   const text = useText('components.tile');
   const { phase, handlers } = useLongPress(onEdit);
   const linkClasses = onEdit ? HOLDABLE_LINK_CLASSES : LINK_CLASSES;
+  const badged = countOnBadge > 0;
 
   const content = (
     <>
-      <span className="bg-dex-red mb-1 flex size-11 items-center justify-center rounded-full text-white">
+      <span className="bg-dex-red relative mb-1 flex size-11 items-center justify-center rounded-full text-white">
         <Icon name={icon} size={22} />
+        {badged && <TileBadge count={countOnBadge} />}
       </span>
       <span className="text-dex-ink-muted text-xs font-bold">
         {text.dexNumber({ number: padDexNo(dexNo) })}
       </span>
-      <span className="text-dex-ink text-base leading-tight font-extrabold">{title}</span>
+      <span className="text-dex-ink text-base leading-tight font-extrabold">
+        {title}
+        {badged && <span className="sr-only">, {text.badge({ count: countOnBadge })}</span>}
+      </span>
       {description !== undefined && (
         <span className="text-dex-ink-muted line-clamp-2 text-sm">{description}</span>
       )}

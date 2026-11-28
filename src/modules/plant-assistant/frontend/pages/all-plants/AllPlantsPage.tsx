@@ -1,0 +1,279 @@
+import { Button, Dialog, LoadFailed, LoadingStatus } from '#platform/frontend';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { PlantDetailsDialog } from '../../components/plant-details/PlantDetailsDialog.tsx';
+import { Section } from '../../components/section/Section.tsx';
+import { SelectableTagChip } from '../../components/tag-chip/SelectableTagChip.tsx';
+import {
+  photoUrl,
+  useDeletePlant,
+  usePlant,
+  usePlants,
+  useTags,
+} from '../../features/plants/index.ts';
+import type { PlantSummary } from '../../features/plants/index.ts';
+import { useText } from '../../locales/index.ts';
+import { AddPlantForm } from './components/AddPlantForm.tsx';
+import { DeleteConfirmation } from './components/DeleteConfirmation.tsx';
+import { EditPlantForm } from './components/EditPlantForm.tsx';
+import { PlantActions } from './components/PlantActions.tsx';
+import { PlantFilters } from './components/PlantFilters.tsx';
+import { PlantList } from './components/PlantList.tsx';
+import { filterPlants } from './internal/filterPlants.ts';
+import { sortByName } from './internal/sortByName.ts';
+import { useAddPlantForm } from './internal/useAddPlantForm.ts';
+import { useEditPlantForm } from './internal/useEditPlantForm.ts';
+
+const MESSAGE_CLASSES = 'text-dex-ink-muted py-4 text-center text-base font-bold';
+const NO_TAGS: string[] = [];
+
+// One dialog at a time: the plant form covers the details and goes back to them when it closes,
+// and so does the delete question when it is cancelled.
+interface Opened {
+  view: 'details' | 'delete';
+  plantId: number;
+}
+
+export const AllPlantsPage = () => {
+  const text = useText('allPlants');
+  const common = useText('common');
+  const { i18n } = useTranslation();
+  const plants = usePlants();
+  const tags = useTags();
+  const [query, setQuery] = useState('');
+  const [tag, setTag] = useState<string | null>(null);
+  const [opened, setOpened] = useState<Opened | null>(null);
+  const openPlant = usePlant(opened?.plantId ?? null);
+  const adder = useAddPlantForm();
+  const editor = useEditPlantForm();
+  const remove = useDeletePlant();
+  const formOpen = adder.form !== null || editor.form !== null;
+
+  // The list names the open plant, so a plant deleted elsewhere closes its dialog.
+  const openedPlant =
+    opened === null ? undefined : plants.data?.plants.find(({ id }) => id === opened.plantId);
+
+  const open = (plant: PlantSummary): void => {
+    setOpened({ view: 'details', plantId: plant.id });
+  };
+
+  const close = (): void => {
+    setOpened(null);
+  };
+
+  const askToDelete = (plant: PlantSummary): void => {
+    remove.reset();
+    setOpened({ view: 'delete', plantId: plant.id });
+  };
+
+  const deleteOpened = (plant: PlantSummary): void => {
+    remove.mutate(plant.id, { onSuccess: close });
+  };
+
+  const clearTag = (): void => {
+    setTag(null);
+  };
+
+  const showAll = (): void => {
+    setQuery('');
+    setTag(null);
+  };
+
+  const showTagFromDetails = (selected: string): void => {
+    setOpened(null);
+    setTag(selected);
+  };
+
+  const retry = (): void => {
+    void plants.refetch();
+  };
+
+  const retryOpenPlant = (): void => {
+    void openPlant.refetch();
+  };
+
+  const renderPlants = (all: PlantSummary[]) => {
+    if (all.length === 0) {
+      return (
+        <div role="status" className={MESSAGE_CLASSES}>
+          <p>{text.empty}</p>
+          <p className="font-semibold">{text.emptyHint}</p>
+        </div>
+      );
+    }
+
+    const shown = filterPlants(sortByName(all, i18n.language), { query, tag });
+
+    return shown.length === 0 ? (
+      <div className="flex flex-col items-center gap-2 py-4">
+        <p role="status" className={MESSAGE_CLASSES}>
+          {text.noMatch}
+        </p>
+        <Button variant="secondary" onClick={showAll}>
+          {text.showAll}
+        </Button>
+      </div>
+    ) : (
+      <PlantList plants={shown} onOpen={open} onSelectTag={setTag} />
+    );
+  };
+
+  const renderList = () => {
+    if (plants.data !== undefined) {
+      const { today, plants: all } = plants.data;
+
+      return (
+        <>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <Button
+              className="shrink-0 sm:self-start"
+              onClick={() => {
+                adder.open(today);
+              }}
+            >
+              <Plus size={18} aria-hidden />
+              {text.add}
+            </Button>
+            {all.length > 0 && (
+              <div className="min-w-0 flex-1">
+                <PlantFilters
+                  query={query}
+                  tag={tag}
+                  onQueryChange={setQuery}
+                  onClearTag={clearTag}
+                />
+              </div>
+            )}
+          </div>
+          {renderPlants(all)}
+        </>
+      );
+    }
+
+    if (plants.isError) {
+      return <LoadFailed message={common.plantsLoadFailed} onRetry={retry} />;
+    }
+
+    return <LoadingStatus />;
+  };
+
+  const editOpened = (): void => {
+    if (openPlant.data !== undefined) {
+      editor.open(openPlant.data.plant, openPlant.data.today);
+    }
+  };
+
+  const renderSelectableTag = (tag: string) => (
+    <SelectableTagChip tag={tag} onSelect={showTagFromDetails} />
+  );
+
+  const renderOpenedDialog = (view: Opened['view'], plant: PlantSummary) =>
+    view === 'details' ? (
+      <PlantDetailsDialog
+        key="details"
+        title={plant.name}
+        plant={openPlant.data?.plant}
+        photoUrl={openPlant.data === undefined ? null : photoUrl(openPlant.data.plant)}
+        failed={openPlant.isError}
+        onRetry={retryOpenPlant}
+        renderTag={renderSelectableTag}
+        actions={
+          <PlantActions
+            onEdit={editOpened}
+            onDelete={() => {
+              askToDelete(plant);
+            }}
+          />
+        }
+        onClose={close}
+      />
+    ) : (
+      <Dialog
+        key="delete"
+        open
+        title={text.deleteConfirmation.title({ name: plant.name })}
+        onClose={() => {
+          open(plant);
+        }}
+      >
+        <DeleteConfirmation
+          deleting={remove.isPending}
+          failed={remove.isError}
+          onDelete={() => {
+            deleteOpened(plant);
+          }}
+          onCancel={() => {
+            open(plant);
+          }}
+        />
+      </Dialog>
+    );
+
+  const renderOpened = () => {
+    if (formOpen || opened === null || openedPlant === undefined) {
+      return null;
+    }
+
+    return renderOpenedDialog(opened.view, openedPlant);
+  };
+
+  const renderAddForm = () =>
+    adder.form !== null && (
+      <Dialog open title={text.addPlantForm.title} onClose={adder.close}>
+        <AddPlantForm
+          values={adder.form.values}
+          errors={adder.errors}
+          tagNote={adder.form.tagNote}
+          tagSuggestions={tags.data?.tags ?? NO_TAGS}
+          photoUrl={adder.photoUrl}
+          photoUnreadable={adder.form.photoUnreadable}
+          dateLimits={adder.dateLimits}
+          saving={adder.saving}
+          failed={adder.failed}
+          onChange={adder.change}
+          onAddTag={adder.addTag}
+          onRemoveTag={adder.removeTag}
+          onChoosePhoto={adder.choosePhoto}
+          onRemovePhoto={adder.removePhoto}
+          onSubmit={adder.save}
+        />
+      </Dialog>
+    );
+
+  const renderEditForm = () =>
+    editor.form !== null && (
+      <Dialog
+        open
+        title={text.editPlantForm.title({ name: editor.form.context.plant.name })}
+        onClose={editor.close}
+      >
+        <EditPlantForm
+          values={editor.form.values}
+          errors={editor.errors}
+          tagNote={editor.form.tagNote}
+          tagSuggestions={tags.data?.tags ?? NO_TAGS}
+          photoUrl={editor.photoUrl}
+          photoUnreadable={editor.form.photoUnreadable}
+          dateLimits={editor.dateLimits}
+          saving={editor.saving}
+          failed={editor.failed}
+          onChange={editor.change}
+          onAddTag={editor.addTag}
+          onRemoveTag={editor.removeTag}
+          onChoosePhoto={editor.choosePhoto}
+          onRemovePhoto={editor.removePhoto}
+          onSubmit={editor.save}
+        />
+      </Dialog>
+    );
+
+  return (
+    <Section heading={text.heading}>
+      {renderList()}
+      {renderOpened()}
+      {renderAddForm()}
+      {renderEditForm()}
+    </Section>
+  );
+};

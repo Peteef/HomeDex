@@ -11,7 +11,7 @@ import {
   REMEMBERED_ACCOUNT_KEY,
   signIn,
 } from './session.ts';
-import { LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
+import { BADGED_TILES, LINK_HOST, SAMPLE_TILES, SHOPPING, settled, stubTiles } from './tiles.ts';
 import type { E2ETile } from './tiles.ts';
 import { SAMPLE_ITEMS, SHOPPING_LIST_PATH, stubItems } from './shoppingList.ts';
 import type { E2EItem } from './shoppingList.ts';
@@ -94,6 +94,7 @@ const screensAt = ({ greeting, polishGreeting }: TimeOfDay): Screen[] => [
   },
   { name: 'home', path: '/', heading: greeting, signedIn: true, tiles: SAMPLE_TILES },
   { name: 'empty home', path: '/', heading: greeting, signedIn: true, tiles: [] },
+  { name: 'badged home', path: '/', heading: greeting, signedIn: true, tiles: BADGED_TILES },
   {
     name: 'add tile dialog',
     path: '/',
@@ -405,6 +406,31 @@ test.describe('shell', () => {
       // Then
       await expect(tab).toHaveURL(`${LINK_HOST}/1`);
       await expect(page).toHaveURL('/');
+    });
+
+    test('should show a module tile badge inside the tile, clear of the pin', async ({ page }) => {
+      // Given
+      await stubTiles(page, BADGED_TILES);
+
+      // When
+      await page.goto('/');
+
+      // Then
+      const clock = tiles(page).filter({
+        has: page.getByRole('link', { name: /^No\. 004 clock ?, 3 waiting$/ }),
+      });
+
+      const badge = clock.getByText('3', { exact: true });
+      await expect(badge).toBeVisible();
+      const badgeBox = await badge.boundingBox();
+      const tileBox = await clock.boundingBox();
+      const pinBox = await clock.getByRole('button', { name: /^Pin/ }).boundingBox();
+      expect(badgeBox?.x).toBeGreaterThanOrEqual(tileBox?.x ?? Infinity);
+      expect(badgeBox?.y).toBeGreaterThanOrEqual(tileBox?.y ?? Infinity);
+
+      expect((badgeBox?.x ?? Infinity) + (badgeBox?.width ?? 0)).toBeLessThanOrEqual(
+        pinBox?.x ?? 0,
+      );
     });
 
     test('should open a module tile at its route inside the app', async ({ page }) => {

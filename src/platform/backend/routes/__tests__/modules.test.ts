@@ -78,6 +78,23 @@ describe('modules API', () => {
       expect(response.body).toEqual({ user: 'Ash', count: 1 });
     });
 
+    it("should give a module today's date in the household time zone", async () => {
+      // Given
+      const modules = await loadModules(fixtures('valid'));
+      const warsaw = createTestApp({ TZ: 'Europe/Warsaw' }, { modules });
+      migrateModules(warsaw.db, modules);
+      warsaw.clock.now = Date.parse('2026-03-31T22:30:00Z');
+      await createTestUser(warsaw.db, 'Ash');
+      const cookie = await sessionCookieFor(warsaw.app, 'Ash');
+
+      // When
+      const response = await request(warsaw.app).get('/api/m/notes/today').set('Cookie', cookie);
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ today: '2026-04-01' });
+    });
+
     it("should prefix a module's log lines with its id", async () => {
       // Given
       const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -100,6 +117,62 @@ describe('modules API', () => {
         expect(response.body).toEqual({ error: 'Not found' });
       },
     );
+  });
+
+  describe('request bodies', () => {
+    let bodies: TestApp;
+    let misty: string;
+
+    const postText = (url: string, length: number, cookie?: string) => {
+      const post = request(bodies.app)
+        .post(url)
+        .set('Content-Type', 'application/json')
+        .send(JSON.stringify({ text: 'x'.repeat(length) }));
+
+      return cookie === undefined ? post : post.set('Cookie', cookie);
+    };
+
+    beforeEach(async () => {
+      bodies = createTestApp({}, { modules: await loadModules(fixtures('bodies')) });
+      await createTestUser(bodies.db, 'Misty');
+      misty = await sessionCookieFor(bodies.app, 'Misty');
+    });
+
+    it("should accept a body up to the module's limit", async () => {
+      // When
+      const response = await postText('/api/m/photos', 300_000, misty);
+
+      // Then
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ received: 300_011 });
+    });
+
+    it("should answer 413 when a body exceeds the module's limit", async () => {
+      // When
+      const response = await postText('/api/m/photos', 1_100_000, misty);
+
+      // Then
+      expect(response.status).toBe(413);
+      expect(response.body).toEqual({ error: 'Invalid request body' });
+    });
+
+    it('should keep the default limit for platform routes', async () => {
+      // When
+      const response = await postText('/api/auth/login', 300_000);
+
+      // Then
+      expect(response.status).toBe(413);
+      expect(response.body).toEqual({ error: 'Invalid request body' });
+    });
+
+    it('should keep the default limit for a module without one', async () => {
+      // When
+      const response = await postText('/api/m/plain', 300_000, misty);
+
+      // Then
+      expect(response.status).toBe(413);
+      expect(response.body).toEqual({ error: 'Invalid request body' });
+    });
   });
 
   describe('startup', () => {

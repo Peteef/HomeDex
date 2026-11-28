@@ -36,6 +36,7 @@ const toEntry = (tile: Tile, language: Language): TileEntry => {
     ...(description === null ? {} : { description }),
     href: tile.url ?? modulePath(tile.moduleId ?? ''),
     external,
+    countOnBadge: tile.countOnBadge,
     pinned: tile.pinned,
     editable: tile.editable,
   };

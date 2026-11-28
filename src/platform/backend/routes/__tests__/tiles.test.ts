@@ -1,13 +1,16 @@
 import path from 'node:path';
 import type Database from 'better-sqlite3';
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
 import {
   createTestApp,
   createTestDatabase,
   createTestUser,
   sessionCookieFor,
 } from '../../infrastructure/__tests__/helpers.ts';
+import { logger } from '../../infrastructure/logger.ts';
+import type { Logger } from '../../infrastructure/logger.ts';
 import { setUpModules } from '../../infrastructure/modules/setUpModules.ts';
 import type { TestApp } from '../../infrastructure/__tests__/helpers.ts';
 
@@ -101,6 +104,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: true,
             editable: true,
+            countOnBadge: 0,
           },
         ],
       });
@@ -357,6 +361,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: false,
             editable: false,
+            countOnBadge: 0,
           },
           {
             id: expect.any(Number) as number,
@@ -369,6 +374,7 @@ describe('tiles API', () => {
             scope: 'shared',
             pinned: false,
             editable: false,
+            countOnBadge: 0,
           },
         ],
       });
@@ -427,6 +433,59 @@ describe('tiles API', () => {
 
       // Then
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe('tile badges', () => {
+    let logged: MockInstance<Logger['error']>;
+
+    const badgesFor = async (cookie: string) =>
+      (
+        (await get(cookie)).body as {
+          tiles: { kind: string; moduleId: string | null; countOnBadge: number }[];
+        }
+      ).tiles.map(({ kind, moduleId, countOnBadge }) => [kind, moduleId, countOnBadge]);
+
+    beforeEach(async () => {
+      logged = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+      const db = createTestDatabase();
+      await createTestUser(db, 'Ash');
+      ctx = createTestApp({}, { db, modules: await setUpModules(db, fixtures('badges')) });
+      ash = await sessionCookieFor(ctx.app, 'Ash');
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should give each module tile its count and every other tile 0', async () => {
+      // Given
+      await createTile(ash);
+
+      // When
+      const badges = await badgesFor(ash);
+
+      // Then
+      expect(badges).toEqual([
+        ['module', 'broken', 0],
+        ['module', 'counted', 3],
+        ['module', 'idle', 0],
+        ['module', 'quiet', 0],
+        ['link', null, 0],
+      ]);
+    });
+
+    it('should answer 200 and log the error when a badge count throws', async () => {
+      // When
+      const response = await get(ash);
+
+      // Then
+      expect(response.status).toBe(200);
+
+      expect(logged).toHaveBeenCalledWith(
+        '[broken] The tile badge failed',
+        new Error('The count is broken'),
+      );
     });
   });
 });

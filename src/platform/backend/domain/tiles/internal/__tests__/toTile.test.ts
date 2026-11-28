@@ -21,7 +21,7 @@ const row: UserTileRow = {
 describe('toTile', () => {
   it('should map the row to a tile without owner and timestamps when given a pinned row', () => {
     // When
-    const tile = toTile(row, true);
+    const tile = toTile(row, { editable: true, countOnBadge: 4 });
 
     // Then
     expect(tile).toEqual({
@@ -35,15 +35,17 @@ describe('toTile', () => {
       scope: 'shared',
       pinned: true,
       editable: true,
+      countOnBadge: 4,
     });
   });
 
   it('should map pinned and editable to false when the row is not pinned and not editable', () => {
     // When
-    const tile = toTile({ ...row, pinned: 0 }, false);
+    const tile = toTile({ ...row, pinned: 0 }, { editable: false, countOnBadge: 0 });
 
     // Then
     expect(tile.pinned).toBe(false);
     expect(tile.editable).toBe(false);
+    expect(tile.countOnBadge).toBe(0);
   });
 });

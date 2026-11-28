@@ -5,14 +5,11 @@ export default {
   },
   list: {
     title: 'Shopping list',
-    back: 'Back to the Dex',
     toBuy: 'To buy',
     inCart: 'In the cart',
     clear: 'Clear',
     empty: 'Nothing to buy. Add the first item above.',
-    loading: 'Loading the list…',
     loadFailed: "Can't load the list.",
-    tryAgain: 'Try again',
     addItemForm: {
       item: 'Item',
       itemPlaceholder: 'e.g. milk',

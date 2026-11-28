@@ -14,6 +14,17 @@ const ENV_FILE = '.env';
 
 const booleanFlag = z.enum(['true', 'false']).transform((value) => value === 'true');
 
+const isTimeZone = (name: string): boolean => {
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: name });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const systemTimeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().min(1).max(MAX_PORT).default(DEFAULT_PORT),
@@ -23,6 +34,10 @@ const schema = z.object({
   COOKIE_SECURE: booleanFlag.default(false),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).default(DEFAULT_SESSION_TTL_DAYS),
   TRUST_PROXY: z.coerce.number().int().min(0).default(DEFAULT_TRUSTED_PROXIES),
+  TZ: z
+    .string()
+    .refine(isTimeZone, 'must be an IANA time zone name, such as Europe/Warsaw')
+    .default(systemTimeZone),
 });
 
 export type Config = z.infer<typeof schema>;

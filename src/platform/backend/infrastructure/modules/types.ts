@@ -11,6 +11,11 @@ export interface ModuleContext {
   storage: Storage;
   currentUser: (req: Request) => CurrentUser;
   logger: Logger;
+  // Today's date as YYYY-MM-DD in the household time zone (TZ).
+  today: () => string;
+  // The platform calls `count` on every tiles request, so it must be cheap and synchronous.
+  // A module sets its badge at most once, in `register`.
+  setTileBadge: (count: () => number) => void;
 }
 
 export type RegisterModule = (ctx: ModuleContext) => void;

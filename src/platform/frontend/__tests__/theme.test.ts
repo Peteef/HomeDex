@@ -85,7 +85,14 @@ const over = (palette: Palette, name: string, background: Rgb): Rgb => {
 
 const BLACK: Rgb = [0, 0, 0];
 const WHITE: Rgb = [255, 255, 255];
-const PANEL_TEXT = ['dex-ink', 'dex-ink-muted', 'dex-red-text'];
+const STATUS_TEXT = ['dex-red-text', 'dex-amber-text', 'dex-green-text'];
+const PANEL_TEXT = ['dex-ink', 'dex-ink-muted', ...STATUS_TEXT];
+
+const STATUS_PILLS = [
+  ['dex-red-text', 'dex-red-soft'],
+  ['dex-amber-text', 'dex-amber-soft'],
+  ['dex-green-text', 'dex-green-soft'],
+];
 
 describe.each(THEMES)('%s theme tokens', (_theme, palette) => {
   describe.each([
@@ -107,7 +114,7 @@ describe.each(THEMES)('%s theme tokens', (_theme, palette) => {
       const card = over(palette, 'dex-card', panel);
 
       // When
-      const ratios = ['dex-ink', 'dex-ink-muted'].map((token) =>
+      const ratios = ['dex-ink', 'dex-ink-muted', ...STATUS_TEXT].map((token) =>
         contrast(solid(palette, token), card),
       );
 
@@ -145,9 +152,20 @@ describe.each(THEMES)('%s theme tokens', (_theme, palette) => {
     expect(ratio).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
   });
 
-  it.each(['dex-ink', 'dex-ink-muted'])('should keep %s at least 4.5:1 on a surface', (token) => {
+  it.each(['dex-ink', 'dex-ink-muted', ...STATUS_TEXT])(
+    'should keep %s at least 4.5:1 on a surface',
+    (token) => {
+      // When
+      const ratio = contrast(solid(palette, token), solid(palette, 'dex-surface'));
+
+      // Then
+      expect(ratio).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+    },
+  );
+
+  it.each(STATUS_PILLS)('should keep %s at least 4.5:1 on %s', (text, background) => {
     // When
-    const ratio = contrast(solid(palette, token), solid(palette, 'dex-surface'));
+    const ratio = contrast(solid(palette, text), solid(palette, background));
 
     // Then
     expect(ratio).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);

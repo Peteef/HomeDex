@@ -94,6 +94,7 @@ describe('tiles service', () => {
         scope: 'shared',
         pinned: false,
         editable: true,
+        countOnBadge: 0,
       });
     });
 
@@ -283,6 +284,37 @@ describe('tiles service', () => {
         url: null,
         scope: 'shared',
       });
+    });
+
+    it('should give module tiles their count on the badge and link tiles 0 when the modules have badges', () => {
+      // Given
+      tiles = tilesService(db, {
+        enabledModuleIds: ['shopping-list'],
+        countOnBadge: (moduleId) => (moduleId === 'shopping-list' ? 5 : 9),
+      });
+
+      tiles.create(ash, linkTile());
+      addModuleTile();
+
+      // When
+      const badges = tiles.list(ash).map(({ kind, countOnBadge }) => [kind, countOnBadge]);
+
+      // Then
+      expect(badges).toEqual([
+        ['link', 0],
+        ['module', 5],
+      ]);
+    });
+
+    it('should count 0 on every badge when the service has no badges', () => {
+      // Given
+      addModuleTile();
+
+      // When
+      const [tile] = tiles.list(ash);
+
+      // Then
+      expect(tile?.countOnBadge).toBe(0);
     });
   });
 

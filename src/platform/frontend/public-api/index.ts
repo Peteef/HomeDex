@@ -1,9 +1,16 @@
 // Public API of the platform frontend: the only thing modules may import (as #platform/frontend).
 export { Button } from '../components/button/Button.tsx';
 export type { ButtonProps, ButtonVariant } from '../components/button/Button.tsx';
+export { Dialog } from '../components/dialog/Dialog.tsx';
+export type { DialogProps } from '../components/dialog/Dialog.tsx';
 export { IconButton } from '../components/icon-button/IconButton.tsx';
 export type { IconButtonProps } from '../components/icon-button/IconButton.tsx';
 export { Panel } from '../components/panel/Panel.tsx';
+export { ModulePage } from '../ModulePage.tsx';
+export type { ModulePageProps } from '../ModulePage.tsx';
+export { LoadFailed } from '../components/load-failed/LoadFailed.tsx';
+export type { LoadFailedProps } from '../components/load-failed/LoadFailed.tsx';
+export { LoadingStatus } from '../components/loading-status/LoadingStatus.tsx';
 export { TextInput } from '../components/text-input/TextInput.tsx';
 export type { TextInputProps } from '../components/text-input/TextInput.tsx';
 export { Icon } from '../components/icon/Icon.tsx';
@@ -14,5 +21,5 @@ export { textHook } from '../lib/i18n/index.ts';
 export type { Translation } from '../lib/i18n/index.ts';
 export { useCurrentUser } from '../features/auth/index.ts';
 export type { CurrentUser } from '../features/auth/index.ts';
-export { del, getJson, postForJson, put } from '../lib/http/index.ts';
+export { ApiError, del, getJson, post, postForJson, put } from '../lib/http/index.ts';
 export { useLiveQuery } from '../lib/live-query/index.ts';

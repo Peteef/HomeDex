@@ -1,25 +1,14 @@
 import { Router } from 'express';
-import type { ErrorRequestHandler, RequestParamHandler } from 'express';
+import type { RequestParamHandler } from 'express';
 import { z } from 'zod';
 import { TILE_SCOPES, TileError } from '../domain/tiles/index.ts';
-import type { TileErrorCode, TilesService } from '../domain/tiles/index.ts';
+import type { TilesService } from '../domain/tiles/index.ts';
 import { currentUser } from '../infrastructure/http/auth/currentUser.ts';
-import {
-  BAD_REQUEST,
-  CREATED,
-  FORBIDDEN,
-  NO_CONTENT,
-  NOT_FOUND,
-} from '../../shared/http/status.ts';
+import { domainErrorHandler } from '../infrastructure/http/domainErrorHandler.ts';
+import { BAD_REQUEST, CREATED, NO_CONTENT, NOT_FOUND } from '../../shared/http/status.ts';
 
 const INVALID_TILE_RESPONSE = { error: 'Invalid tile' };
 const TILE_NOT_FOUND_RESPONSE = { error: 'Tile not found' };
-
-const TILE_ERROR_STATUS: Record<TileErrorCode, number> = {
-  invalid: BAD_REQUEST,
-  not_found: NOT_FOUND,
-  forbidden: FORBIDDEN,
-};
 
 const tileIdSchema = z.coerce.number().int().positive();
 
@@ -56,15 +45,6 @@ const rejectUnknownTileId: RequestParamHandler = (_req, res, next, id: string) =
   }
 
   next();
-};
-
-const sendTileErrors: ErrorRequestHandler = (error, _req, res, next) => {
-  if (!(error instanceof TileError)) {
-    next(error);
-    return;
-  }
-
-  res.status(TILE_ERROR_STATUS[error.code]).json({ error: error.message });
 };
 
 export const tilesRoutes = ({ tiles }: TilesRoutesOptions): Router => {
@@ -112,6 +92,6 @@ export const tilesRoutes = ({ tiles }: TilesRoutesOptions): Router => {
     res.status(NO_CONTENT).end();
   });
 
-  router.use(sendTileErrors);
+  router.use(domainErrorHandler(TileError));
   return router;
 };
